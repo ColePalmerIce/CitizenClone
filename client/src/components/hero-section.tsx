@@ -46,9 +46,6 @@ export default function HeroSection() {
                 className={`banner-slide ${index === currentSlide ? 'active' : ''} ${
                   index !== currentSlide ? 'absolute inset-0' : ''
                 }`}
-                style={{
-                  opacity: index === currentSlide ? 1 : 0,
-                }}
               >
                 <span 
                   className="text-sm font-medium bg-white bg-opacity-20 px-3 py-1 rounded-full"
