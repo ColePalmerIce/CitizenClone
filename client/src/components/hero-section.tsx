@@ -46,7 +46,7 @@ const handleActionClick = (actionType: string, onAccountClick: () => void) => {
       onAccountClick();
       break;
     case "mortgage":
-      console.log("Navigate to mortgage journey");
+      window.open("https://www.firstcitizens.com/personal/mortgages", "_blank");
       break;
     case "investing":
       console.log("Navigate to self-directed investing");
