@@ -16,9 +16,11 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
       <DialogContent className="sm:max-w-md" data-testid="modal-login">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FC</span>
-            </div>
+            <img 
+              src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
+              alt="First Citizens Bank" 
+              className="h-6 w-auto"
+            />
             <h3 className="text-lg font-semibold">Welcome Back</h3>
           </div>
           <Button 

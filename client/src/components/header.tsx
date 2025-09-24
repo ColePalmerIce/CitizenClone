@@ -25,9 +25,11 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">FC</span>
-            </div>
+            <img 
+              src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
+              alt="First Citizens Bank" 
+              className="h-8 w-auto"
+            />
             <span className="text-xl font-semibold text-primary">First Citizens</span>
           </div>
 
@@ -79,9 +81,11 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
               </SheetTrigger>
               <SheetContent>
                 <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">FC</span>
-                  </div>
+                  <img 
+                    src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
+                    alt="First Citizens Bank" 
+                    className="h-6 w-auto"
+                  />
                   <span className="text-lg font-semibold text-primary">First Citizens</span>
                 </div>
                 <nav className="flex flex-col space-y-4">
