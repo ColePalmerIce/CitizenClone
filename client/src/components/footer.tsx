@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Facebook, Twitter, Linkedin, Youtube, ChevronRight } from "lucide-react";
+import { Facebook, X, Linkedin, Youtube, ChevronRight } from "lucide-react";
 
 interface FooterProps {
   onCreditCardClick: () => void;
@@ -121,32 +121,64 @@ export default function Footer({ onCreditCardClick }: FooterProps) {
                 size="icon"
                 className="w-8 h-8 text-gray-300 hover:text-white hover:bg-slate-700"
                 data-testid="link-social-facebook"
+                asChild
               >
-                <Facebook size={18} />
+                <a 
+                  href="https://www.facebook.com/firstcitizensbank/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit First Citizens Bank on Facebook"
+                >
+                  <Facebook size={18} />
+                </a>
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon"
                 className="w-8 h-8 text-gray-300 hover:text-white hover:bg-slate-700"
-                data-testid="link-social-twitter"
+                data-testid="link-social-x"
+                asChild
               >
-                <Twitter size={18} />
+                <a 
+                  href="https://x.com/firstcitizens" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit First Citizens Bank on X (formerly Twitter)"
+                >
+                  <X size={18} />
+                </a>
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon"
                 className="w-8 h-8 text-gray-300 hover:text-white hover:bg-slate-700"
                 data-testid="link-social-linkedin"
+                asChild
               >
-                <Linkedin size={18} />
+                <a 
+                  href="https://www.linkedin.com/company/first-citizens-bank/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit First Citizens Bank on LinkedIn"
+                >
+                  <Linkedin size={18} />
+                </a>
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon"
                 className="w-8 h-8 text-gray-300 hover:text-white hover:bg-slate-700"
                 data-testid="link-social-youtube"
+                asChild
               >
-                <Youtube size={18} />
+                <a 
+                  href="https://www.youtube.com/channel/UCGp8w5KIoFheteqBeKaKuXw" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Visit First Citizens Bank on YouTube"
+                >
+                  <Youtube size={18} />
+                </a>
               </Button>
             </div>
           </div>
