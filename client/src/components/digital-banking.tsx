@@ -153,7 +153,6 @@ export default function DigitalBanking() {
           {/* Features Content */}
           <div className="space-y-8 relative">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Digital Banking</h2>
               <p className="text-xl text-gray-600 mb-8">Bank from anywhere with your mobile devices</p>
             </div>
             
