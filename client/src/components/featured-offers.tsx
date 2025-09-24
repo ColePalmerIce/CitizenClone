@@ -7,17 +7,17 @@ export default function FeaturedOffers() {
     <section className="py-8 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Tax Overhaul Banner */}
-        <Link href="/insights/tax-overhaul" data-testid="link-tax-overhaul">
+        <a href="https://www.firstcitizens.com/wealth/insights/intel/landmark-tax-overhaul-highlights" target="_blank" rel="noopener noreferrer" data-testid="link-tax-overhaul">
           <div className="bg-blue-900 text-white p-6 rounded-lg mb-6 flex justify-between items-center cursor-pointer hover:bg-blue-800 transition-colors">
             <h2 className="text-xl font-semibold">
               New: Tax overhaul—what to know now
             </h2>
-            <div className="flex items-center text-white hover:text-gray-200">
+            <div className="flex items-center text-white hover:text-white">
               <span className="mr-1">Learn More</span>
               <ChevronRight className="w-4 h-4" />
             </div>
           </div>
-        </Link>
+        </a>
 
         {/* Two Cards Layout */}
         <div className="grid lg:grid-cols-2 gap-6 items-stretch">
