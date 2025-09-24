@@ -1,4 +1,4 @@
-import { Wallet, MapPin, Phone } from "lucide-react";
+import { Wallet, MapPin, Phone, ChevronRight } from "lucide-react";
 
 interface CustomerServiceProps {
   onAccountClick?: () => void;
@@ -8,20 +8,26 @@ const services = [
   {
     icon: Wallet,
     title: "Open an Account",
+    displayTitle: "Open an Account",
     description: "See all we have to offer.",
-    action: "open_account"
+    action: "open_account",
+    hasArrow: false
   },
   {
     icon: MapPin,
     title: "Find a Branch",
+    displayTitle: "Find a Branch",
     description: "Meet our associates.",
-    action: "find_branch"
+    action: "find_branch",
+    hasArrow: true
   },
   {
     icon: Phone,
     title: "Call Us",
+    displayTitle: "Call Us",
     description: "Reach out and we'll help.",
-    action: "call_us"
+    action: "call_us",
+    hasArrow: true
   },
 ];
 
@@ -62,10 +68,15 @@ export default function CustomerService({ onAccountClick }: CustomerServiceProps
                 onClick={() => handleServiceClick(service.action)}
                 data-testid={`card-${service.action.replace('_', '-')}`}
               >
-                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                  <Icon className="h-8 w-8 text-gray-600" />
+                <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center mx-auto mb-6">
+                  <Icon className="h-6 w-6 text-gray-500 stroke-1" strokeWidth={1} />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">{service.title}</h3>
+                <div className="flex items-center justify-center mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">{service.displayTitle}</h3>
+                  {service.hasArrow && (
+                    <ChevronRight className="h-4 w-4 text-gray-600 ml-1" strokeWidth={2} />
+                  )}
+                </div>
                 <p className="text-gray-600 text-sm">{service.description}</p>
               </div>
             );
