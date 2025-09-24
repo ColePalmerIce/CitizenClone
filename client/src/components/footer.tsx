@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Facebook, X, Linkedin, Youtube, ChevronRight } from "lucide-react";
+import { Facebook, Linkedin, Youtube, ChevronRight } from "lucide-react";
+import XLogo from "@/components/icons/x-logo";
 
 interface FooterProps {
   onCreditCardClick: () => void;
@@ -145,7 +146,7 @@ export default function Footer({ onCreditCardClick }: FooterProps) {
                   rel="noopener noreferrer"
                   aria-label="Visit First Citizens Bank on X (formerly Twitter)"
                 >
-                  <X size={18} />
+                  <XLogo size={18} />
                 </a>
               </Button>
               <Button 
