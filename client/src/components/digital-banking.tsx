@@ -152,9 +152,6 @@ export default function DigitalBanking() {
 
           {/* Features Content */}
           <div className="space-y-8 relative">
-            <div>
-              <p className="text-xl text-gray-600 mb-8">Bank from anywhere with your mobile devices</p>
-            </div>
             
             {/* Features List with connecting lines */}
             <div className="space-y-8 relative">
