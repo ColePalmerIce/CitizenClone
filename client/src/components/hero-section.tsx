@@ -52,7 +52,7 @@ const handleActionClick = (actionType: string, onAccountClick: () => void) => {
       window.open("https://www.firstcitizens.com/personal/investments/self-directed-investing", "_blank");
       break;
     case "save":
-      console.log("Navigate to savings options");
+      window.open("https://www.firstcitizens.com/personal/savings", "_blank");
       break;
     case "loan":
       console.log("Navigate to loan application");
