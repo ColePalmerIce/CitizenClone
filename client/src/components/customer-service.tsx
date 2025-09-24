@@ -11,7 +11,7 @@ const services = [
     displayTitle: "Open an Account",
     description: "See all we have to offer.",
     action: "open_account",
-    hasArrow: false
+    hasArrow: true
   },
   {
     icon: MapPin,
@@ -72,9 +72,9 @@ export default function CustomerService({ onAccountClick }: CustomerServiceProps
                   <Icon className="h-6 w-6 text-gray-500 stroke-1" strokeWidth={1} />
                 </div>
                 <div className="flex items-center justify-center mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">{service.displayTitle}</h3>
+                  <h3 className="text-lg font-semibold text-green-700">{service.displayTitle}</h3>
                   {service.hasArrow && (
-                    <ChevronRight className="h-4 w-4 text-gray-600 ml-1" strokeWidth={2} />
+                    <ChevronRight className="h-4 w-4 text-green-700 ml-1" strokeWidth={2} />
                   )}
                 </div>
                 <p className="text-gray-600 text-sm">{service.description}</p>
