@@ -45,7 +45,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
+            <nav className="flex items-center space-x-8">
               {navigationItems.map((item) => (
                 <button 
                   key={item.label}
@@ -61,13 +61,13 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
             {/* Right side actions */}
             <div className="flex items-center space-x-6">
               {/* Support */}
-              <button className="hidden lg:flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm">
+              <button className="flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm">
                 <HelpCircle className="h-4 w-4 mr-1" />
                 Support
               </button>
               
               {/* Locations */}
-              <button className="hidden lg:flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm">
+              <button className="flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm">
                 <MapPin className="h-4 w-4 mr-1" />
                 Locations
               </button>
@@ -79,7 +79,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                 data-testid="button-search"
               >
                 <Search className="h-4 w-4 mr-1" />
-                <span className="hidden lg:inline">Search</span>
+                <span>Search</span>
               </button>
               
               {/* Login */}
