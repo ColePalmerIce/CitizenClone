@@ -2,7 +2,6 @@ import { useState } from "react";
 import Header from "@/components/header";
 import HeroSection from "@/components/hero-section";
 import FeaturedOffers from "@/components/featured-offers";
-import DigitalBanking from "@/components/digital-banking";
 import CustomerService from "@/components/customer-service";
 import ForeverFirst from "@/components/forever-first";
 import Insights from "@/components/insights";
@@ -36,7 +35,6 @@ export default function Home() {
       <main id="main-content">
         <HeroSection onAccountClick={() => setIsAccountOpenerOpen(true)} />
         <FeaturedOffers />
-        <DigitalBanking />
         <CustomerService onAccountClick={() => setIsAccountOpenerOpen(true)} />
         <ForeverFirst />
         <Insights 
