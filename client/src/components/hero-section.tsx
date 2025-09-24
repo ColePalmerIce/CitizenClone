@@ -55,7 +55,7 @@ const handleActionClick = (actionType: string, onAccountClick: () => void) => {
       window.open("https://www.firstcitizens.com/personal/savings", "_blank");
       break;
     case "loan":
-      console.log("Navigate to loan application");
+      window.open("https://www.firstcitizens.com/personal/loans", "_blank");
       break;
     case "credit-card":
       console.log("Navigate to credit card selection");
