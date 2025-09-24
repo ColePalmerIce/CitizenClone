@@ -39,7 +39,10 @@ export default function Home() {
         <DigitalBanking />
         <CustomerService />
         <ForeverFirst />
-        <Insights />
+        <Insights 
+          onAccountClick={() => setIsAccountOpenerOpen(true)}
+          onSearchClick={() => setIsSearchOpen(true)}
+        />
       </main>
 
       <Footer onCreditCardClick={() => setIsCreditCardToolOpen(true)} />
