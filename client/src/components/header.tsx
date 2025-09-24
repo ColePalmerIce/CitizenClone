@@ -46,6 +46,287 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
     }, 150);
   };
 
+  // Small Business Menu Data
+  const smallBusinessMenuData = {
+    sections: [
+      {
+        title: "Small Business Home",
+        href: "https://www.firstcitizens.com/small-business",
+        isMain: true
+      },
+      {
+        title: "Deposits",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Checking", href: "https://www.firstcitizens.com/small-business/deposits/checking" },
+          { label: "Savings", href: "https://www.firstcitizens.com/small-business/deposits/savings" },
+          { label: "Money Market", href: "https://www.firstcitizens.com/small-business/deposits/money-market" },
+          { label: "CDs", href: "https://www.firstcitizens.com/small-business/deposits/certificates-of-deposit" }
+        ]
+      },
+      {
+        title: "Credit & Financing",
+        icon: <CreditCard className="w-4 h-4" />,
+        items: [
+          { label: "Business Financing", href: "https://www.firstcitizens.com/small-business/credit-financing/business-financing" },
+          { label: "Business Loans", href: "https://www.firstcitizens.com/small-business/credit-financing/business-financing/business-loans" },
+          { label: "Credit Cards", href: "https://www.firstcitizens.com/small-business/credit-financing/credit-cards" },
+          { label: "Equipment Financing", href: "https://www.firstcitizens.com/small-business/credit-financing/equipment-financing" },
+          { label: "Lines of Credit", href: "https://www.firstcitizens.com/small-business/credit-financing/business-financing/line-of-credit" },
+          { label: "SBA Loans", href: "https://www.firstcitizens.com/small-business/credit-financing/business-financing/sba-loans" }
+        ]
+      }
+    ],
+    secondColumn: [
+      {
+        title: "Cash Management",
+        icon: <DollarSign className="w-4 h-4" />,
+        items: [
+          { label: "ACH Services", href: "https://www.firstcitizens.com/small-business/cash-management/ach-services" },
+          { label: "Fraud Prevention", href: "https://www.firstcitizens.com/small-business/cash-management/fraud-prevention" },
+          { label: "Merchant Services", href: "https://www.firstcitizens.com/small-business/cash-management/merchant-services" },
+          { label: "Remote Deposit", href: "https://www.firstcitizens.com/small-business/cash-management/remote-deposit" },
+          { label: "Wire Services", href: "https://www.firstcitizens.com/small-business/cash-management/wire-services" },
+          { label: "Payroll Services", href: "https://www.firstcitizens.com/small-business/cash-management/payroll-services" }
+        ]
+      },
+      {
+        title: "Industry Solutions",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Healthcare", href: "https://www.firstcitizens.com/small-business/expertise/healthcare" },
+          { label: "Professional Services", href: "https://www.firstcitizens.com/small-business/expertise/professional-services" },
+          { label: "Real Estate", href: "https://www.firstcitizens.com/small-business/expertise/real-estate" },
+          { label: "Retail", href: "https://www.firstcitizens.com/small-business/expertise/retail" },
+          { label: "Technology", href: "https://www.firstcitizens.com/small-business/expertise/technology" }
+        ]
+      }
+    ],
+    thirdColumn: [
+      {
+        title: "Digital Banking",
+        icon: <CreditCard className="w-4 h-4" />,
+        items: [
+          { label: "Online Banking", href: "https://www.firstcitizens.com/small-business/digital-banking/online-banking" },
+          { label: "Mobile Banking", href: "https://www.firstcitizens.com/small-business/digital-banking/mobile-banking" },
+          { label: "Bill Pay", href: "https://www.firstcitizens.com/small-business/digital-banking/bill-pay" },
+          { label: "Account Alerts", href: "https://www.firstcitizens.com/small-business/digital-banking/account-alerts" }
+        ]
+      },
+      {
+        title: "Insights",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Business Banking", href: "https://www.firstcitizens.com/small-business/insights/business-banking" },
+          { label: "Cash Flow", href: "https://www.firstcitizens.com/small-business/insights/cash-flow" },
+          { label: "Credit & Financing", href: "https://www.firstcitizens.com/small-business/insights/credit-financing" },
+          { label: "Growth", href: "https://www.firstcitizens.com/small-business/insights/growth" },
+          { label: "Industry Insights", href: "https://www.firstcitizens.com/small-business/insights/industry" },
+          { label: "Operations", href: "https://www.firstcitizens.com/small-business/insights/operations" },
+          { label: "Startup", href: "https://www.firstcitizens.com/small-business/insights/startup" }
+        ]
+      }
+    ],
+    rightSidebar: {
+      title: "Protect against fraud",
+      description: "Protect your business with comprehensive fraud prevention tools and security features.",
+      cta: {
+        text: "Protect Your Business",
+        href: "https://www.firstcitizens.com/small-business/cash-management/fraud-prevention"
+      }
+    }
+  };
+
+  // Commercial Menu Data
+  const commercialMenuData = {
+    sections: [
+      {
+        title: "Commercial Home",
+        href: "https://www.firstcitizens.com/commercial",
+        isMain: true
+      },
+      {
+        title: "Credit & Financing",
+        icon: <CreditCard className="w-4 h-4" />,
+        items: [
+          { label: "Asset Based Lending", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/asset-based-lending" },
+          { label: "Commercial Real Estate", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/commercial-real-estate" },
+          { label: "Equipment Financing", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/equipment-financing" },
+          { label: "Government Contracting", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/government-contracting" },
+          { label: "Healthcare Finance", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/healthcare-finance" },
+          { label: "Lines of Credit", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/lines-of-credit" },
+          { label: "Term Loans", href: "https://www.firstcitizens.com/commercial/solutions/credit-financing/term-loans" }
+        ]
+      }
+    ],
+    secondColumn: [
+      {
+        title: "Treasury Management",
+        icon: <DollarSign className="w-4 h-4" />,
+        items: [
+          { label: "ACH Services", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/ach-services" },
+          { label: "Account Analysis", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/account-analysis" },
+          { label: "Controlled Disbursements", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/controlled-disbursements" },
+          { label: "Deposit Services", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/deposit-services" },
+          { label: "Information Reporting", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/information-reporting" },
+          { label: "Integrated Payables", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/integrated-payables" },
+          { label: "Lockbox Services", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/lockbox-services" },
+          { label: "Merchant Services", href: "https://www.firstcitizens.com/commercial/solutions/treasury-management/merchant-services" }
+        ]
+      }
+    ],
+    thirdColumn: [
+      {
+        title: "International Services",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Foreign Exchange", href: "https://www.firstcitizens.com/commercial/solutions/international-banking/foreign-exchange" },
+          { label: "International Lending", href: "https://www.firstcitizens.com/commercial/solutions/international-banking/international-lending" },
+          { label: "International Wire", href: "https://www.firstcitizens.com/commercial/solutions/international-banking/international-wire" },
+          { label: "Letters of Credit", href: "https://www.firstcitizens.com/commercial/solutions/international-banking/letters-of-credit" },
+          { label: "Trade Finance", href: "https://www.firstcitizens.com/commercial/solutions/international-banking/trade-finance" }
+        ]
+      },
+      {
+        title: "Risk Management",
+        icon: <Shield className="w-4 h-4" />,
+        items: [
+          { label: "Insurance Services", href: "https://www.firstcitizens.com/commercial/solutions/risk-management-insurance" },
+          { label: "Fraud Prevention", href: "https://www.firstcitizens.com/commercial/solutions/risk-management-insurance/fraud-prevention" }
+        ]
+      }
+    ],
+    fourthColumn: [
+      {
+        title: "Industry Expertise",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Automotive", href: "https://www.firstcitizens.com/commercial/expertise/automotive" },
+          { label: "Construction", href: "https://www.firstcitizens.com/commercial/expertise/construction" },
+          { label: "Energy", href: "https://www.firstcitizens.com/commercial/expertise/energy" },
+          { label: "Government", href: "https://www.firstcitizens.com/commercial/expertise/government" },
+          { label: "Healthcare", href: "https://www.firstcitizens.com/commercial/expertise/healthcare" },
+          { label: "Manufacturing", href: "https://www.firstcitizens.com/commercial/expertise/manufacturing" },
+          { label: "Real Estate", href: "https://www.firstcitizens.com/commercial/expertise/real-estate" },
+          { label: "Technology", href: "https://www.firstcitizens.com/commercial/expertise/technology" }
+        ]
+      },
+      {
+        title: "Middle Market Banking",
+        href: "https://www.firstcitizens.com/commercial/solutions/middle-market-banking",
+        isMain: true
+      }
+    ],
+    rightSidebar: {
+      title: "Address risks and protect assets",
+      description: "Comprehensive risk management and insurance solutions to protect your commercial enterprise.",
+      cta: {
+        text: "Explore Risk Management",
+        href: "https://www.firstcitizens.com/commercial/solutions/risk-management-insurance"
+      }
+    }
+  };
+
+  // Wealth Menu Data  
+  const wealthMenuData = {
+    sections: [
+      {
+        title: "Wealth Home",
+        href: "https://www.firstcitizens.com/wealth",
+        isMain: true
+      },
+      {
+        title: "Planning",
+        icon: <TrendingUp className="w-4 h-4" />,
+        items: [
+          { label: "Financial Planning", href: "https://www.firstcitizens.com/wealth/planning/financial-planning" },
+          { label: "Estate Planning", href: "https://www.firstcitizens.com/wealth/planning/estate-planning" },
+          { label: "Tax Planning", href: "https://www.firstcitizens.com/wealth/planning/tax-planning" },
+          { label: "Retirement Planning", href: "https://www.firstcitizens.com/wealth/planning/retirement-planning" },
+          { label: "Business Succession", href: "https://www.firstcitizens.com/wealth/planning/business-succession" },
+          { label: "Charitable Planning", href: "https://www.firstcitizens.com/wealth/planning/charitable-planning" }
+        ]
+      }
+    ],
+    secondColumn: [
+      {
+        title: "Investment Management",
+        icon: <TrendingUp className="w-4 h-4" />,
+        items: [
+          { label: "Investment Advisory", href: "https://www.firstcitizens.com/wealth/investment-management/investment-advisory" },
+          { label: "Portfolio Management", href: "https://www.firstcitizens.com/wealth/investment-management/portfolio-management" },
+          { label: "Alternative Investments", href: "https://www.firstcitizens.com/wealth/investment-management/alternative-investments" },
+          { label: "ESG Investing", href: "https://www.firstcitizens.com/wealth/investment-management/esg-investing" }
+        ]
+      },
+      {
+        title: "Trust & Fiduciary",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Trust Services", href: "https://www.firstcitizens.com/wealth/trust-fiduciary-services/trust-services" },
+          { label: "Estate Settlement", href: "https://www.firstcitizens.com/wealth/trust-fiduciary-services/estate-settlement" },
+          { label: "Investment Management", href: "https://www.firstcitizens.com/wealth/trust-fiduciary-services/investment-management" },
+          { label: "Custody Services", href: "https://www.firstcitizens.com/wealth/trust-fiduciary-services/custody-services" }
+        ]
+      }
+    ],
+    thirdColumn: [
+      {
+        title: "Private Banking",
+        icon: <CreditCard className="w-4 h-4" />,
+        items: [
+          { label: "Private Banking Services", href: "https://www.firstcitizens.com/wealth/private-banking" },
+          { label: "Lending Solutions", href: "https://www.firstcitizens.com/wealth/private-banking/lending-solutions" },
+          { label: "Deposit Services", href: "https://www.firstcitizens.com/wealth/private-banking/deposit-services" },
+          { label: "Credit Solutions", href: "https://www.firstcitizens.com/wealth/private-banking/credit-solutions" }
+        ]
+      },
+      {
+        title: "Who We Help",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Individuals & Families", href: "https://www.firstcitizens.com/wealth/who-we-help/individuals-families" },
+          { label: "Businesses & Corporations", href: "https://www.firstcitizens.com/wealth/who-we-help/businesses-corporations" },
+          { label: "Entrepreneurs & Founders", href: "https://www.firstcitizens.com/wealth/who-we-help/entrepreneurs-founders-investors" },
+          { label: "Nonprofits", href: "https://www.firstcitizens.com/wealth/who-we-help/nonprofits" }
+        ]
+      }
+    ],
+    fourthColumn: [
+      {
+        title: "Market Outlook",
+        href: "https://www.firstcitizens.com/wealth/market-outlook",
+        isMain: true
+      },
+      {
+        title: "Institutional Trust",
+        href: "https://www.firstcitizens.com/wealth/institutional-trust",
+        isMain: true
+      },
+      {
+        title: "Insights",
+        icon: <Building className="w-4 h-4" />,
+        items: [
+          { label: "Business", href: "https://www.firstcitizens.com/wealth/insights/business" },
+          { label: "Estate Planning", href: "https://www.firstcitizens.com/wealth/insights/estate-planning" },
+          { label: "Investing", href: "https://www.firstcitizens.com/wealth/insights/investing" },
+          { label: "Market Commentary", href: "https://www.firstcitizens.com/wealth/insights/market-commentary" },
+          { label: "Philanthropy", href: "https://www.firstcitizens.com/wealth/insights/philanthropy" },
+          { label: "Podcasts", href: "https://www.firstcitizens.com/wealth/insights/podcasts" },
+          { label: "Tax Planning", href: "https://www.firstcitizens.com/wealth/insights/tax-planning" }
+        ]
+      }
+    ],
+    rightSidebar: {
+      title: "Building More Than Business",
+      description: "A podcast series for founders and CEOs exploring risks, opportunities and pivotal decisions.",
+      cta: {
+        text: "Listen Now",
+        href: "https://www.firstcitizens.com/wealth/insights/podcasts"
+      }
+    }
+  };
+
   const personalMenuData = {
     sections: [
       {
@@ -445,6 +726,479 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                               data-testid="button-start-online"
                             >
                               {personalMenuData.rightSidebar.cta.text}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Small Business Dropdown */}
+                  {item.label === 'SMALL BUSINESS' && activeDropdown === 'SMALL BUSINESS' && (
+                    <div className="absolute top-full left-0 mt-1 w-screen max-w-5xl bg-white shadow-2xl border border-gray-200 rounded-lg z-50 -ml-32">
+                      <div className="p-8">
+                        <div className="grid grid-cols-4 gap-8">
+                          {/* First Column */}
+                          <div className="space-y-6">
+                            {smallBusinessMenuData.sections.map((section, idx) => (
+                              <div key={idx}>
+                                {section.isMain ? (
+                                  <a
+                                    href={section.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-blue-600 font-semibold hover:text-blue-800 mb-4"
+                                    data-testid="link-small-business-home"
+                                  >
+                                    {section.title}
+                                  </a>
+                                ) : (
+                                  <div>
+                                    <div className="flex items-center mb-3">
+                                      {section.icon}
+                                      <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                        {section.title}
+                                      </h3>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {section.items?.map((item, itemIdx) => (
+                                        <li key={itemIdx}>
+                                          <a
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            data-testid={`link-small-business-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                          >
+                                            {item.label}
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Second Column */}
+                          <div className="space-y-6">
+                            {smallBusinessMenuData.secondColumn.map((section, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center mb-3">
+                                  {section.icon}
+                                  <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    {section.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items?.map((item, itemIdx) => (
+                                    <li key={itemIdx}>
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                        data-testid={`link-small-business-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {item.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Third Column */}
+                          <div className="space-y-6">
+                            {smallBusinessMenuData.thirdColumn.map((section, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center mb-3">
+                                  {section.icon}
+                                  <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    {section.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items?.map((item, itemIdx) => (
+                                    <li key={itemIdx}>
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                        data-testid={`link-small-business-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {item.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Right Sidebar */}
+                          <div className="bg-gray-50 p-6 rounded-lg">
+                            <h3 className="text-gray-900 font-bold text-lg mb-3">
+                              {smallBusinessMenuData.rightSidebar.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                              {smallBusinessMenuData.rightSidebar.description}
+                            </p>
+                            <a
+                              href={smallBusinessMenuData.rightSidebar.cta.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center bg-white border-2 border-gray-300 text-gray-700 px-6 py-2 rounded-md hover:border-blue-500 hover:text-blue-600 font-medium transition-colors duration-200"
+                              data-testid="button-protect-business"
+                            >
+                              {smallBusinessMenuData.rightSidebar.cta.text}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Commercial Dropdown */}
+                  {item.label === 'COMMERCIAL' && activeDropdown === 'COMMERCIAL' && (
+                    <div className="absolute top-full left-0 mt-1 w-screen max-w-6xl bg-white shadow-2xl border border-gray-200 rounded-lg z-50 -ml-32">
+                      <div className="p-8">
+                        <div className="grid grid-cols-5 gap-8">
+                          {/* First Column */}
+                          <div className="space-y-6">
+                            {commercialMenuData.sections.map((section, idx) => (
+                              <div key={idx}>
+                                {section.isMain ? (
+                                  <a
+                                    href={section.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-blue-600 font-semibold hover:text-blue-800 mb-4"
+                                    data-testid="link-commercial-home"
+                                  >
+                                    {section.title}
+                                  </a>
+                                ) : (
+                                  <div>
+                                    <div className="flex items-center mb-3">
+                                      {section.icon}
+                                      <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                        {section.title}
+                                      </h3>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {section.items?.map((item, itemIdx) => (
+                                        <li key={itemIdx}>
+                                          <a
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            data-testid={`link-commercial-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                          >
+                                            {item.label}
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Second Column */}
+                          <div className="space-y-6">
+                            {commercialMenuData.secondColumn.map((section, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center mb-3">
+                                  {section.icon}
+                                  <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    {section.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items?.map((item, itemIdx) => (
+                                    <li key={itemIdx}>
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                        data-testid={`link-commercial-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {item.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Third Column */}
+                          <div className="space-y-6">
+                            {commercialMenuData.thirdColumn.map((section, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center mb-3">
+                                  {section.icon}
+                                  <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    {section.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items?.map((item, itemIdx) => (
+                                    <li key={itemIdx}>
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                        data-testid={`link-commercial-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {item.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Fourth Column */}
+                          <div className="space-y-6">
+                            {commercialMenuData.fourthColumn.map((section, idx) => (
+                              <div key={idx}>
+                                {section.isMain ? (
+                                  <a
+                                    href={section.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-blue-600 font-semibold hover:text-blue-800 mb-4"
+                                    data-testid="link-middle-market-banking"
+                                  >
+                                    {section.title}
+                                  </a>
+                                ) : (
+                                  <div>
+                                    <div className="flex items-center mb-3">
+                                      {section.icon}
+                                      <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                        {section.title}
+                                      </h3>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {section.items?.map((item, itemIdx) => (
+                                        <li key={itemIdx}>
+                                          <a
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            data-testid={`link-commercial-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                          >
+                                            {item.label}
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Right Sidebar */}
+                          <div className="bg-gray-50 p-6 rounded-lg">
+                            <h3 className="text-gray-900 font-bold text-lg mb-3">
+                              {commercialMenuData.rightSidebar.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                              {commercialMenuData.rightSidebar.description}
+                            </p>
+                            <a
+                              href={commercialMenuData.rightSidebar.cta.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center bg-white border-2 border-gray-300 text-gray-700 px-6 py-2 rounded-md hover:border-blue-500 hover:text-blue-600 font-medium transition-colors duration-200"
+                              data-testid="button-explore-risk-management"
+                            >
+                              {commercialMenuData.rightSidebar.cta.text}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Wealth Dropdown */}
+                  {item.label === 'WEALTH' && activeDropdown === 'WEALTH' && (
+                    <div className="absolute top-full left-0 mt-1 w-screen max-w-6xl bg-white shadow-2xl border border-gray-200 rounded-lg z-50 -ml-32">
+                      <div className="p-8">
+                        <div className="grid grid-cols-5 gap-8">
+                          {/* First Column */}
+                          <div className="space-y-6">
+                            {wealthMenuData.sections.map((section, idx) => (
+                              <div key={idx}>
+                                {section.isMain ? (
+                                  <a
+                                    href={section.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-blue-600 font-semibold hover:text-blue-800 mb-4"
+                                    data-testid="link-wealth-home"
+                                  >
+                                    {section.title}
+                                  </a>
+                                ) : (
+                                  <div>
+                                    <div className="flex items-center mb-3">
+                                      {section.icon}
+                                      <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                        {section.title}
+                                      </h3>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {section.items?.map((item, itemIdx) => (
+                                        <li key={itemIdx}>
+                                          <a
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            data-testid={`link-wealth-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                          >
+                                            {item.label}
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Second Column */}
+                          <div className="space-y-6">
+                            {wealthMenuData.secondColumn.map((section, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center mb-3">
+                                  {section.icon}
+                                  <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    {section.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items?.map((item, itemIdx) => (
+                                    <li key={itemIdx}>
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                        data-testid={`link-wealth-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {item.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Third Column */}
+                          <div className="space-y-6">
+                            {wealthMenuData.thirdColumn.map((section, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center mb-3">
+                                  {section.icon}
+                                  <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    {section.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-2">
+                                  {section.items?.map((item, itemIdx) => (
+                                    <li key={itemIdx}>
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                        data-testid={`link-wealth-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {item.label}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Fourth Column */}
+                          <div className="space-y-6">
+                            {wealthMenuData.fourthColumn.map((section, idx) => (
+                              <div key={idx}>
+                                {section.isMain ? (
+                                  <a
+                                    href={section.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-blue-600 font-semibold hover:text-blue-800 mb-4"
+                                    data-testid={`link-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
+                                  >
+                                    {section.title}
+                                  </a>
+                                ) : (
+                                  <div>
+                                    <div className="flex items-center mb-3">
+                                      {section.icon}
+                                      <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                        {section.title}
+                                      </h3>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {section.items?.map((item, itemIdx) => (
+                                        <li key={itemIdx}>
+                                          <a
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            data-testid={`link-wealth-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                                          >
+                                            {item.label}
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Right Sidebar */}
+                          <div className="bg-gray-50 p-6 rounded-lg">
+                            <h3 className="text-gray-900 font-bold text-lg mb-3">
+                              {wealthMenuData.rightSidebar.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+                              {wealthMenuData.rightSidebar.description}
+                            </p>
+                            <a
+                              href={wealthMenuData.rightSidebar.cta.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center bg-white border-2 border-gray-300 text-gray-700 px-6 py-2 rounded-md hover:border-blue-500 hover:text-blue-600 font-medium transition-colors duration-200"
+                              data-testid="button-listen-now"
+                            >
+                              {wealthMenuData.rightSidebar.cta.text}
                             </a>
                           </div>
                         </div>
