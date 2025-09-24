@@ -1,10 +1,10 @@
-import { Search, X, Wallet, Home, TrendingUp, DollarSign, Banknote, CreditCard } from "lucide-react";
+import { Wallet, Home, TrendingUp, DollarSign, Banknote, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import AccountOpener from "@/components/modals/account-opener";
 import CreditCardTool from "@/components/modals/credit-card-tool";
+import SearchDropdown from "@/components/ui/search-dropdown";
 
 interface HeroSectionProps {
   onAccountClick: () => void;
@@ -106,24 +106,35 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
           {/* Search Bar */}
           <div className="w-full">
             <div className="max-w-5xl mx-auto">
-              <div className="relative max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input 
-                    type="text" 
-                    placeholder="How can we help?"
-                    className="pl-10 pr-10 py-3 w-full bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-700 focus:border-transparent"
-                    data-testid="input-help-search"
-                  />
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-                    data-testid="button-clear-search"
-                  >
-                    <X className="h-4 w-4 text-gray-400" />
-                  </Button>
-                </div>
+              <div className="max-w-md">
+                <SearchDropdown
+                  placeholder="How can we help?"
+                  className="w-full"
+                  inputClassName="py-3 text-base rounded-lg border-2 border-gray-200 focus:border-green-700 focus:outline-none bg-white"
+                  showCloseButton={true}
+                  onSearch={(query) => {
+                    console.log("Search query:", query);
+                    // Handle search functionality here if needed
+                  }}
+                  onNavigate={(url) => {
+                    const newWindow = window.open(url, '_blank');
+                    if (newWindow) newWindow.opener = null;
+                  }}
+                  onModalOpen={(modalType) => {
+                    switch (modalType) {
+                      case 'account':
+                        setIsAccountOpenerOpen(true);
+                        break;
+                      case 'creditCard':
+                        setIsCreditCardToolOpen(true);
+                        break;
+                      case 'login':
+                        // Handle login modal if you have one
+                        console.log("Login modal requested");
+                        break;
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>
