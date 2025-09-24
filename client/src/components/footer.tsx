@@ -10,7 +10,7 @@ const footerSections = [
     title: "Contact",
     links: [
       { text: "Call Us", url: "https://www.firstcitizens.com/support/call-us" },
-      { text: "Email Us", url: "#" },
+      { text: "Email Us", url: "https://www.firstcitizens.com/support/contact/other-questions" },
       { text: "Careers", url: "#" },
     ],
   },
