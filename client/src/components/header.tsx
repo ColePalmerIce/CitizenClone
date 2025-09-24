@@ -12,11 +12,15 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigationItems = [
-    { label: "Personal", href: "#" },
-    { label: "Small Business", href: "#" },
-    { label: "Commercial", href: "#" },
-    { label: "Wealth", href: "#" },
-    { label: "About Us", href: "#" },
+    { label: "PERSONAL", href: "#" },
+    { label: "SMALL BUSINESS", href: "#" },
+    { label: "COMMERCIAL", href: "#" },
+    { label: "WEALTH", href: "#" },
+  ];
+
+  const rightNavigationItems = [
+    { label: "Support", href: "#" },
+    { label: "Locations", href: "#" },
   ];
 
   return (
@@ -24,13 +28,12 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             <img 
               src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
               alt="First Citizens Bank" 
               className="h-8 w-auto"
             />
-            <span className="text-xl font-semibold text-primary">First Citizens</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -38,7 +41,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
             {navigationItems.map((item) => (
               <button 
                 key={item.label}
-                className="text-foreground hover:text-primary font-medium transition-colors"
+                className="text-gray-700 hover:text-primary font-medium transition-colors text-sm uppercase tracking-wide"
                 data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
               >
                 {item.label}
@@ -47,21 +50,34 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
           </nav>
 
           {/* Right side actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
+            {/* Support and Locations */}
+            {rightNavigationItems.map((item) => (
+              <button 
+                key={item.label}
+                className="text-gray-600 hover:text-primary font-medium transition-colors hidden lg:block"
+                data-testid={`nav-${item.label.toLowerCase()}`}
+              >
+                {item.label}
+              </button>
+            ))}
+            
             {/* Search */}
             <Button
               variant="ghost"
               size="sm"
               onClick={onSearchClick}
               data-testid="button-search"
+              className="text-gray-600 hover:text-primary"
             >
-              <Search className="h-5 w-5" />
+              Search
             </Button>
             
             {/* Login */}
             <Button
               onClick={onLoginClick}
-              className="bg-primary text-primary-foreground hover:bg-secondary"
+              variant="outline"
+              className="border-gray-400 text-gray-900 hover:bg-gray-50"
               data-testid="button-login"
             >
               Log In
@@ -80,13 +96,12 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                 </Button>
               </SheetTrigger>
               <SheetContent>
-                <div className="flex items-center space-x-4 mb-8">
+                <div className="flex items-center mb-8">
                   <img 
                     src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
                     alt="First Citizens Bank" 
                     className="h-6 w-auto"
                   />
-                  <span className="text-lg font-semibold text-primary">First Citizens</span>
                 </div>
                 <nav className="flex flex-col space-y-4">
                   {navigationItems.map((item) => (
@@ -95,6 +110,16 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                       className="text-left text-foreground hover:text-primary font-medium transition-colors py-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                       data-testid={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                  {rightNavigationItems.map((item) => (
+                    <button 
+                      key={item.label}
+                      className="text-left text-foreground hover:text-primary font-medium transition-colors py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      data-testid={`mobile-nav-${item.label.toLowerCase()}`}
                     >
                       {item.label}
                     </button>
