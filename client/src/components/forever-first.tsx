@@ -21,32 +21,32 @@ const promises = [
 
 export default function ForeverFirst() {
   return (
-    <section className="bg-primary text-white py-16">
+    <section className="bg-slate-700 text-white py-16" style={{backgroundColor: '#4A5C7A'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Our Forever First Promise</h2>
-          <p className="text-xl text-blue-100">Forever First® means the name on our door will stay the same for years to come.</p>
+          <h2 className="text-4xl font-bold mb-6">Our Forever First Promise</h2>
+          <p className="text-xl text-white/90 max-w-4xl mx-auto">Forever First® means the name on our door will stay the same for years to come.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-12 mt-16">
           {promises.map((promise) => {
             const Icon = promise.icon;
             return (
               <div key={promise.title} className="text-center">
-                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon className="h-6 w-6 text-white" />
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Icon className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{promise.title}</h3>
-                <p className="text-blue-100">{promise.description}</p>
+                <h3 className="text-2xl font-bold mb-4 text-white">{promise.title}</h3>
+                <p className="text-white/90 leading-relaxed text-base">{promise.description}</p>
               </div>
             );
           })}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-16">
           <Button 
             size="lg"
-            className="bg-white text-primary hover:bg-blue-50"
+            className="bg-white text-slate-700 hover:bg-gray-100 px-8 py-3 text-base font-medium"
             data-testid="button-about-first-citizens"
           >
             About First Citizens
