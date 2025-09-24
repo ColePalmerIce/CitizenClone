@@ -2,6 +2,9 @@ import { Search, X, Wallet, Home, TrendingUp, DollarSign, Banknote, CreditCard }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import AccountOpener from "@/components/modals/account-opener";
+import CreditCardTool from "@/components/modals/credit-card-tool";
 
 interface HeroSectionProps {
   onAccountClick: () => void;
@@ -40,10 +43,10 @@ const actions = [
   },
 ];
 
-const handleActionClick = (actionType: string, onAccountClick: () => void) => {
+const handleActionClick = (actionType: string, onAccountClick: () => void, setIsAccountOpenerOpen: (open: boolean) => void, setIsCreditCardToolOpen: (open: boolean) => void) => {
   switch (actionType) {
     case "account":
-      onAccountClick();
+      setIsAccountOpenerOpen(true);
       break;
     case "mortgage":
       window.open("https://www.firstcitizens.com/personal/mortgages", "_blank");
@@ -58,7 +61,7 @@ const handleActionClick = (actionType: string, onAccountClick: () => void) => {
       window.open("https://www.firstcitizens.com/personal/loans", "_blank");
       break;
     case "credit-card":
-      console.log("Navigate to credit card selection");
+      setIsCreditCardToolOpen(true);
       break;
     default:
       console.log("Unknown action:", actionType);
@@ -66,6 +69,9 @@ const handleActionClick = (actionType: string, onAccountClick: () => void) => {
 };
 
 export default function HeroSection({ onAccountClick }: HeroSectionProps) {
+  const [isAccountOpenerOpen, setIsAccountOpenerOpen] = useState(false);
+  const [isCreditCardToolOpen, setIsCreditCardToolOpen] = useState(false);
+
   return (
     <section 
       className="relative bg-cover bg-center bg-no-repeat text-gray-900 overflow-hidden min-h-[600px]"
@@ -130,7 +136,7 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
                   <Card 
                     key={action.title} 
                     className="hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105 bg-white/90 backdrop-blur-sm border-gray-200"
-                    onClick={() => handleActionClick(action.onClick, onAccountClick)}
+                    onClick={() => handleActionClick(action.onClick, onAccountClick, setIsAccountOpenerOpen, setIsCreditCardToolOpen)}
                     data-testid={`card-${action.title.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     <CardContent className="p-4 flex flex-col items-center text-center">
@@ -148,6 +154,18 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
           </div>
         </div>
       </div>
+
+      {/* Account Opener Modal */}
+      <AccountOpener 
+        open={isAccountOpenerOpen} 
+        onOpenChange={setIsAccountOpenerOpen} 
+      />
+
+      {/* Credit Card Tool Modal */}
+      <CreditCardTool 
+        open={isCreditCardToolOpen} 
+        onOpenChange={setIsCreditCardToolOpen} 
+      />
     </section>
   );
 }
