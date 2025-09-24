@@ -94,6 +94,7 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
               size="lg"
               className="bg-green-700 hover:bg-green-800 text-white px-8 py-3 text-lg font-medium"
               data-testid="button-start-investing"
+              onClick={() => window.open('https://www.firstcitizens.com/personal/investments/self-directed-investing', '_blank')}
             >
               Start Investing
             </Button>
