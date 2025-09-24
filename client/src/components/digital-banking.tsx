@@ -242,8 +242,9 @@ export default function DigitalBanking() {
             <div className="pt-6 pl-20 lg:pl-20">
               <Button 
                 size="lg"
-                className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 text-base"
+                className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-base font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
                 data-testid="button-digital-banking-learn-more"
+                onClick={() => window.open('https://www.firstcitizens.com/personal/digital-banking', '_blank')}
               >
                 Learn More →
               </Button>
