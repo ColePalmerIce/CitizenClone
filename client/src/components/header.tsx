@@ -335,6 +335,11 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
         isMain: true
       },
       {
+        title: "All Checking Accounts",
+        href: "https://www.firstcitizens.com/personal/checking",
+        isMain: true
+      },
+      {
         title: "Checking",
         icon: <CreditCard className="w-4 h-4" />,
         items: [
