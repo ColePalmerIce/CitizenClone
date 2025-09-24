@@ -115,38 +115,31 @@ export default function DigitalBanking() {
           {/* Mobile Phone Interface */}
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative">
-              {/* Phone Frame */}
-              <div className="relative bg-black rounded-[2.5rem] p-2 shadow-2xl">
-                <div className="bg-white rounded-[2rem] overflow-hidden relative" style={{ width: '320px', height: '640px' }}>
-                  {/* Loading overlay with animated progress bar */}
-                  {isLoading && (
-                    <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center">
-                      <div className="w-48 h-1 bg-gray-200 rounded-full overflow-hidden mb-4">
-                        <div 
-                          className="h-full bg-blue-600 rounded-full transition-all duration-100 ease-out"
-                          style={{ width: `${loadingProgress}%` }}
-                        />
-                      </div>
-                      <p className="text-sm text-gray-600">Loading...</p>
-                    </div>
-                  )}
-                  
-                  {/* Phone Screen Content - Dynamic Image */}
-                  <div className="h-full flex items-center justify-center bg-gray-50">
-                    <img
-                      key={activeFeature} // Force re-render for smooth transition
-                      src={FEATURES[activeFeature].image}
-                      alt={FEATURES[activeFeature].alt}
-                      className="max-w-full max-h-full object-contain transition-opacity duration-500"
-                      data-testid={`phone-image-${FEATURES[activeFeature].id}`}
-                      onError={(e) => {
-                        // Fallback to a simple placeholder if image fails to load
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjY0MCIgdmlld0JveD0iMCAwIDMyMCA2NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iNjQwIiBmaWxsPSIjRjNGNEY2Ii8+PHBhdGggZD0iTTE2MCAxODBIMjQwVjQ2MEgxNjBWMTgwWiIgZmlsbD0iIzlDQTNBRiIvPjxwYXRoIGQ9Ik0xMzYgMjAwVjIzMkgxNTJWMjAwSDE2MFYyMzJIMTc2VjIwMEgxODRWMjMySDIwMFYyMDBIMjA4VjIzMkgyMjRWMjAwSDIyNFYyNjRIMTM2VjIwMFoiIGZpbGw9IiM0Qjc2ODAiLz48L3N2Zz4=';
-                      }}
+              {/* Loading overlay with animated progress bar */}
+              {isLoading && (
+                <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg">
+                  <div className="w-48 h-1 bg-gray-200 rounded-full overflow-hidden mb-4">
+                    <div 
+                      className="h-full bg-blue-600 rounded-full transition-all duration-100 ease-out"
+                      style={{ width: `${loadingProgress}%` }}
                     />
                   </div>
+                  <p className="text-sm text-gray-600">Loading...</p>
                 </div>
-              </div>
+              )}
+              
+              {/* Direct Image Display - No additional phone frame */}
+              <img
+                key={activeFeature} // Force re-render for smooth transition
+                src={FEATURES[activeFeature].image}
+                alt={FEATURES[activeFeature].alt}
+                className="max-w-full h-auto object-contain transition-opacity duration-500 shadow-xl rounded-lg"
+                data-testid={`phone-image-${FEATURES[activeFeature].id}`}
+                onError={(e) => {
+                  // Fallback to a simple placeholder if image fails to load
+                  (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjY0MCIgdmlld0JveD0iMCAwIDMyMCA2NDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iNjQwIiBmaWxsPSIjRjNGNEY2Ii8+PHBhdGggZD0iTTE2MCAxODBIMjQwVjQ2MEgxNjBWMTgwWiIgZmlsbD0iIzlDQTNBRiIvPjxwYXRoIGQ9Ik0xMzYgMjAwVjIzMkgxNTJWMjAwSDE2MFYyMzJIMTc2VjIwMEgxODRWMjMySDIwMFYyMDBIMjA4VjIzMkgyMjRWMjAwSDIyNFYyNjRIMTM2VjIwMFoiIGZpbGw9IiM0Qjc2ODAiLz48L3N2Zz4=';
+                }}
+              />
             </div>
           </div>
 
