@@ -1,6 +1,6 @@
-import { Search, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import SearchDropdown from "@/components/ui/search-dropdown";
 import { useState, useMemo } from "react";
 
 const articles = [
@@ -64,17 +64,25 @@ export default function Insights({ onAccountClick, onSearchClick }: InsightsProp
           
           {/* Search Bar */}
           <div className="flex justify-center mb-12">
-            <div className="relative">
-              <Input 
-                type="text" 
-                placeholder="Search Insights" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-3 w-80 bg-white border-gray-200 text-center"
-                data-testid="input-search-insights"
-              />
-              <Search className="h-5 w-5 absolute left-3 top-3.5 text-gray-400" />
-            </div>
+            <SearchDropdown
+              placeholder="Search Insights"
+              value={searchQuery}
+              onChange={setSearchQuery}
+              suggestions={[
+                "Self-directed investing",
+                "Financial planning",
+                "IRA investments",
+                "Retirement planning", 
+                "Investment strategies",
+                "Portfolio management",
+                "Wealth management",
+                "College savings",
+                "Emergency funds",
+                "Tax planning"
+              ]}
+              className="w-80"
+              inputClassName="text-center border-gray-200 bg-white"
+            />
           </div>
         </div>
 

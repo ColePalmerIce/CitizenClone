@@ -1,7 +1,6 @@
-import { X, Search } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import SearchDropdown from "@/components/ui/search-dropdown";
 
 interface SearchModalProps {
   open: boolean;
@@ -9,48 +8,61 @@ interface SearchModalProps {
 }
 
 export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      // Clear search when modal opens
+      setSearchQuery("");
+    }
+  }, [open]);
+
+  const handleSearch = async (query: string) => {
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          userId: "anonymous"
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Search results:", data);
+        // Here you could show results or navigate based on the search
+        onOpenChange(false); // Close modal after search
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  };
+
+  const handleClose = () => {
+    setSearchQuery("");
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl" data-testid="modal-search">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Search First Citizens</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onOpenChange(false)}
-              data-testid="button-close-search"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="relative">
-            <Input 
-              type="text" 
-              placeholder="What can we help you find?" 
-              className="pl-10 pr-4 py-3 text-base"
-              data-testid="input-search"
-            />
-            <Search className="h-5 w-5 absolute left-3 top-3.5 text-muted-foreground" />
-          </div>
-          
-          {/* Search suggestions could go here */}
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Popular searches:</p>
-            <div className="flex flex-wrap gap-2">
-              {["Account Balance", "Transfer Money", "Pay Bills", "Find Branch", "Contact Us"].map((suggestion) => (
-                <Button 
-                  key={suggestion}
-                  variant="outline" 
-                  size="sm"
-                  className="text-xs"
-                  data-testid={`button-suggestion-${suggestion.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  {suggestion}
-                </Button>
-              ))}
-            </div>
-          </div>
+      <DialogContent 
+        className="sm:max-w-2xl p-0 overflow-visible border-0 shadow-none bg-transparent" 
+        data-testid="modal-search"
+      >
+        <div className="mt-4">
+          <SearchDropdown
+            placeholder="How can we help?"
+            onSearch={handleSearch}
+            onClose={handleClose}
+            showCloseButton={true}
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full"
+            inputClassName="text-lg py-4 px-6 shadow-lg"
+          />
         </div>
       </DialogContent>
     </Dialog>
