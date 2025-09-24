@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
-import { Link } from "wouter";
 
 export default function FeaturedOffers() {
   return (
@@ -22,7 +21,7 @@ export default function FeaturedOffers() {
         {/* Two Cards Layout */}
         <div className="grid lg:grid-cols-2 gap-6 items-stretch">
           {/* Home Improvement Loans Card */}
-          <Link href="/loans/home-improvement" data-testid="card-home-improvement">
+          <a href="https://www.firstcitizens.com/personal/loans/home-improvement" target="_blank" rel="noopener noreferrer" data-testid="card-home-improvement">
             <Card className="bg-blue-600 text-white border-none cursor-pointer hover:bg-blue-700 transition-colors h-full">
               <CardContent className="p-8 h-full flex flex-col">
                 <div className="mb-4">
@@ -43,10 +42,10 @@ export default function FeaturedOffers() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
+          </a>
 
           {/* Credit Cards Card */}
-          <Link href="/credit-cards" data-testid="card-credit-cards">
+          <a href="https://www.firstcitizens.com/personal/credit-cards" target="_blank" rel="noopener noreferrer" data-testid="card-credit-cards">
             <Card className="bg-green-700 text-white border-none cursor-pointer hover:bg-green-800 transition-colors h-full">
               <CardContent className="p-8 h-full flex flex-col">
                 <div className="mb-4">
@@ -67,7 +66,7 @@ export default function FeaturedOffers() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
+          </a>
         </div>
       </div>
     </section>
