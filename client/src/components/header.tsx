@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Menu, X, ChevronDown, MapPin, HelpCircle } from "lucide-react";
+import { Search, Menu, X, ChevronDown, ChevronUp, MapPin, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -10,6 +10,7 @@ interface HeaderProps {
 
 export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isFdicExpanded, setIsFdicExpanded] = useState(false);
 
   const navigationItems = [
     { label: "PERSONAL", href: "#" },
@@ -21,12 +22,67 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
   return (
     <div className="sticky top-0 z-40">
       {/* FDIC Information Bar */}
-      <div className="bg-slate-700 text-white text-sm py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center">
-            <span className="text-white font-medium">FDIC</span>
-            <span className="mx-2 text-white">FDIC-Insured - Backed by the full faith and credit of the U.S. Government</span>
-            <ChevronDown className="h-4 w-4 text-white ml-auto" />
+      <div className="bg-slate-700 text-white text-sm">
+        {/* Collapsed Banner */}
+        <div 
+          className="py-2 cursor-pointer hover:bg-slate-600 transition-colors duration-200"
+          onClick={() => setIsFdicExpanded(!isFdicExpanded)}
+          data-testid="fdic-banner"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center">
+              <span className="text-white font-bold">FDIC</span>
+              <span className="mx-2 text-white">FDIC-Insured - Backed by the full faith and credit of the U.S. Government</span>
+              {isFdicExpanded ? (
+                <ChevronUp className="h-4 w-4 text-white ml-auto transition-transform duration-200" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-white ml-auto transition-transform duration-200" />
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Expanded Content */}
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isFdicExpanded ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+        }`}>
+          <div className="border-t border-slate-600 bg-slate-700 py-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* BankFind Section */}
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                      <Search className="w-4 h-4 text-slate-700" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-1">BankFind</h3>
+                    <p className="text-gray-300 text-xs leading-relaxed">
+                      This bank is insured by the Federal Deposit Insurance Corporation. The FDIC Certificate ID is 11043.
+                      Click on the Certificate ID # to confirm this bank's FDIC coverage using the FDIC's BankFind tool.
+                    </p>
+                  </div>
+                </div>
+
+                {/* EDIE Section */}
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                      <HelpCircle className="w-4 h-4 text-slate-700" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-1">EDIE</h3>
+                    <p className="text-gray-300 text-xs leading-relaxed">
+                      EDIE lets consumers and bankers know, on a per-bank basis, how the insurance rules and limits apply to
+                      a depositor's accounts—what's insured and what portion (if any) exceeds coverage limits at that bank.
+                      Check your deposit insurance coverage {'>>'} 
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
