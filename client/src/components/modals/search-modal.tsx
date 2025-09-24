@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import SearchDropdown from "@/components/ui/search-dropdown";
 
 interface SearchModalProps {
@@ -52,6 +52,10 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
         className="sm:max-w-2xl p-0 overflow-visible border-0 shadow-none bg-transparent" 
         data-testid="modal-search"
       >
+        <DialogTitle className="sr-only">Search First Citizens</DialogTitle>
+        <DialogDescription className="sr-only">
+          Search for banking services, account information, and financial help
+        </DialogDescription>
         <div className="mt-4">
           <SearchDropdown
             placeholder="How can we help?"
