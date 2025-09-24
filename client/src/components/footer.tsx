@@ -17,29 +17,29 @@ const footerSections = [
   {
     title: "Support",
     links: [
-      { text: "Locations", url: "#" },
-      { text: "Accessibility", url: "#" },
-      { text: "Routing Number", url: "#" },
-      { text: "Privacy & Security", url: "#" },
+      { text: "Locations", url: "https://locations.firstcitizens.com/?_gl=1*di8kys*_gcl_au*MjE0NDA3NzY1OC4xNzU4Njc0NTcy*_ga*MjExMDQ5OTA5NC4xNzU4Njc0NTg4*_ga_GHPE53GVHX*czE3NTg3NDUzNTgkbzYkZzEkdDE3NTg3NDU4NjIkajU3JGwwJGgw*_ga_ZLJSNLKT9D*czE3NTg3NDUzNTgkbzckZzEkdDE3NTg3NDU4NjIkajYwJGwwJGgw" },
+      { text: "Accessibility", url: "https://www.firstcitizens.com/accessibility-statement" },
+      { text: "Routing Number", url: "https://www.firstcitizens.com/support/routing-numbers" },
+      { text: "Privacy & Security", url: "https://www.firstcitizens.com/privacy-security" },
     ],
   },
   {
     title: "Company",
     links: [
-      { text: "About Us", url: "#" },
-      { text: "Investor Relations", url: "#" },
-      { text: "Newsroom", url: "#" },
-      { text: "Community Support", url: "#" },
-      { text: "Terms of Use", url: "#" },
+      { text: "About Us", url: "https://www.firstcitizens.com/about-us" },
+      { text: "Investor Relations", url: "https://ir.firstcitizens.com/overview/default.aspx?_gl=1*3paijv*_gcl_au*MjE0NDA3NzY1OC4xNzU4Njc0NTcy*_ga*MjExMDQ5OTA5NC4xNzU4Njc0NTg4*_ga_GHPE53GVHX*czE3NTg3NDUzNTgkbzYkZzEkdDE3NTg3NDcxNTAkajYwJGwwJGgw*_ga_ZLJSNLKT9D*czE3NTg3NDUzNTgkbzckZzEkdDE3NTg3NDY5MzgkajYwJGwwJGgw" },
+      { text: "Newsroom", url: "https://newsroom.firstcitizens.com/?_gl=1*emrxly*_gcl_au*MjE0NDA3NzY1OC4xNzU4Njc0NTcy*_ga*MjExMDQ5OTA5NC4xNzU4Njc0NTg4*_ga_GHPE53GVHX*czE3NTg3NDUzNTgkbzYkZzEkdDE3NTg3NDY5MzgkajU4JGwwJGgw*_ga_ZLJSNLKT9D*czE3NTg3NDUzNTgkbzckZzEkdDE3NTg3NDY5MzgkajYwJGwwJGgw" },
+      { text: "Community Support", url: "https://www.firstcitizens.com/about-us/community-support" },
+      { text: "Terms of Use", url: "https://www.firstcitizens.com/terms-of-use" },
     ],
   },
   {
     title: "Banking",
     links: [
-      { text: "Personal", url: "#" },
-      { text: "Small Business", url: "#" }, 
-      { text: "Commercial", url: "#" },
-      { text: "Wealth", url: "#" },
+      { text: "Personal", url: "https://www.firstcitizens.com/personal" },
+      { text: "Small Business", url: "https://www.firstcitizens.com/small-business" }, 
+      { text: "Commercial", url: "https://www.firstcitizens.com/commercial" },
+      { text: "Wealth", url: "https://www.firstcitizens.com/wealth" },
     ],
   },
 ];
