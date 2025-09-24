@@ -9,37 +9,37 @@ const footerSections = [
   {
     title: "Contact",
     links: [
-      "Call Us",
-      "Email Us",
-      "Careers",
+      { text: "Call Us", url: "https://www.firstcitizens.com/support/call-us" },
+      { text: "Email Us", url: "#" },
+      { text: "Careers", url: "#" },
     ],
   },
   {
     title: "Support",
     links: [
-      "Locations",
-      "Accessibility",
-      "Routing Number",
-      "Privacy & Security",
+      { text: "Locations", url: "#" },
+      { text: "Accessibility", url: "#" },
+      { text: "Routing Number", url: "#" },
+      { text: "Privacy & Security", url: "#" },
     ],
   },
   {
     title: "Company",
     links: [
-      "About Us",
-      "Investor Relations",
-      "Newsroom",
-      "Community Support",
-      "Terms of Use",
+      { text: "About Us", url: "#" },
+      { text: "Investor Relations", url: "#" },
+      { text: "Newsroom", url: "#" },
+      { text: "Community Support", url: "#" },
+      { text: "Terms of Use", url: "#" },
     ],
   },
   {
     title: "Banking",
     links: [
-      "Personal",
-      "Small Business", 
-      "Commercial",
-      "Wealth",
+      { text: "Personal", url: "#" },
+      { text: "Small Business", url: "#" }, 
+      { text: "Commercial", url: "#" },
+      { text: "Wealth", url: "#" },
     ],
   },
 ];
@@ -79,14 +79,32 @@ export default function Footer({ onCreditCardClick }: FooterProps) {
               <h4 className="font-medium mb-4 text-white">{section.title}</h4>
               <ul className="space-y-3">
                 {section.links.map((link) => (
-                  <li key={link}>
-                    <Button 
-                      variant="ghost" 
-                      className="p-0 h-auto hover:text-gray-300 hover:bg-transparent text-gray-300 text-left justify-start flex items-center"
-                      data-testid={`link-footer-${link.toLowerCase().replace(/\s+/g, '-')}`}
-                    >
-                      {link} <ChevronRight className="ml-1 h-3 w-3" />
-                    </Button>
+                  <li key={link.text}>
+                    {link.url !== "#" ? (
+                      <Button 
+                        variant="ghost" 
+                        className="p-0 h-auto hover:text-gray-300 hover:bg-transparent text-gray-300 text-left justify-start flex items-center"
+                        data-testid={`link-footer-${link.text.toLowerCase().replace(/\s+/g, '-')}`}
+                        asChild
+                      >
+                        <a 
+                          href={link.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          {link.text} <ChevronRight className="ml-1 h-3 w-3" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="ghost" 
+                        className="p-0 h-auto text-gray-500 text-left justify-start flex items-center cursor-not-allowed"
+                        data-testid={`link-footer-${link.text.toLowerCase().replace(/\s+/g, '-')}`}
+                        disabled
+                      >
+                        {link.text} <ChevronRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
