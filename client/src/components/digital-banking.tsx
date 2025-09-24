@@ -133,7 +133,7 @@ export default function DigitalBanking() {
                 key={activeFeature} // Force re-render for smooth transition
                 src={FEATURES[activeFeature].image}
                 alt={FEATURES[activeFeature].alt}
-                className="max-w-full h-auto object-contain transition-opacity duration-500 shadow-xl rounded-lg"
+                className="w-80 h-auto object-contain transition-opacity duration-500 shadow-xl rounded-lg"
                 data-testid={`phone-image-${FEATURES[activeFeature].id}`}
                 onError={(e) => {
                   // Fallback to a simple placeholder if image fails to load
