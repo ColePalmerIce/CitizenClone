@@ -14,14 +14,14 @@ const articles = [
   {
     category: "RETIREMENT",
     title: "Key ways to think about financial planning",
-    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300",
+    image: "https://www.firstcitizens.com/content/dam/firstcitizens/images/resources/personal/retirement/4-ways-to-think-about-financial-planning@2x.jpg.transform/resource-card-standard-3-desktop/image.jpeg",
     alt: "Financial planning documents and retirement strategy",
     action: "search_financial_planning"
   },
   {
     category: "INVESTING",
     title: "How to choose IRA investments",
-    image: "https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300",
+    image: "https://www.firstcitizens.com/content/dam/firstcitizens/images/resources/personal/investing/how-to-choose-IRA-investments@2x.jpg.transform/resource-card-standard-3-desktop/image.jpeg",
     alt: "IRA investment planning and retirement account options",
     action: "open_account"
   },
