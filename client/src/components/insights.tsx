@@ -69,16 +69,16 @@ export default function Insights({ onAccountClick, onSearchClick }: InsightsProp
               value={searchQuery}
               onChange={setSearchQuery}
               suggestions={[
-                "Self-directed investing",
-                "Financial planning",
-                "IRA investments",
-                "Retirement planning", 
-                "Investment strategies",
-                "Portfolio management",
-                "Wealth management",
-                "College savings",
-                "Emergency funds",
-                "Tax planning"
+                { text: "Self-directed investing", action: "search" },
+                { text: "Financial planning", action: "search" },
+                { text: "IRA investments", action: "search" },
+                { text: "Retirement planning", action: "search" }, 
+                { text: "Investment strategies", action: "search" },
+                { text: "Portfolio management", action: "search" },
+                { text: "Wealth management", action: "search" },
+                { text: "College savings", action: "search" },
+                { text: "Emergency funds", action: "search" },
+                { text: "Tax planning", action: "search" }
               ]}
               className="w-80"
               inputClassName="text-center border-gray-200 bg-white"

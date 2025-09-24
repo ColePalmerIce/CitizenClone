@@ -5,9 +5,12 @@ import SearchDropdown from "@/components/ui/search-dropdown";
 interface SearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAccountClick?: () => void;
+  onCreditCardClick?: () => void;
+  onLoginClick?: () => void;
 }
 
-export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
+export default function SearchModal({ open, onOpenChange, onAccountClick, onCreditCardClick, onLoginClick }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -41,6 +44,29 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
     }
   };
 
+  const handleNavigate = (url: string) => {
+    const newWindow = window.open(url, '_blank');
+    if (newWindow) newWindow.opener = null;
+    onOpenChange(false); // Close modal after navigation
+  };
+
+  const handleModalOpen = (modalType: 'account' | 'creditCard' | 'login') => {
+    onOpenChange(false); // Close search modal first
+    
+    // Open the appropriate modal
+    switch (modalType) {
+      case 'account':
+        if (onAccountClick) onAccountClick();
+        break;
+      case 'creditCard':
+        if (onCreditCardClick) onCreditCardClick();
+        break;
+      case 'login':
+        if (onLoginClick) onLoginClick();
+        break;
+    }
+  };
+
   const handleClose = () => {
     setSearchQuery("");
     onOpenChange(false);
@@ -61,6 +87,8 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
             placeholder="How can we help?"
             onSearch={handleSearch}
             onClose={handleClose}
+            onNavigate={handleNavigate}
+            onModalOpen={handleModalOpen}
             showCloseButton={true}
             value={searchQuery}
             onChange={setSearchQuery}

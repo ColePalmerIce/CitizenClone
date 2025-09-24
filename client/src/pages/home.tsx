@@ -53,7 +53,10 @@ export default function Home() {
       />
       <SearchModal 
         open={isSearchOpen} 
-        onOpenChange={setIsSearchOpen} 
+        onOpenChange={setIsSearchOpen}
+        onAccountClick={() => setIsAccountOpenerOpen(true)}
+        onCreditCardClick={() => setIsCreditCardToolOpen(true)}
+        onLoginClick={() => setIsLoginOpen(true)}
       />
       <CreditCardTool 
         open={isCreditCardToolOpen} 
