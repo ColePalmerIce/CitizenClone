@@ -7,7 +7,7 @@ const articles = [
   {
     category: "INVESTING",
     title: "Self-directed investing fundamentals",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300",
+    image: "https://www.firstcitizens.com/content/dam/firstcitizens/images/resources/personal/investing/self-directed-investing@2x.jpg.transform/resource-card-standard-3-desktop/image.jpeg",
     alt: "Investment portfolio analysis and self-directed investing",
     action: "open_account"
   },
