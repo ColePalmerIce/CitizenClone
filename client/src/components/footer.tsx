@@ -11,7 +11,7 @@ const footerSections = [
     links: [
       { text: "Call Us", url: "https://www.firstcitizens.com/support/call-us" },
       { text: "Email Us", url: "https://www.firstcitizens.com/support/contact/other-questions" },
-      { text: "Careers", url: "#" },
+      { text: "Careers", url: "https://jobs.firstcitizens.com/?_gl=1*t6e3yl*_gcl_au*MjE0NDA3NzY1OC4xNzU4Njc0NTcy*_ga*MjExMDQ5OTA5NC4xNzU4Njc0NTg4*_ga_GHPE53GVHX*czE3NTg3NDUzNTgkbzYkZzEkdDE3NTg3NDU2MzEkajQkbDAkaDA.*_ga_ZLJSNLKT9D*czE3NTg3NDUzNTgkbzckZzEkdDE3NTg3NDU2MzEkajMxJGwwJGgw" },
     ],
   },
   {
