@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/header";
 import HeroSection from "@/components/hero-section";
+import FeaturedOffers from "@/components/featured-offers";
 import ProductSections from "@/components/product-sections";
 import DigitalBanking from "@/components/digital-banking";
 import CustomerService from "@/components/customer-service";
@@ -35,6 +36,7 @@ export default function Home() {
 
       <main id="main-content">
         <HeroSection onAccountClick={() => setIsAccountOpenerOpen(true)} />
+        <FeaturedOffers />
         <ProductSections />
         <DigitalBanking />
         <CustomerService />
