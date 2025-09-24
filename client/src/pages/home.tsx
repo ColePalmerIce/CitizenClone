@@ -37,7 +37,7 @@ export default function Home() {
         <HeroSection onAccountClick={() => setIsAccountOpenerOpen(true)} />
         <FeaturedOffers />
         <DigitalBanking />
-        <CustomerService />
+        <CustomerService onAccountClick={() => setIsAccountOpenerOpen(true)} />
         <ForeverFirst />
         <Insights 
           onAccountClick={() => setIsAccountOpenerOpen(true)}
