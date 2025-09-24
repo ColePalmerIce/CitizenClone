@@ -1212,10 +1212,16 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
             {/* Right side actions */}
             <div className="flex items-center space-x-6">
               {/* Support */}
-              <button className="flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm" data-testid="button-support">
+              <a 
+                href="https://www.firstcitizens.com/support" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm" 
+                data-testid="button-support"
+              >
                 <HelpCircle className="h-4 w-4 mr-1" />
                 Support
-              </button>
+              </a>
               
               {/* Locations */}
               <button className="flex items-center text-gray-600 hover:text-blue-700 font-medium transition-colors text-sm" data-testid="button-locations">
