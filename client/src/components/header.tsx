@@ -571,7 +571,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
 
                   {/* Personal Dropdown */}
                   {item.label === 'PERSONAL' && activeDropdown === 'PERSONAL' && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[1000px] max-w-[90vw] bg-white shadow-2xl border border-gray-200 rounded-lg z-50">
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[1200px] max-w-[95vw] bg-white shadow-2xl border border-gray-200 rounded-lg z-50">
                       <div className="p-8">
                         <div className="grid grid-cols-5 gap-8">
                           {/* First Column */}
@@ -872,7 +872,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
 
                   {/* Commercial Dropdown */}
                   {item.label === 'COMMERCIAL' && activeDropdown === 'COMMERCIAL' && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[1000px] max-w-[90vw] bg-white shadow-2xl border border-gray-200 rounded-lg z-50">
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[1200px] max-w-[95vw] bg-white shadow-2xl border border-gray-200 rounded-lg z-50">
                       <div className="p-8">
                         <div className="grid grid-cols-5 gap-8">
                           {/* First Column */}
@@ -1044,9 +1044,9 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
 
                   {/* Wealth Dropdown */}
                   {item.label === 'WEALTH' && activeDropdown === 'WEALTH' && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[1000px] max-w-[90vw] bg-white shadow-2xl border border-gray-200 rounded-lg z-50">
-                      <div className="p-6 lg:p-8">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8">
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[1200px] max-w-[95vw] bg-white shadow-2xl border border-gray-200 rounded-lg z-50">
+                      <div className="p-8">
+                        <div className="grid grid-cols-5 gap-8">
                           {/* First Column */}
                           <div className="space-y-6">
                             {wealthMenuData.sections.map((section, idx) => (
