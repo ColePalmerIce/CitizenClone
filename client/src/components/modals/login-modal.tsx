@@ -45,38 +45,44 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     try {
       const response = await apiRequest('POST', '/api/user/login', { username, password });
       
-      if (response.ok) {
-        const user = await response.json();
-        
-        // Store user info in sessionStorage
-        sessionStorage.setItem('user', JSON.stringify(user));
-        
-        // Show success message with time-based greeting
-        toast({
-          title: "Login successful",
-          description: `${getTimeGreeting()}, ${user.firstName || user.username}!`,
-        });
-        
-        onOpenChange(false);
-        
-        // Navigate to user dashboard after a brief delay
-        setTimeout(() => {
-          setLocation("/dashboard");
-        }, 1000);
-        
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Login failed",
-          description: error.message || "Invalid credentials",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      // apiRequest throws on non-ok responses, so if we get here, it was successful
+      const user = await response.json();
+      
+      // Store user info in sessionStorage
+      sessionStorage.setItem('user', JSON.stringify(user));
+      
+      // Show success message with time-based greeting
+      toast({
+        title: "Login successful",
+        description: `${getTimeGreeting()}, ${user.firstName || user.username}!`,
+      });
+      
+      onOpenChange(false);
+      
+      // Navigate to user dashboard after a brief delay
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 1000);
+      
+    } catch (error: any) {
       console.error('Login error:', error);
+      
+      // Try to parse error message from API response
+      let errorMessage = "Please check your username and password";
+      
+      if (error.message) {
+        // Extract actual error message from "401: Invalid credentials" format
+        const match = error.message.match(/^\d+:\s*(.+)$/);
+        if (match) {
+          errorMessage = match[1];
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Login failed",
-        description: "Network error. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
