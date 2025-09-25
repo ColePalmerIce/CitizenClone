@@ -858,9 +858,6 @@ function CustomersTab({
   deleteCustomerMutation: any;
 }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('overview');
   const [newCustomer, setNewCustomer] = useState({
     username: '',
     email: '',
