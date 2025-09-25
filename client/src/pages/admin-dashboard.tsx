@@ -868,12 +868,20 @@ function CustomersTab({
   customers, 
   customersLoading, 
   createCustomerMutation, 
-  deleteCustomerMutation 
+  deleteCustomerMutation,
+  selectedCustomer,
+  setSelectedCustomer,
+  isCustomerDetailsDialogOpen,
+  setIsCustomerDetailsDialogOpen
 }: {
   customers: any[];
   customersLoading: boolean;
   createCustomerMutation: any;
   deleteCustomerMutation: any;
+  selectedCustomer: any;
+  setSelectedCustomer: (customer: any) => void;
+  isCustomerDetailsDialogOpen: boolean;
+  setIsCustomerDetailsDialogOpen: (open: boolean) => void;
 }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
