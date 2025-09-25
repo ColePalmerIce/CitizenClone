@@ -50,17 +50,17 @@ export default function Footer({ onCreditCardClick }: FooterProps) {
     <footer className="bg-slate-800 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Disclosures Section */}
-        <div className="mb-8 pb-8 border-b border-slate-700">
+        <div className="mb-8 pb-8 border-b border-slate-700 bg-white rounded-lg p-6">
           <Button
             variant="ghost"
-            className="text-white hover:text-gray-300 hover:bg-transparent mb-4 p-0 h-auto"
+            className="text-gray-900 hover:text-gray-600 hover:bg-transparent mb-4 p-0 h-auto"
             data-testid="button-disclosures"
           >
             <span className="flex items-center">
               Disclosures <ChevronRight className="ml-1 h-4 w-4" />
             </span>
           </Button>
-          <div className="text-sm text-gray-300 space-y-4">
+          <div className="text-sm text-gray-600 space-y-4">
             <p>
               This material is for informational purposes only and is not intended to be an offer, specific investment strategy, recommendation or solicitation to purchase or sell any security or insurance product, and should not be construed as legal, tax or accounting advice. Please consult with your legal or tax advisor regarding the particular facts and circumstances of your situation prior to making any financial decision. While we believe that the information presented is from reliable sources, we do not represent, warrant or guarantee that it is accurate or complete.
             </p>
