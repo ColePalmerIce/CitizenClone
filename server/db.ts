@@ -7,6 +7,7 @@ import {
   accountApplications,
   contactInquiries,
   adminUsers,
+  adminBalance,
   bankAccounts,
   transactions,
   customerProfiles,
@@ -22,6 +23,8 @@ import {
   type InsertContactInquiry,
   type AdminUser,
   type InsertAdminUser,
+  type AdminBalance,
+  type InsertAdminBalance,
   type BankAccount,
   type InsertBankAccount,
   type Transaction,
@@ -137,6 +140,25 @@ export class PostgreSQLStorage implements IStorage {
     const result = await db.update(adminUsers)
       .set({ lastLogin: new Date() })
       .where(eq(adminUsers.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Admin balance
+  async getAdminBalance(adminId: string): Promise<AdminBalance | undefined> {
+    const result = await db.select().from(adminBalance).where(eq(adminBalance.adminId, adminId)).limit(1);
+    return result[0];
+  }
+
+  async createAdminBalance(balance: InsertAdminBalance): Promise<AdminBalance> {
+    const result = await db.insert(adminBalance).values(balance).returning();
+    return result[0];
+  }
+
+  async updateAdminBalance(adminId: string, newBalance: string): Promise<AdminBalance | undefined> {
+    const result = await db.update(adminBalance)
+      .set({ balance: newBalance, lastUpdated: new Date() })
+      .where(eq(adminBalance.adminId, adminId))
       .returning();
     return result[0];
   }

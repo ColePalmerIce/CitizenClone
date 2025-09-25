@@ -62,6 +62,15 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Admin balance table
+export const adminBalance = pgTable("admin_balance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminId: varchar("admin_id").notNull().unique(),
+  balance: decimal("balance", { precision: 15, scale: 2 }).default("500000000.00"), // $500 million
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Bank accounts table  
 export const bankAccounts = pgTable("bank_accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -171,9 +180,18 @@ export const insertCustomerProfileSchema = createInsertSchema(customerProfiles).
   createdAt: true,
 });
 
+export const insertAdminBalanceSchema = createInsertSchema(adminBalance).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
 // New types for banking tables
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+
+export type AdminBalance = typeof adminBalance.$inferSelect;
+export type InsertAdminBalance = z.infer<typeof insertAdminBalanceSchema>;
 
 export type BankAccount = typeof bankAccounts.$inferSelect;
 export type InsertBankAccount = z.infer<typeof insertBankAccountSchema>;

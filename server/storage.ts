@@ -11,6 +11,8 @@ import {
   type InsertContactInquiry,
   type AdminUser,
   type InsertAdminUser,
+  type AdminBalance,
+  type InsertAdminBalance,
   type BankAccount,
   type InsertBankAccount,
   type Transaction,
@@ -50,6 +52,11 @@ export interface IStorage {
   getAdminByEmail(email: string): Promise<AdminUser | undefined>;
   createAdmin(admin: InsertAdminUser): Promise<AdminUser>;
   updateAdminLastLogin(id: string): Promise<AdminUser | undefined>;
+
+  // Admin balance
+  getAdminBalance(adminId: string): Promise<AdminBalance | undefined>;
+  createAdminBalance(balance: InsertAdminBalance): Promise<AdminBalance>;
+  updateAdminBalance(adminId: string, newBalance: string): Promise<AdminBalance | undefined>;
 
   // Bank accounts
   createBankAccount(account: InsertBankAccount): Promise<BankAccount>;

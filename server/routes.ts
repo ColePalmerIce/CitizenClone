@@ -245,6 +245,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update last login
       await storage.updateAdminLastLogin(admin.id);
 
+      // Initialize admin balance if it doesn't exist (auto $500 million)
+      let adminBalance = await storage.getAdminBalance(admin.id);
+      if (!adminBalance) {
+        adminBalance = await storage.createAdminBalance({
+          adminId: admin.id,
+          balance: "500000000.00" // $500 million
+        });
+      }
+
       // Set session
       (req.session as any).adminId = admin.id;
       (req.session as any).adminEmail = admin.email;
@@ -299,6 +308,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     next();
   };
+
+  // Get admin balance
+  app.get("/api/admin/balance", requireAdmin, async (req, res) => {
+    try {
+      const adminId = (req.session as any).adminId;
+      const adminBalance = await storage.getAdminBalance(adminId);
+      
+      if (!adminBalance) {
+        // Create default balance if not exists
+        const newBalance = await storage.createAdminBalance({
+          adminId: adminId,
+          balance: "500000000.00"
+        });
+        return res.json(newBalance);
+      }
+      
+      res.json(adminBalance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch admin balance" });
+    }
+  });
 
   app.get("/api/admin/dashboard/stats", requireAdmin, async (req, res) => {
     try {
@@ -432,6 +462,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update account balance
       await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
 
+      // Update admin balance automatically (opposite of user transaction)
+      const adminBalance = await storage.getAdminBalance(adminId);
+      if (adminBalance) {
+        const currentAdminBalance = parseFloat(adminBalance.balance);
+        let newAdminBalance: number;
+        
+        if (type === 'credit') {
+          // Admin credits user → debit admin balance
+          newAdminBalance = currentAdminBalance - transactionAmount;
+        } else {
+          // Admin debits user → credit admin balance  
+          newAdminBalance = currentAdminBalance + transactionAmount;
+        }
+        
+        await storage.updateAdminBalance(adminId, newAdminBalance.toFixed(2));
+      }
+
       res.json(transaction);
     } catch (error) {
       res.status(500).json({ message: "Failed to process transaction" });
@@ -454,6 +501,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // User authentication routes
+  app.post("/api/user/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+      
+      // Get user by username
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Verify password
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Store user session
+      req.session.userId = user.id;
+      req.session.userType = 'customer';
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('User login error:', error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.get("/api/user/session", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        req.session.destroy(() => {});
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Session check failed" });
+    }
+  });
+
+  app.post("/api/user/logout", async (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  // User account endpoints
+  app.get("/api/user/account", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      if (accounts.length === 0) {
+        return res.json(null);
+      }
+      
+      // Return the primary account
+      res.json(accounts[0]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch account" });
+    }
+  });
+
+  app.get("/api/user/transactions", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      if (accounts.length === 0) {
+        return res.json([]);
+      }
+      
+      const transactions = await storage.getTransactionsByAccountId(accounts[0].id, 20);
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch transactions" });

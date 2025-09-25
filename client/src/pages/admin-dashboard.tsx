@@ -311,7 +311,7 @@ export default function AdminDashboard() {
         <div className="flex-1 lg:ml-0">
           <main className="p-4 lg:p-8">
             {selectedTab === "overview" && (
-              <OverviewTab stats={stats} statsLoading={statsLoading} />
+              <OverviewTab stats={stats} statsLoading={statsLoading} admin={admin} />
             )}
             {selectedTab === "customers" && (
               <CustomersTab 
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
 }
 
 // Overview Tab Component
-function OverviewTab({ stats, statsLoading }: { stats: DashboardStats, statsLoading: boolean }) {
+function OverviewTab({ stats, statsLoading, admin }: { stats: DashboardStats, statsLoading: boolean, admin: AdminUser | null }) {
   if (statsLoading) {
     return (
       <div className="space-y-6">
@@ -354,7 +354,13 @@ function OverviewTab({ stats, statsLoading }: { stats: DashboardStats, statsLoad
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2 sm:mt-0">Welcome to the admin portal</p>
+        <p className="text-gray-600 dark:text-gray-300 mt-2 sm:mt-0">
+          {(() => {
+            const hour = new Date().getHours();
+            const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+            return `${greeting}, ${admin?.firstName || 'Admin'}! Welcome to the admin portal`;
+          })()}
+        </p>
       </div>
 
       {/* Stats Cards */}
