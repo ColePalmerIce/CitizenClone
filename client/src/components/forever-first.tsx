@@ -49,8 +49,15 @@ export default function ForeverFirst() {
             variant="outline"
             className="border-2 border-teal-600 text-teal-600 hover:bg-teal-50 px-8 py-3 text-base font-medium"
             data-testid="button-about-first-citizens"
+            asChild
           >
-            About First Citizens
+            <a 
+              href="https://www.firstcitizens.com/about-us" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              About First Citizens
+            </a>
           </Button>
         </div>
       </div>
