@@ -111,9 +111,9 @@ export default function DigitalBanking() {
   return (
     <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Mobile Phone Interface */}
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="relative flex justify-center lg:justify-end order-2 lg:order-1">
             <div className="relative">
               {/* Loading overlay with animated progress bar */}
               {isLoading && (
@@ -133,7 +133,7 @@ export default function DigitalBanking() {
                 key={activeFeature} // Force re-render for smooth transition
                 src={FEATURES[activeFeature].image}
                 alt={FEATURES[activeFeature].alt}
-                className="w-80 h-auto object-contain transition-opacity duration-500 shadow-xl rounded-lg"
+                className="w-full max-w-sm sm:max-w-md lg:w-80 h-auto object-contain transition-opacity duration-500 shadow-xl rounded-lg"
                 data-testid={`phone-image-${FEATURES[activeFeature].id}`}
                 onError={(e) => {
                   // Fallback to a simple placeholder if image fails to load
@@ -144,7 +144,7 @@ export default function DigitalBanking() {
           </div>
 
           {/* Features Content */}
-          <div className="space-y-8 relative">
+          <div className="space-y-6 lg:space-y-8 relative order-1 lg:order-2">
             
             {/* Features List with connecting lines */}
             <div className="space-y-8 relative">
@@ -181,7 +181,7 @@ export default function DigitalBanking() {
               </div>
               
               <div 
-                className="pl-20 lg:pl-20 space-y-8"
+                className="pl-6 sm:pl-12 lg:pl-20 space-y-6 lg:space-y-8"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
@@ -228,7 +228,7 @@ export default function DigitalBanking() {
             </div>
             
             {/* Learn More Button */}
-            <div className="pt-6 pl-20 lg:pl-20">
+            <div className="pt-4 lg:pt-6 pl-6 sm:pl-12 lg:pl-20">
               <Button 
                 size="lg"
                 className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-base font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200"

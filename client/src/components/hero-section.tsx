@@ -74,7 +74,7 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
 
   return (
     <section 
-      className="relative bg-cover bg-center bg-no-repeat text-gray-900 overflow-hidden min-h-[600px] hero-section"
+      className="relative bg-cover bg-center bg-no-repeat text-gray-900 overflow-hidden min-h-[500px] sm:min-h-[600px] hero-section"
       style={{
         backgroundImage: `url('https://www.firstcitizens.com/adobe/dynamicmedia/deliver/dm-aid--643f9c8b-129d-4e4f-9b1b-70da53f214a2/personal-09-2025-2x-jpg.webp?format=webp&width=4800')`,
       }}
@@ -82,17 +82,17 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
       {/* Background overlay with improved containment */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/90 to-transparent" style={{background: 'linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 55%, transparent 100%)'}}></div>
       
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full h-full flex flex-col justify-between">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 w-full h-full flex flex-col justify-between">
         {/* Title and Start Investing Button */}
         <div className="max-w-lg">
-          <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 text-gray-900 leading-tight">
             Take control of your portfolio with Self-Directed Investing
           </h1>
           
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <Button 
               size="lg"
-              className="bg-green-700 hover:bg-green-800 text-white px-8 py-3 text-lg font-medium"
+              className="bg-green-700 hover:bg-green-800 text-white px-6 sm:px-8 py-3 text-base sm:text-lg font-medium"
               data-testid="button-start-investing"
               onClick={() => window.open('https://www.firstcitizens.com/personal/investments/self-directed-investing', '_blank')}
             >
@@ -102,11 +102,11 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
         </div>
         
         {/* Bottom Section with Search and Action Cards */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Search Bar */}
           <div className="w-full">
             <div className="max-w-5xl mx-auto">
-              <div className="max-w-md">
+              <div className="max-w-sm sm:max-w-md">
                 <SearchDropdown
                   placeholder="How can we help?"
                   className="w-full"
@@ -141,7 +141,7 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
           
           {/* Action Cards */}
           <div className="w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 max-w-5xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 max-w-5xl mx-auto">
               {actions.map((action) => {
                 const IconComponent = action.icon;
                 return (
@@ -151,7 +151,7 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
                     onClick={() => handleActionClick(action.onClick, onAccountClick, setIsAccountOpenerOpen, setIsCreditCardToolOpen)}
                     data-testid={`card-${action.title.toLowerCase().replace(/\s+/g, '-')}`}
                   >
-                    <CardContent className="p-4 flex flex-col items-center text-center">
+                    <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center">
                       <div className="mb-2 p-2 rounded-full bg-primary/10">
                         <IconComponent className="w-6 h-6 text-primary" />
                       </div>

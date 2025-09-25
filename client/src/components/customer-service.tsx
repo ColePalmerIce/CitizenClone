@@ -58,13 +58,13 @@ export default function CustomerService({ onAccountClick }: CustomerServiceProps
           <h2 className="text-3xl font-bold text-white">Open an Account Today</h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {services.map((service) => {
             const Icon = service.icon;
             return (
               <div 
                 key={service.title} 
-                className="bg-white rounded-lg p-8 text-center hover:shadow-xl transition-all cursor-pointer hover:transform hover:-translate-y-1"
+                className="bg-white rounded-lg p-6 lg:p-8 text-center hover:shadow-xl transition-all cursor-pointer hover:transform hover:-translate-y-1"
                 onClick={() => handleServiceClick(service.action)}
                 data-testid={`card-${service.action.replace('_', '-')}`}
               >
