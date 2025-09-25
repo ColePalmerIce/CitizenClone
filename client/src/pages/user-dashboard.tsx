@@ -83,10 +83,10 @@ export default function UserDashboard() {
           const userData = await response.json();
           setUser(userData);
         } else {
-          setLocation('/login');
+          setLocation('/');
         }
       } catch (error) {
-        setLocation('/login');
+        setLocation('/');
       }
     };
     checkSession();
@@ -109,7 +109,7 @@ export default function UserDashboard() {
       await apiRequest('POST', '/api/user/logout');
       sessionStorage.removeItem('user');
       setUser(null);
-      setLocation('/login');
+      setLocation('/');
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
