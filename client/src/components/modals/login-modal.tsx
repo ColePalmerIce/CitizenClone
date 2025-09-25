@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 interface LoginModalProps {
   open: boolean;
@@ -11,6 +16,73 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both username and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await apiRequest('POST', '/api/user/login', { username, password });
+      
+      if (response.ok) {
+        const user = await response.json();
+        
+        // Store user info in sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(user));
+        
+        // Show success message with time-based greeting
+        toast({
+          title: "Login successful",
+          description: `${getTimeGreeting()}, ${user.firstName || user.username}!`,
+        });
+        
+        onOpenChange(false);
+        
+        // Navigate to user dashboard after a brief delay
+        setTimeout(() => {
+          setLocation("/dashboard");
+        }, 1000);
+        
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Login failed",
+          description: error.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login failed",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" data-testid="modal-login">
@@ -55,10 +127,13 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="user-id">ID*</Label>
+              <Label htmlFor="user-id">Username*</Label>
               <Input 
                 id="user-id" 
                 type="text" 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
                 data-testid="input-user-id"
               />
             </div>
@@ -66,7 +141,10 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
               <Label htmlFor="password">Password*</Label>
               <Input 
                 id="password" 
-                type="password" 
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
                 data-testid="input-password"
               />
             </div>
@@ -75,9 +153,11 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
           <div className="space-y-4">
             <Button 
               className="w-full bg-primary text-primary-foreground hover:bg-secondary"
+              onClick={handleSubmit}
+              disabled={isLoading}
               data-testid="button-login-submit"
             >
-              Log In
+              {isLoading ? "Logging in..." : "Log In"}
             </Button>
             <div className="text-center text-sm space-y-2">
               <div>
