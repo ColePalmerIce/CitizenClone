@@ -124,11 +124,90 @@ export default function UserDashboard() {
   const [isTwoFactorOpen, setIsTwoFactorOpen] = useState(false);
   const [isSecurityQuestionsOpen, setIsSecurityQuestionsOpen] = useState(false);
   const [isSecurityAlertsOpen, setIsSecurityAlertsOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [accountNumberVisible, setAccountNumberVisible] = useState(false);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const { toast } = useToast();
+
+  const handlePasswordChange = async () => {
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all password fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error", 
+        description: "New password and confirmation don't match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast({
+        title: "Error",
+        description: "New password must be at least 8 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    
+    try {
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success!",
+          description: "Your password has been updated successfully. Please use your new password for future logins.",
+          variant: "default"
+        });
+        
+        // Clear form and close dialog
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setIsChangePasswordOpen(false);
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to change password",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   // Transfer form state
   const [transferForm, setTransferForm] = useState({
@@ -1458,15 +1537,36 @@ export default function UserDashboard() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="current-password">Current Password</Label>
-              <Input type="password" id="current-password" placeholder="Enter current password" />
+              <Input 
+                type="password" 
+                id="current-password" 
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                disabled={isChangingPassword}
+              />
             </div>
             <div>
               <Label htmlFor="new-password">New Password</Label>
-              <Input type="password" id="new-password" placeholder="Enter new password" />
+              <Input 
+                type="password" 
+                id="new-password" 
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={isChangingPassword}
+              />
             </div>
             <div>
               <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <Input type="password" id="confirm-password" placeholder="Confirm new password" />
+              <Input 
+                type="password" 
+                id="confirm-password" 
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isChangingPassword}
+              />
             </div>
             <div className="p-3 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-800">
@@ -1475,14 +1575,23 @@ export default function UserDashboard() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsChangePasswordOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsChangePasswordOpen(false);
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+              }}
+              disabled={isChangingPassword}
+            >
               Cancel
             </Button>
-            <Button onClick={() => {
-              toast({ title: "Password updated successfully!" });
-              setIsChangePasswordOpen(false);
-            }}>
-              Update Password
+            <Button 
+              onClick={handlePasswordChange}
+              disabled={isChangingPassword}
+            >
+              {isChangingPassword ? "Updating..." : "Update Password"}
             </Button>
           </DialogFooter>
         </DialogContent>
