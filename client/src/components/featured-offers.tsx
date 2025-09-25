@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 export default function FeaturedOffers() {
   return (
     <section className="py-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Tax Overhaul Banner */}
         <a href="https://www.firstcitizens.com/wealth/insights/intel/landmark-tax-overhaul-highlights" target="_blank" rel="noopener noreferrer" data-testid="link-tax-overhaul">
           <div className="bg-blue-900 text-white p-6 rounded-lg mb-6 flex justify-between items-center cursor-pointer hover:bg-blue-800 transition-colors">

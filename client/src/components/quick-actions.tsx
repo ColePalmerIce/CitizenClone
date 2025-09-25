@@ -71,7 +71,7 @@ const handleActionClick = (actionType: string, onAccountClick: () => void) => {
 export default function QuickActions({ onAccountClick }: QuickActionsProps) {
   return (
     <section className="bg-muted py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-6 gap-4 overflow-x-auto">
           {actions.map((action) => {
             const IconComponent = action.icon;

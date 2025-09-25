@@ -473,7 +473,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
           onClick={() => setIsFdicExpanded(!isFdicExpanded)}
           data-testid="fdic-banner"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <span className="text-white font-bold">FDIC</span>
               <span className="mx-2 text-white">FDIC-Insured - Backed by the full faith and credit of the U.S. Government</span>
@@ -491,7 +491,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
           isFdicExpanded ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
         }`}>
           <div className="border-t border-slate-600 bg-slate-700 py-4">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* BankFind Section */}
                 <div className="flex items-start space-x-3">
@@ -533,7 +533,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
 
       {/* Main Header */}
       <header className="bg-white shadow-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">

@@ -82,7 +82,7 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
       {/* Background overlay for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent"></div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full h-full flex flex-col justify-between">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full h-full flex flex-col justify-between">
         {/* Title and Start Investing Button */}
         <div className="max-w-lg">
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 leading-tight">

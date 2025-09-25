@@ -110,7 +110,7 @@ export default function DigitalBanking() {
   };
   return (
     <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Mobile Phone Interface */}
           <div className="relative flex justify-center lg:justify-end">

@@ -54,7 +54,7 @@ export default function Insights({ onAccountClick, onSearchClick }: InsightsProp
   };
   return (
     <section className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-12">
           <div className="text-sm font-medium text-slate-600 tracking-wide mb-4">INSIGHTS</div>

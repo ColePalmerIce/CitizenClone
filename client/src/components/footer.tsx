@@ -48,7 +48,7 @@ const footerSections = [
 export default function Footer({ onCreditCardClick }: FooterProps) {
   return (
     <footer className="bg-slate-800 text-white py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Disclosures Section */}
         <div className="mb-8 pb-8 border-b border-slate-700 bg-white rounded-lg p-6">
           <Button

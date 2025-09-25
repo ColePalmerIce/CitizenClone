@@ -22,7 +22,7 @@ const promises = [
 export default function ForeverFirst() {
   return (
     <section className="bg-white py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {/* First Column - Our Forever First Promise */}
           <div className="text-center">
