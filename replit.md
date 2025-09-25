@@ -43,3 +43,17 @@ Preferred communication style: Simple, everyday language.
 - **Google Fonts**: Web font service for typography (Inter, DM Sans, Fira Code, Geist Mono, Architects Daughter)
 
 The architecture follows a monorepo structure with shared TypeScript types and schemas between frontend and backend, enabling type safety across the full stack. The modular design allows for easy extension of banking services and integration with external financial systems.
+
+## Recent Changes
+
+### September 25, 2025 - Enhanced Banking Features Complete
+- **Fixed Transaction History Display Bug**: Resolved frontend API query issue that was preventing transaction histories from displaying despite data existing in database
+- **Comprehensive Account Details**: All accounts now clickable with full transaction history showing exact calculations for each balance
+- **Realistic Routing Numbers**: Different routing numbers per account type (Checking: 053100300, Savings: 067092022, Business: 113024588)
+- **Complete Transaction Histories**: 20 realistic transactions across all accounts totaling exactly $150,000
+- **Advanced Transfer System**: Both domestic (ACH) and international (SWIFT) transfer capabilities with proper processing times
+- **Perfect Balance Calculations**: 
+  - Checking: $50,000 (8 transactions from $75K initial minus expenses)
+  - Savings: $25,000 (5 transactions from $20K plus interest/transfers)  
+  - Business: $75,000 (7 transactions from $50K plus client payments minus business expenses)
+- **Professional Banking UI**: Account detail modals, tabbed transfer interface, and realistic banking references
