@@ -1291,11 +1291,12 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                   {/* Header with Logo, Login, and Close */}
                   <div className="flex justify-between items-center p-4 bg-white border-b border-gray-100">
                     <div className="flex items-center">
-                      <img
-                        src="https://www.firstcitizens.com/etc.clientlibs/firstcitizens/clientlibs/clientlib-site/resources/fcb-main-logo.svg"
-                        alt="First Citizens Bank"
-                        className="h-6"
-                      />
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-600 rounded mr-3 flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">FCB</span>
+                        </div>
+                        <span className="text-xl font-bold text-gray-900">First Citizens Bank</span>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button 
