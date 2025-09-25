@@ -1277,15 +1277,42 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full h-full p-0 flex flex-col">
                   {/* FDIC Banner */}
-                  <div 
-                    className="bg-blue-900 text-white p-3 flex items-center justify-between cursor-pointer"
-                    onClick={() => setIsFdicExpanded(!isFdicExpanded)}
-                  >
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold">FDIC</div>
-                      <div className="text-xs opacity-90">FDIC Insured - Backed by the full faith and credit of the U.S. Government</div>
+                  <div className="bg-blue-900 text-white">
+                    <div 
+                      className="p-3 flex items-center justify-between cursor-pointer"
+                      onClick={() => setIsFdicExpanded(!isFdicExpanded)}
+                    >
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold">FDIC</div>
+                        <div className="text-xs opacity-90">FDIC Insured - Backed by the full faith and credit of the U.S. Government</div>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isFdicExpanded ? 'rotate-180' : ''}`} />
                     </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isFdicExpanded ? 'rotate-180' : ''}`} />
+                    
+                    {/* Expanded FDIC Content */}
+                    {isFdicExpanded && (
+                      <div className="px-3 pb-3 border-t border-blue-800">
+                        <div className="pt-3 space-y-2 text-xs opacity-90">
+                          <p>
+                            The Federal Deposit Insurance Corporation (FDIC) is an independent agency of the United States government that protects depositors against the loss of their insured deposits if an FDIC-insured bank fails.
+                          </p>
+                          <p>
+                            FDIC insurance is backed by the full faith and credit of the United States government. Since the FDIC's creation in 1933, no depositor has ever lost a penny of insured deposits.
+                          </p>
+                          <p>
+                            Standard insurance coverage is $250,000 per depositor, per bank, per ownership category.
+                          </p>
+                          <a 
+                            href="https://www.fdic.gov/resources/deposit-insurance/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-200 hover:text-white underline inline-block mt-2"
+                          >
+                            Learn more about FDIC insurance
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Header with Logo, Login, and Close */}
