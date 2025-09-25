@@ -126,7 +126,7 @@ export default function UserDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #1c92d2, #203a43, #9b59b6)'}}>
         <div className="text-center">
           <User className="w-12 h-12 text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Checking authentication...</p>
@@ -136,7 +136,7 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #1c92d2, #203a43, #9b59b6)'}}>
       {/* Mobile Header */}
       <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
