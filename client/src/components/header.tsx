@@ -12,6 +12,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFdicExpanded, setIsFdicExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeMobileSection, setActiveMobileSection] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -595,7 +596,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -638,7 +639,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -767,7 +768,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-small-business-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -896,7 +897,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-commercial-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -997,7 +998,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-commercial-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -1036,9 +1037,10 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
 
                   {/* Wealth Dropdown */}
                   {item.label === 'WEALTH' && activeDropdown === 'WEALTH' && (
-                    <div className="absolute top-full left-0 mt-1 w-screen max-w-6xl bg-white shadow-2xl border border-gray-200 rounded-lg z-50 -ml-32">
-                      <div className="p-8">
-                        <div className="grid grid-cols-5 gap-8">
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[90vw] max-w-5xl bg-white shadow-2xl border border-gray-100 rounded-xl z-50 overflow-hidden"
+                         style={{boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'}}>
+                      <div className="p-6 lg:p-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8">
                           {/* First Column */}
                           <div className="space-y-6">
                             {wealthMenuData.sections.map((section, idx) => (
@@ -1048,16 +1050,18 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                     href={section.href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block text-blue-600 font-semibold hover:text-blue-800 mb-4"
+                                    className="block text-blue-600 font-bold hover:text-blue-800 mb-6 text-base"
                                     data-testid="link-wealth-home"
                                   >
                                     {section.title}
                                   </a>
                                 ) : (
                                   <div>
-                                    <div className="flex items-center mb-3">
-                                      {section.icon}
-                                      <h3 className="text-gray-900 font-semibold ml-2 text-sm uppercase tracking-wide">
+                                    <div className="flex items-center mb-4 pb-2 border-b border-gray-100">
+                                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 mr-3">
+                                        {section.icon}
+                                      </div>
+                                      <h3 className="text-gray-900 font-bold text-sm uppercase tracking-wider">
                                         {section.title}
                                       </h3>
                                     </div>
@@ -1068,7 +1072,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-wealth-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -1169,7 +1173,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                                             href={item.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gray-600 hover:text-blue-600 text-sm block py-1"
+                                            className="text-gray-700 hover:text-blue-700 hover:bg-blue-50 text-sm block py-2 px-3 rounded-lg transition-colors duration-200 font-medium"
                                             data-testid={`link-wealth-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                                           >
                                             {item.label}
@@ -1261,41 +1265,161 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
-                  <div className="flex items-center mb-8">
+                <SheetContent className="w-full sm:w-[400px] px-0">
+                  <div className="flex items-center px-6 py-4 border-b border-gray-100">
                     <img 
                       src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
                       alt="First Citizens Bank" 
-                      className="h-6 w-auto"
+                      className="h-8 w-auto"
                     />
                   </div>
-                  <nav className="flex flex-col space-y-4">
-                    {navigationItems.map((item) => (
-                      <button 
-                        key={item.label}
-                        className="text-left text-foreground hover:text-primary font-medium transition-colors py-2 flex items-center"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        data-testid={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                      >
-                        <span>{item.label}</span>
-                        <ChevronDown className="h-4 w-4 ml-1" />
-                      </button>
-                    ))}
-                    <button 
-                      className="text-left text-foreground hover:text-primary font-medium transition-colors py-2 flex items-center"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <HelpCircle className="h-4 w-4 mr-2" />
-                      Support
-                    </button>
-                    <button 
-                      className="text-left text-foreground hover:text-primary font-medium transition-colors py-2 flex items-center"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Locations
-                    </button>
-                  </nav>
+                  
+                  <div className="overflow-y-auto h-full">
+                    <nav className="py-4">
+                      {navigationItems.map((item) => (
+                        <div key={item.label} className="border-b border-gray-100 last:border-b-0">
+                          <button
+                            className="w-full flex items-center justify-between px-6 py-4 text-left text-gray-900 hover:bg-gray-50 font-semibold transition-colors"
+                            onClick={() => setActiveMobileSection(activeMobileSection === item.label ? null : item.label)}
+                            data-testid={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                          >
+                            <span className="text-base">{item.label}</span>
+                            {activeMobileSection === item.label ? (
+                              <ChevronUp className="h-5 w-5 text-blue-600" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-gray-400" />
+                            )}
+                          </button>
+                          
+                          {/* Mobile submenu for Wealth */}
+                          {item.label === 'WEALTH' && activeMobileSection === 'WEALTH' && (
+                            <div className="bg-gray-50 px-6 py-4">
+                              <div className="space-y-4">
+                                {wealthMenuData.sections.map((section, idx) => (
+                                  <div key={idx}>
+                                    {section.isMain ? (
+                                      <a
+                                        href={section.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block text-blue-600 font-semibold hover:text-blue-800 py-2 text-sm"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                      >
+                                        {section.title}
+                                      </a>
+                                    ) : (
+                                      <div>
+                                        <div className="flex items-center mb-2">
+                                          <div className="flex items-center justify-center w-6 h-6 rounded bg-blue-100 mr-2">
+                                            {section.icon}
+                                          </div>
+                                          <h4 className="text-gray-900 font-semibold text-xs uppercase tracking-wide">
+                                            {section.title}
+                                          </h4>
+                                        </div>
+                                        <div className="ml-8 space-y-1">
+                                          {section.items?.map((subItem, subIdx) => (
+                                            <a
+                                              key={subIdx}
+                                              href={subItem.href}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="block text-gray-600 hover:text-blue-600 py-1 text-sm"
+                                              onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                              {subItem.label}
+                                            </a>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                
+                                {/* Right sidebar content for mobile */}
+                                <div className="mt-6 pt-4 border-t border-gray-200">
+                                  <h4 className="text-gray-900 font-bold text-sm mb-2">
+                                    {wealthMenuData.rightSidebar.title}
+                                  </h4>
+                                  <p className="text-gray-600 text-xs mb-3 leading-relaxed">
+                                    {wealthMenuData.rightSidebar.description}
+                                  </p>
+                                  <a
+                                    href={wealthMenuData.rightSidebar.cta.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                  >
+                                    {wealthMenuData.rightSidebar.cta.text}
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Placeholder for other sections - could be expanded similarly */}
+                          {item.label === 'PERSONAL' && activeMobileSection === 'PERSONAL' && (
+                            <div className="bg-gray-50 px-6 py-4">
+                              <p className="text-gray-600 text-sm">Personal banking options coming soon...</p>
+                            </div>
+                          )}
+                          
+                          {item.label === 'SMALL BUSINESS' && activeMobileSection === 'SMALL BUSINESS' && (
+                            <div className="bg-gray-50 px-6 py-4">
+                              <p className="text-gray-600 text-sm">Small business options coming soon...</p>
+                            </div>
+                          )}
+                          
+                          {item.label === 'COMMERCIAL' && activeMobileSection === 'COMMERCIAL' && (
+                            <div className="bg-gray-50 px-6 py-4">
+                              <p className="text-gray-600 text-sm">Commercial banking options coming soon...</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {/* Additional mobile menu items */}
+                      <div className="mt-8 px-6 space-y-4">
+                        <a
+                          href="https://www.firstcitizens.com/support"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <HelpCircle className="h-5 w-5 mr-3 text-blue-600" />
+                          Support
+                        </a>
+                        <button
+                          className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <MapPin className="h-5 w-5 mr-3 text-blue-600" />
+                          Locations
+                        </button>
+                        <button
+                          onClick={() => {
+                            onSearchClick();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
+                        >
+                          <Search className="h-5 w-5 mr-3 text-blue-600" />
+                          Search
+                        </button>
+                        <Button
+                          onClick={() => {
+                            onLoginClick();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 mt-4"
+                        >
+                          Log In
+                        </Button>
+                      </div>
+                    </nav>
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
