@@ -85,7 +85,6 @@ export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('overview');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -368,29 +367,38 @@ export default function AdminDashboard() {
           <main className="p-4 lg:p-8">
             {selectedTab === "overview" && (
               <OverviewTab 
-                stats={stats} 
+                stats={safeStats} 
                 statsLoading={statsLoading} 
                 admin={admin} 
-                adminBalance={adminBalance}
+                adminBalance={safeAdminBalance}
                 balanceLoading={balanceLoading}
                 adminCreditMutation={adminCreditMutation}
-                transactions={transactions}
+                transactions={safeTransactions}
                 transactionsLoading={transactionsLoading}
+                setSelectedTab={setSelectedTab}
+                selectedCustomer={selectedCustomer}
+                setSelectedCustomer={setSelectedCustomer}
+                isCustomerDetailsDialogOpen={isCustomerDetailsDialogOpen}
+                setIsCustomerDetailsDialogOpen={setIsCustomerDetailsDialogOpen}
               />
             )}
             {selectedTab === "customers" && (
               <CustomersTab 
-                customers={customers} 
+                customers={safeCustomers} 
                 customersLoading={customersLoading}
                 createCustomerMutation={createCustomerMutation}
                 deleteCustomerMutation={deleteCustomerMutation}
+                selectedCustomer={selectedCustomer}
+                setSelectedCustomer={setSelectedCustomer}
+                isCustomerDetailsDialogOpen={isCustomerDetailsDialogOpen}
+                setIsCustomerDetailsDialogOpen={setIsCustomerDetailsDialogOpen}
               />
             )}
             {selectedTab === "transactions" && (
               <TransactionsTab 
-                transactions={transactions}
+                transactions={safeTransactions}
                 transactionsLoading={transactionsLoading}
-                customers={customers}
+                customers={safeCustomers}
                 createTransactionMutation={createTransactionMutation}
               />
             )}
@@ -410,7 +418,12 @@ function OverviewTab({
   balanceLoading,
   adminCreditMutation,
   transactions,
-  transactionsLoading 
+  transactionsLoading,
+  setSelectedTab,
+  selectedCustomer,
+  setSelectedCustomer,
+  isCustomerDetailsDialogOpen,
+  setIsCustomerDetailsDialogOpen
 }: { 
   stats: DashboardStats; 
   statsLoading: boolean; 
@@ -420,6 +433,11 @@ function OverviewTab({
   adminCreditMutation: any;
   transactions: any[];
   transactionsLoading: boolean;
+  setSelectedTab: (tab: string) => void;
+  selectedCustomer: any;
+  setSelectedCustomer: (customer: any) => void;
+  isCustomerDetailsDialogOpen: boolean;
+  setIsCustomerDetailsDialogOpen: (open: boolean) => void;
 }) {
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDetail | null>(null);
   const [showCreditModal, setShowCreditModal] = useState(false);
@@ -661,7 +679,7 @@ function OverviewTab({
               <Button 
                 variant="outline" 
                 className="border-blue-200 hover:bg-blue-50"
-                onClick={() => setActiveTab('transactions')}
+                onClick={() => setSelectedTab('transactions')}
                 data-testid="button-view-history"
               >
                 <Eye className="w-4 h-4 mr-2" />
