@@ -739,6 +739,56 @@ function OverviewTab({
         </DialogContent>
       </Dialog>
       
+      {/* Customer Details Modal */}
+      <Dialog open={isCustomerDetailsDialogOpen} onOpenChange={setIsCustomerDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Customer Details</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-6">
+              {/* Customer Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100">Personal Information</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Full Name:</span> {selectedCustomer.firstName} {selectedCustomer.lastName}</p>
+                    <p><span className="font-medium">Email:</span> {selectedCustomer.email}</p>
+                    <p><span className="font-medium">Username:</span> {selectedCustomer.username}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100">Account Information</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Account #:</span> {selectedCustomer.accountNumber}</p>
+                    <p><span className="font-medium">Account Type:</span> {selectedCustomer.accountType}</p>
+                    <p><span className="font-medium">Routing #:</span> {selectedCustomer.routingNumber}</p>
+                    <p><span className="font-medium">Status:</span> 
+                      <Badge variant={selectedCustomer.status === 'active' ? 'default' : 'secondary'} className="ml-2">
+                        {selectedCustomer.status}
+                      </Badge>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Current Balance */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border">
+                <h3 className="font-semibold text-lg mb-2">Current Balance</h3>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              
+              <div className="text-sm text-gray-500 text-center">
+                Account opened: {selectedCustomer.createdAt ? new Date(selectedCustomer.createdAt).toLocaleDateString() : 'N/A'}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       {/* Admin Credit Modal */}
       <Dialog open={showCreditModal} onOpenChange={setShowCreditModal}>
         <DialogContent className="max-w-md">

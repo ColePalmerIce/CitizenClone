@@ -446,8 +446,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/customers", requireAdmin, async (req, res) => {
     try {
       const accounts = await storage.getAllBankAccounts();
+      // Force no caching to get fresh data
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.json(accounts);
     } catch (error) {
+      console.error('Failed to fetch customers:', error);
       res.status(500).json({ message: "Failed to fetch customers" });
     }
   });
