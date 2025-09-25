@@ -6,7 +6,14 @@ import {
   insertCreditCardApplicationSchema,
   insertAccountApplicationSchema,
   insertContactInquirySchema,
+  insertAdminUserSchema,
+  insertBankAccountSchema,
+  insertTransactionSchema,
+  insertCustomerProfileSchema,
+  insertUserSchema,
 } from "@shared/schema";
+import bcrypt from "bcrypt";
+import session from "express-session";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Search queries
@@ -211,6 +218,270 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(filteredBranches);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch branches" });
+    }
+  });
+
+  // Admin Authentication Routes
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find admin user
+      const admin = await storage.getAdminByEmail(email);
+      if (!admin) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Check password
+      const validPassword = await bcrypt.compare(password, admin.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Update last login
+      await storage.updateAdminLastLogin(admin.id);
+
+      // Set session
+      (req.session as any).adminId = admin.id;
+      (req.session as any).adminEmail = admin.email;
+
+      res.json({ 
+        id: admin.id,
+        email: admin.email,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/admin/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/admin/session", async (req, res) => {
+    try {
+      const adminId = (req.session as any)?.adminId;
+      if (!adminId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const admin = await storage.getAdminByEmail((req.session as any).adminEmail);
+      if (!admin) {
+        return res.status(401).json({ message: "Admin not found" });
+      }
+
+      res.json({
+        id: admin.id,
+        email: admin.email,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Session check failed" });
+    }
+  });
+
+  // Admin Dashboard Routes
+  const requireAdmin = (req: any, res: any, next: any) => {
+    const adminId = req.session?.adminId;
+    if (!adminId) {
+      return res.status(401).json({ message: "Admin authentication required" });
+    }
+    next();
+  };
+
+  app.get("/api/admin/dashboard/stats", requireAdmin, async (req, res) => {
+    try {
+      const totalCustomers = await storage.getTotalCustomers();
+      const totalBalance = await storage.getTotalAccountBalance();
+      const recentTransactions = await storage.getRecentTransactions(5);
+      const allAccounts = await storage.getAllBankAccounts();
+
+      res.json({
+        totalCustomers,
+        totalBalance,
+        totalAccounts: allAccounts.length,
+        recentTransactions,
+        accounts: allAccounts.slice(0, 10) // Latest 10 accounts
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  // User/Customer Management Routes
+  app.post("/api/admin/customers", requireAdmin, async (req, res) => {
+    try {
+      const { 
+        username, 
+        email, 
+        firstName, 
+        lastName, 
+        password,
+        accountType = "checking",
+        initialBalance = "0.00"
+      } = req.body;
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await storage.createUser({
+        username,
+        email, 
+        password: hashedPassword,
+        firstName,
+        lastName
+      });
+
+      // Generate random account number (8-12 digits)
+      const accountNumber = Math.floor(Math.random() * 900000000000) + 100000000000;
+      
+      // First Citizens Bank routing number (fictional for demo)
+      const routingNumber = "053000196";
+
+      // Create bank account
+      const account = await storage.createBankAccount({
+        userId: user.id,
+        accountNumber: accountNumber.toString(),
+        routingNumber,
+        accountType,
+        balance: initialBalance
+      });
+
+      // Create customer profile
+      const profile = await storage.createCustomerProfile({
+        userId: user.id,
+        kycStatus: "approved"
+      });
+
+      res.json({ user, account, profile });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create customer account" });
+    }
+  });
+
+  app.get("/api/admin/customers", requireAdmin, async (req, res) => {
+    try {
+      const accounts = await storage.getAllBankAccounts();
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  });
+
+  app.delete("/api/admin/customers/:accountId", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteBankAccount(req.params.accountId);
+      if (!success) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
+  // Transaction Management Routes
+  app.post("/api/admin/transactions", requireAdmin, async (req, res) => {
+    try {
+      const { accountId, type, amount, description } = req.body;
+      const adminId = (req.session as any).adminId;
+
+      // Get current account balance
+      const account = await storage.getBankAccount(accountId);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      const currentBalance = parseFloat(account.balance || '0');
+      const transactionAmount = parseFloat(amount);
+
+      let newBalance: number;
+      if (type === 'credit') {
+        newBalance = currentBalance + transactionAmount;
+      } else if (type === 'debit') {
+        if (currentBalance < transactionAmount) {
+          return res.status(400).json({ message: "Insufficient funds" });
+        }
+        newBalance = currentBalance - transactionAmount;
+      } else {
+        return res.status(400).json({ message: "Invalid transaction type" });
+      }
+
+      // Create transaction record
+      const transaction = await storage.createTransaction({
+        accountId,
+        type,
+        amount: amount.toString(),
+        description,
+        balanceAfter: newBalance.toFixed(2),
+        processedBy: adminId
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
+
+      res.json(transaction);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process transaction" });
+    }
+  });
+
+  app.get("/api/admin/transactions", requireAdmin, async (req, res) => {
+    try {
+      const { accountId, limit } = req.query;
+      let transactions;
+      
+      if (accountId) {
+        transactions = await storage.getTransactionsByAccountId(
+          accountId as string, 
+          parseInt(limit as string) || 50
+        );
+      } else {
+        transactions = await storage.getAllTransactions(
+          parseInt(limit as string) || 100
+        );
+      }
+      
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Seed admin user on first run
+  app.post("/api/admin/seed", async (req, res) => {
+    try {
+      // Check if admin already exists
+      const existing = await storage.getAdminByEmail('Alexdenson231@gmail.com');
+      if (existing) {
+        return res.json({ message: "Admin user already exists" });
+      }
+      
+      // Hash password and create admin
+      const hashedPassword = await bcrypt.hash('Project2025!!', 10);
+      const admin = await storage.createAdmin({
+        email: 'Alexdenson231@gmail.com',
+        password: hashedPassword,
+        firstName: 'Alex',
+        lastName: 'Administrator',
+        role: 'admin'
+      });
+      
+      res.json({ message: "Admin user created successfully", admin: { email: admin.email, id: admin.id } });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to seed admin user" });
     }
   });
 
