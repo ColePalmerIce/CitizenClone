@@ -12,7 +12,6 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFdicExpanded, setIsFdicExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [activeMobileSection, setActiveMobileSection] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1265,158 +1264,78 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:w-[400px] px-0">
-                  <div className="flex items-center px-6 py-4 border-b border-gray-100">
-                    <img 
-                      src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png" 
-                      alt="First Citizens Bank" 
-                      className="h-8 w-auto"
+                <SheetContent className="w-full sm:w-[350px] px-0">
+                  {/* Clean header with logo */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                    <img
+                      src="https://www.firstcitizens.com/etc.clientlibs/firstcitizens/clientlibs/clientlib-site/resources/fcb-main-logo.svg"
+                      alt="First Citizens Bank"
+                      className="h-6"
                     />
                   </div>
                   
+                  {/* Simplified mobile navigation */}
                   <div className="overflow-y-auto h-full">
-                    <nav className="py-4">
-                      {navigationItems.map((item) => (
-                        <div key={item.label} className="border-b border-gray-100 last:border-b-0">
-                          <button
-                            className="w-full flex items-center justify-between px-6 py-4 text-left text-gray-900 hover:bg-gray-50 font-semibold transition-colors"
-                            onClick={() => setActiveMobileSection(activeMobileSection === item.label ? null : item.label)}
+                    <nav className="py-6">
+                      {/* Main navigation sections */}
+                      <div className="space-y-1">
+                        {navigationItems.map((item) => (
+                          <a
+                            key={item.label}
+                            href={item.href}
+                            className="block px-6 py-4 text-gray-900 hover:bg-gray-50 font-semibold text-lg border-b border-gray-50 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
                             data-testid={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
                           >
-                            <span className="text-base">{item.label}</span>
-                            {activeMobileSection === item.label ? (
-                              <ChevronUp className="h-5 w-5 text-blue-600" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400" />
-                            )}
-                          </button>
-                          
-                          {/* Mobile submenu for Wealth */}
-                          {item.label === 'WEALTH' && activeMobileSection === 'WEALTH' && (
-                            <div className="bg-gray-50 px-6 py-4">
-                              <div className="space-y-4">
-                                {wealthMenuData.sections.map((section, idx) => (
-                                  <div key={idx}>
-                                    {section.isMain ? (
-                                      <a
-                                        href={section.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block text-blue-600 font-semibold hover:text-blue-800 py-2 text-sm"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                      >
-                                        {section.title}
-                                      </a>
-                                    ) : (
-                                      <div>
-                                        <div className="flex items-center mb-2">
-                                          <div className="flex items-center justify-center w-6 h-6 rounded bg-blue-100 mr-2">
-                                            {section.icon}
-                                          </div>
-                                          <h4 className="text-gray-900 font-semibold text-xs uppercase tracking-wide">
-                                            {section.title}
-                                          </h4>
-                                        </div>
-                                        <div className="ml-8 space-y-1">
-                                          {section.items?.map((subItem, subIdx) => (
-                                            <a
-                                              key={subIdx}
-                                              href={subItem.href}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="block text-gray-600 hover:text-blue-600 py-1 text-sm"
-                                              onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                              {subItem.label}
-                                            </a>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                                
-                                {/* Right sidebar content for mobile */}
-                                <div className="mt-6 pt-4 border-t border-gray-200">
-                                  <h4 className="text-gray-900 font-bold text-sm mb-2">
-                                    {wealthMenuData.rightSidebar.title}
-                                  </h4>
-                                  <p className="text-gray-600 text-xs mb-3 leading-relaxed">
-                                    {wealthMenuData.rightSidebar.description}
-                                  </p>
-                                  <a
-                                    href={wealthMenuData.rightSidebar.cta.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                  >
-                                    {wealthMenuData.rightSidebar.cta.text}
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Placeholder for other sections - could be expanded similarly */}
-                          {item.label === 'PERSONAL' && activeMobileSection === 'PERSONAL' && (
-                            <div className="bg-gray-50 px-6 py-4">
-                              <p className="text-gray-600 text-sm">Personal banking options coming soon...</p>
-                            </div>
-                          )}
-                          
-                          {item.label === 'SMALL BUSINESS' && activeMobileSection === 'SMALL BUSINESS' && (
-                            <div className="bg-gray-50 px-6 py-4">
-                              <p className="text-gray-600 text-sm">Small business options coming soon...</p>
-                            </div>
-                          )}
-                          
-                          {item.label === 'COMMERCIAL' && activeMobileSection === 'COMMERCIAL' && (
-                            <div className="bg-gray-50 px-6 py-4">
-                              <p className="text-gray-600 text-sm">Commercial banking options coming soon...</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            {item.label}
+                          </a>
+                        ))}
+                      </div>
                       
-                      {/* Additional mobile menu items */}
-                      <div className="mt-8 px-6 space-y-4">
-                        <a
-                          href="https://www.firstcitizens.com/support"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <HelpCircle className="h-5 w-5 mr-3 text-blue-600" />
-                          Support
-                        </a>
-                        <button
-                          className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <MapPin className="h-5 w-5 mr-3 text-blue-600" />
-                          Locations
-                        </button>
-                        <button
-                          onClick={() => {
-                            onSearchClick();
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors py-2"
-                        >
-                          <Search className="h-5 w-5 mr-3 text-blue-600" />
-                          Search
-                        </button>
-                        <Button
-                          onClick={() => {
-                            onLoginClick();
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 mt-4"
-                        >
-                          Log In
-                        </Button>
+                      {/* Additional services */}
+                      <div className="mt-8 px-6">
+                        <div className="space-y-3">
+                          <a
+                            href="https://www.firstcitizens.com/support"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-gray-700 hover:text-green-700 font-medium transition-colors py-3"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <HelpCircle className="h-5 w-5 mr-3 text-green-700" />
+                            Support
+                          </a>
+                          <button
+                            className="flex items-center text-gray-700 hover:text-green-700 font-medium transition-colors py-3 w-full text-left"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <MapPin className="h-5 w-5 mr-3 text-green-700" />
+                            Find a Location
+                          </button>
+                          <button
+                            onClick={() => {
+                              onSearchClick();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="flex items-center text-gray-700 hover:text-green-700 font-medium transition-colors py-3 w-full text-left"
+                          >
+                            <Search className="h-5 w-5 mr-3 text-green-700" />
+                            Search
+                          </button>
+                        </div>
+                        
+                        {/* Login button */}
+                        <div className="mt-8 pt-6 border-t border-gray-100">
+                          <Button
+                            onClick={() => {
+                              onLoginClick();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-4 text-lg rounded-lg"
+                          >
+                            Log In
+                          </Button>
+                        </div>
                       </div>
                     </nav>
                   </div>
