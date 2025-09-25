@@ -42,6 +42,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Eye,
+  EyeOff,
   Building,
   Send,
   Receipt,
@@ -56,7 +57,24 @@ import {
   History,
   Settings,
   PiggyBank,
-  Wallet
+  Wallet,
+  Users,
+  HelpCircle,
+  MessageCircle,
+  Shield,
+  Bell,
+  Camera,
+  FileText,
+  BarChart3,
+  Lock,
+  CreditCard as CardIcon,
+  MapPin,
+  Phone,
+  UserCircle,
+  Calendar,
+  ChevronRight,
+  Copy,
+  Check
 } from "lucide-react";
 
 interface UserData {
@@ -93,7 +111,13 @@ export default function UserDashboard() {
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isBillPayDialogOpen, setIsBillPayDialogOpen] = useState(false);
   const [isInternalTransferOpen, setIsInternalTransferOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isCardsDialogOpen, setIsCardsDialogOpen] = useState(false);
+  const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [balanceVisible, setBalanceVisible] = useState(true);
+  const [accountNumberVisible, setAccountNumberVisible] = useState(false);
+  const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const { toast } = useToast();
 
   // Transfer form state
@@ -127,6 +151,32 @@ export default function UserDashboard() {
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
     return "Good evening";
+  };
+
+  const toggleBalanceVisibility = () => {
+    setBalanceVisible(!balanceVisible);
+  };
+
+  const toggleAccountNumberVisibility = () => {
+    setAccountNumberVisible(!accountNumberVisible);
+  };
+
+  const copyAccountNumber = async (accountNumber: string) => {
+    try {
+      await navigator.clipboard.writeText(accountNumber);
+      setCopiedAccountNumber(true);
+      toast({
+        title: "Copied!",
+        description: "Account number copied to clipboard",
+      });
+      setTimeout(() => setCopiedAccountNumber(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy account number",
+        variant: "destructive",
+      });
+    }
   };
 
   // Check user session
@@ -314,7 +364,7 @@ export default function UserDashboard() {
             </div>
             
             {/* User Info */}
-            <div className="px-6 py-6 border-b border-blue-500 lg:border-none">
+            <div className="px-6 py-6 border-b border-blue-500">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
                   <User className="w-6 h-6 text-white" />
@@ -331,8 +381,276 @@ export default function UserDashboard() {
               </p>
             </div>
 
+            {/* Navigation Menu */}
+            <div className="flex-1 px-4 py-4 space-y-2">
+              <div className="text-blue-200 text-xs font-semibold uppercase tracking-wide mb-3">
+                Account Services
+              </div>
+              
+              <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-profile"
+                  >
+                    <UserCircle className="w-4 h-4 mr-3" />
+                    My Profile
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>My Profile</DialogTitle>
+                    <DialogDescription>
+                      Your personal account information
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                        <User className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {user?.firstName} {user?.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-600">{user?.email}</p>
+                        <p className="text-sm text-gray-600">Username: {user?.username}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 border rounded-lg">
+                        <span className="text-sm font-medium text-gray-600">Date of Birth</span>
+                        <span className="text-sm">January 15, 1990</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 border rounded-lg">
+                        <span className="text-sm font-medium text-gray-600">Phone Number</span>
+                        <span className="text-sm">(555) 123-4567</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 border rounded-lg">
+                        <span className="text-sm font-medium text-gray-600">Address</span>
+                        <span className="text-sm">123 Main St, City, ST</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 border rounded-lg">
+                        <span className="text-sm font-medium text-gray-600">Customer Since</span>
+                        <span className="text-sm">March 2020</span>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" className="w-full">
+                      Edit Profile
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isCardsDialogOpen} onOpenChange={setIsCardsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-cards"
+                  >
+                    <CardIcon className="w-4 h-4 mr-3" />
+                    My Cards
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>My Cards</DialogTitle>
+                    <DialogDescription>
+                      Manage your credit and debit cards
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {/* Debit Card */}
+                    <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg text-white">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-xs text-blue-200">Debit Card</p>
+                          <p className="font-semibold">First Citizens Debit</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-blue-200">Balance</p>
+                          <p className="font-semibold">
+                            {bankAccount && balanceVisible 
+                              ? `$${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}`
+                              : "••••••"
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div className="font-mono text-lg tracking-wider mb-2">
+                        {bankAccount 
+                          ? `**** **** **** ${(bankAccount as BankAccount).accountNumber.slice(-4)}`
+                          : "**** **** **** ----"
+                        }
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">{user?.firstName} {user?.lastName}</span>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="secondary">
+                            <Lock className="w-4 h-4 mr-1" />
+                            Freeze
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Credit Card */}
+                    <div className="p-4 bg-gradient-to-r from-gray-700 to-gray-900 rounded-lg text-white">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-xs text-gray-300">Credit Card</p>
+                          <p className="font-semibold">FCB Rewards Card</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-300">Available Credit</p>
+                          <p className="font-semibold">$4,750</p>
+                        </div>
+                      </div>
+                      <div className="font-mono text-lg tracking-wider mb-2">
+                        **** **** **** 8492
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">{user?.firstName} {user?.lastName}</span>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="secondary">
+                            <Lock className="w-4 h-4 mr-1" />
+                            Freeze
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-gray-600">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-300">Payment Due</span>
+                          <span>Dec 15, 2025</span>
+                        </div>
+                        <div className="flex justify-between text-xs mt-1">
+                          <span className="text-gray-300">Minimum Payment</span>
+                          <span className="font-semibold">$125.00</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" className="w-full">
+                      Add New Card
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                data-testid="button-statements"
+              >
+                <FileText className="w-4 h-4 mr-3" />
+                Statements
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                data-testid="button-security"
+              >
+                <Shield className="w-4 h-4 mr-3" />
+                Security
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </Button>
+
+              <div className="text-blue-200 text-xs font-semibold uppercase tracking-wide mb-3 mt-6">
+                Support & Help
+              </div>
+
+              <Dialog open={isSupportDialogOpen} onOpenChange={setIsSupportDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-support"
+                  >
+                    <HelpCircle className="w-4 h-4 mr-3" />
+                    Support Center
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Support Center</DialogTitle>
+                    <DialogDescription>
+                      Get help with your banking needs
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button variant="outline" className="h-20 flex-col space-y-2">
+                        <Phone className="w-6 h-6 text-blue-600" />
+                        <span className="text-xs">Call Support</span>
+                      </Button>
+                      <Button variant="outline" className="h-20 flex-col space-y-2">
+                        <MessageCircle className="w-6 h-6 text-green-600" />
+                        <span className="text-xs">Live Chat</span>
+                      </Button>
+                      <Button variant="outline" className="h-20 flex-col space-y-2">
+                        <HelpCircle className="w-6 h-6 text-purple-600" />
+                        <span className="text-xs">FAQ</span>
+                      </Button>
+                      <Button variant="outline" className="h-20 flex-col space-y-2">
+                        <Shield className="w-6 h-6 text-red-600" />
+                        <span className="text-xs">Report Fraud</span>
+                      </Button>
+                    </div>
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2">24/7 Support</h4>
+                      <p className="text-sm text-blue-700 mb-2">
+                        Need immediate assistance? Our support team is available 24/7.
+                      </p>
+                      <p className="font-mono text-sm text-blue-900">1-800-CITIZENS</p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                data-testid="button-contact"
+              >
+                <MessageCircle className="w-4 h-4 mr-3" />
+                Contact Us
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                data-testid="button-locations"
+              >
+                <MapPin className="w-4 h-4 mr-3" />
+                Branch Locator
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                data-testid="button-notifications"
+              >
+                <Bell className="w-4 h-4 mr-3" />
+                Notifications
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </Button>
+            </div>
+
             {/* Logout */}
-            <div className="mt-auto p-4">
+            <div className="p-4 border-t border-blue-500">
               <Button 
                 onClick={handleLogout}
                 variant="ghost" 
@@ -363,22 +681,77 @@ export default function UserDashboard() {
             <Card className="mb-6 bg-white/95 backdrop-blur border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Available Balance</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm text-gray-600">Available Balance</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleBalanceVisibility}
+                        className="h-6 w-6 p-0"
+                        data-testid="button-toggle-balance"
+                      >
+                        {balanceVisible ? (
+                          <Eye className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 text-gray-500" />
+                        )}
+                      </Button>
+                    </div>
                     {accountLoading ? (
                       <div className="h-8 bg-gray-200 rounded animate-pulse w-32"></div>
                     ) : bankAccount ? (
                       <h2 className="text-3xl font-bold text-gray-900">
-                        ${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}
+                        {balanceVisible 
+                          ? `$${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}`
+                          : "••••••"
+                        }
                       </h2>
                     ) : (
-                      <h2 className="text-3xl font-bold text-gray-400">$0.00</h2>
+                      <h2 className="text-3xl font-bold text-gray-400">{balanceVisible ? "$0.00" : "••••••"}</h2>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-1">Account</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs text-gray-500">Account</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleAccountNumberVisibility}
+                        className="h-4 w-4 p-0"
+                        data-testid="button-toggle-account"
+                      >
+                        {accountNumberVisible ? (
+                          <EyeOff className="w-3 h-3 text-gray-400" />
+                        ) : (
+                          <Eye className="w-3 h-3 text-gray-400" />
+                        )}
+                      </Button>
+                    </div>
                     {bankAccount ? (
-                      <p className="font-mono text-sm">****{(bankAccount as BankAccount).accountNumber.slice(-4)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-mono text-sm">
+                          {accountNumberVisible 
+                            ? (bankAccount as BankAccount).accountNumber
+                            : `****${(bankAccount as BankAccount).accountNumber.slice(-4)}`
+                          }
+                        </p>
+                        {accountNumberVisible && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyAccountNumber((bankAccount as BankAccount).accountNumber)}
+                            className="h-4 w-4 p-0"
+                            data-testid="button-copy-account"
+                          >
+                            {copiedAccountNumber ? (
+                              <Check className="w-3 h-3 text-green-500" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-gray-400" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <p className="font-mono text-sm">****----</p>
                     )}
@@ -612,15 +985,45 @@ export default function UserDashboard() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button 
-                    variant="outline" 
-                    className="h-16 flex-col space-y-1 bg-orange-50 hover:bg-orange-100 border-orange-200"
-                    disabled
-                    data-testid="button-deposit"
-                  >
-                    <PiggyBank className="w-5 h-5 text-orange-400" />
-                    <span className="text-xs text-orange-500">Coming Soon</span>
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex-col space-y-1 bg-orange-50 hover:bg-orange-100 border-orange-200"
+                        data-testid="button-mobile-deposit"
+                      >
+                        <Camera className="w-5 h-5 text-orange-600" />
+                        <span className="text-xs text-orange-700">Mobile Deposit</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Mobile Check Deposit</DialogTitle>
+                        <DialogDescription>
+                          Deposit checks instantly using your mobile device
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="text-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
+                          <Camera className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="font-medium text-gray-900 mb-2">Ready to Deposit?</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Take photos of the front and back of your check
+                          </p>
+                          <div className="space-y-2 text-xs text-gray-500">
+                            <p>• Ensure check is properly endorsed</p>
+                            <p>• Good lighting and clear images</p>
+                            <p>• Amount limit: $5,000 per day</p>
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button className="w-full" data-testid="button-start-deposit">
+                          Start Deposit
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>
@@ -741,6 +1144,7 @@ export default function UserDashboard() {
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
+
     </div>
   );
 }
