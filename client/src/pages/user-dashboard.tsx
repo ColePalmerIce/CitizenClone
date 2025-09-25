@@ -120,6 +120,10 @@ export default function UserDashboard() {
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isBranchLocatorOpen, setIsBranchLocatorOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isTwoFactorOpen, setIsTwoFactorOpen] = useState(false);
+  const [isSecurityQuestionsOpen, setIsSecurityQuestionsOpen] = useState(false);
+  const [isSecurityAlertsOpen, setIsSecurityAlertsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [accountNumberVisible, setAccountNumberVisible] = useState(false);
@@ -602,22 +606,38 @@ export default function UserDashboard() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-3">
-                      <Button variant="outline" className="w-full justify-start">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setIsChangePasswordOpen(true)}
+                      >
                         <Lock className="w-4 h-4 mr-3" />
                         Change Password
                         <ChevronRight className="w-4 h-4 ml-auto" />
                       </Button>
-                      <Button variant="outline" className="w-full justify-start">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setIsTwoFactorOpen(true)}
+                      >
                         <Shield className="w-4 h-4 mr-3" />
                         Two-Factor Authentication
                         <ChevronRight className="w-4 h-4 ml-auto" />
                       </Button>
-                      <Button variant="outline" className="w-full justify-start">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setIsSecurityQuestionsOpen(true)}
+                      >
                         <FileText className="w-4 h-4 mr-3" />
                         Security Questions
                         <ChevronRight className="w-4 h-4 ml-auto" />
                       </Button>
-                      <Button variant="outline" className="w-full justify-start">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setIsSecurityAlertsOpen(true)}
+                      >
                         <Bell className="w-4 h-4 mr-3" />
                         Security Alerts
                         <ChevronRight className="w-4 h-4 ml-auto" />
@@ -811,10 +831,10 @@ export default function UserDashboard() {
                         <div className="flex items-start space-x-3">
                           <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
                           <div>
-                            <h4 className="font-medium text-blue-900">Main Branch</h4>
-                            <p className="text-sm text-blue-700">123 Financial Street</p>
-                            <p className="text-sm text-blue-700">Banking City, BC 12345</p>
-                            <p className="text-xs text-blue-600 mt-1">Open: Mon-Fri 9AM-5PM</p>
+                            <h4 className="font-medium text-blue-900">Raleigh Downtown</h4>
+                            <p className="text-sm text-blue-700">239 Fayetteville Street</p>
+                            <p className="text-sm text-blue-700">Raleigh, NC 27601</p>
+                            <p className="text-xs text-blue-600 mt-1">Open: Mon-Fri 9AM-5PM • (919) 716-7050</p>
                           </div>
                         </div>
                       </div>
@@ -822,10 +842,21 @@ export default function UserDashboard() {
                         <div className="flex items-start space-x-3">
                           <MapPin className="w-5 h-5 text-gray-600 mt-0.5" />
                           <div>
-                            <h4 className="font-medium">Downtown Branch</h4>
-                            <p className="text-sm text-gray-600">456 Commerce Ave</p>
-                            <p className="text-sm text-gray-600">Banking City, BC 12346</p>
-                            <p className="text-xs text-gray-500 mt-1">Open: Mon-Sat 9AM-4PM</p>
+                            <h4 className="font-medium">Charlotte Main</h4>
+                            <p className="text-sm text-gray-600">128 S Tryon Street</p>
+                            <p className="text-sm text-gray-600">Charlotte, NC 28202</p>
+                            <p className="text-xs text-gray-500 mt-1">Open: Mon-Fri 9AM-5PM • Full Service Branch</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-start space-x-3">
+                          <MapPin className="w-5 h-5 text-purple-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium">Raleigh Stonehenge</h4>
+                            <p className="text-sm text-gray-600">7208 Creedmoor Road</p>
+                            <p className="text-sm text-gray-600">Raleigh, NC 27613</p>
+                            <p className="text-xs text-gray-500 mt-1">Open: Mon-Fri 9AM-5PM • (919) 716-7577</p>
                           </div>
                         </div>
                       </div>
@@ -834,7 +865,7 @@ export default function UserDashboard() {
                           <CreditCard className="w-5 h-5 text-green-600 mt-0.5" />
                           <div>
                             <h4 className="font-medium">ATM Network</h4>
-                            <p className="text-sm text-gray-600">50+ ATM locations</p>
+                            <p className="text-sm text-gray-600">500+ ATM locations nationwide</p>
                             <p className="text-xs text-gray-500 mt-1">24/7 Access • Surcharge-free</p>
                           </div>
                         </div>
@@ -842,7 +873,7 @@ export default function UserDashboard() {
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-700">
-                        <strong>Need directions?</strong> Call 1-800-CITIZENS or visit our website for the complete branch locator with maps and driving directions.
+                        <strong>Need more locations?</strong> Visit locations.firstcitizens.com or call 1-888-FC-DIRECT (888-323-4732) for our complete branch locator with maps and driving directions.
                       </p>
                     </div>
                   </div>
@@ -1412,6 +1443,197 @@ export default function UserDashboard() {
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
+
+      {/* Security Dialogs */}
+      
+      {/* Change Password Dialog */}
+      <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Update your account password for enhanced security
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="current-password">Current Password</Label>
+              <Input type="password" id="current-password" placeholder="Enter current password" />
+            </div>
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <Input type="password" id="new-password" placeholder="Enter new password" />
+            </div>
+            <div>
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input type="password" id="confirm-password" placeholder="Confirm new password" />
+            </div>
+            <div className="p-3 bg-yellow-50 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Password Requirements:</strong> Must be at least 8 characters with uppercase, lowercase, numbers, and special characters.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsChangePasswordOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              toast({ title: "Password updated successfully!" });
+              setIsChangePasswordOpen(false);
+            }}>
+              Update Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Two-Factor Authentication Dialog */}
+      <Dialog open={isTwoFactorOpen} onOpenChange={setIsTwoFactorOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Two-Factor Authentication</DialogTitle>
+            <DialogDescription>
+              Secure your account with two-factor authentication
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <h4 className="font-medium">SMS Authentication</h4>
+                <p className="text-sm text-gray-600">Receive codes via text message</p>
+              </div>
+              <div className="w-10 h-5 bg-green-500 rounded-full relative">
+                <div className="absolute right-0 top-0 w-5 h-5 bg-white rounded-full shadow"></div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <h4 className="font-medium">Authenticator App</h4>
+                <p className="text-sm text-gray-600">Use Google Authenticator or similar</p>
+              </div>
+              <div className="w-10 h-5 bg-gray-300 rounded-full relative">
+                <div className="absolute left-0 top-0 w-5 h-5 bg-white rounded-full shadow"></div>
+              </div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-2">Currently Active</h4>
+              <p className="text-sm text-green-700">
+                SMS authentication is enabled for phone number ending in **67
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTwoFactorOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              toast({ title: "Two-factor settings updated!" });
+              setIsTwoFactorOpen(false);
+            }}>
+              Update Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Security Questions Dialog */}
+      <Dialog open={isSecurityQuestionsOpen} onOpenChange={setIsSecurityQuestionsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Security Questions</DialogTitle>
+            <DialogDescription>
+              Manage your security questions for account recovery
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Question 1: What was your first pet's name?</Label>
+              <Input placeholder="Your answer (already set)" disabled className="bg-gray-50" />
+            </div>
+            <div>
+              <Label>Question 2: What city were you born in?</Label>
+              <Input placeholder="Your answer (already set)" disabled className="bg-gray-50" />
+            </div>
+            <div>
+              <Label>Question 3: What was your mother's maiden name?</Label>
+              <Input placeholder="Your answer (already set)" disabled className="bg-gray-50" />
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">Security Questions Status</h4>
+              <p className="text-sm text-blue-700">
+                All 3 security questions have been set up. Contact support at 1-888-FC-DIRECT to update them.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSecurityQuestionsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Security Alerts Dialog */}
+      <Dialog open={isSecurityAlertsOpen} onOpenChange={setIsSecurityAlertsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Security Alerts</DialogTitle>
+            <DialogDescription>
+              Configure security alerts for suspicious activity
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Login Alerts</h4>
+                  <p className="text-sm text-gray-600">Notify when account is accessed</p>
+                </div>
+                <div className="w-10 h-5 bg-green-500 rounded-full relative">
+                  <div className="absolute right-0 top-0 w-5 h-5 bg-white rounded-full shadow"></div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Transaction Alerts</h4>
+                  <p className="text-sm text-gray-600">Notify for large transactions</p>
+                </div>
+                <div className="w-10 h-5 bg-green-500 rounded-full relative">
+                  <div className="absolute right-0 top-0 w-5 h-5 bg-white rounded-full shadow"></div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <h4 className="font-medium">Profile Changes</h4>
+                  <p className="text-sm text-gray-600">Notify when profile is modified</p>
+                </div>
+                <div className="w-10 h-5 bg-gray-300 rounded-full relative">
+                  <div className="absolute left-0 top-0 w-5 h-5 bg-white rounded-full shadow"></div>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-2">Alert Methods</h4>
+              <p className="text-sm text-green-700 mb-2">
+                ✓ Email: cole.palmer@email.com<br/>
+                ✓ SMS: ***-***-*567
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSecurityAlertsOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              toast({ title: "Security alert settings updated!" });
+              setIsSecurityAlertsOpen(false);
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
