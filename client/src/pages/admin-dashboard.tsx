@@ -117,24 +117,28 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/dashboard/stats'],
     enabled: !!admin,
   });
+  const safeStats = stats || { totalCustomers: 0, totalBalance: '0.00', totalAccounts: 0, recentTransactions: [], accounts: [] };
 
   // Customers query
   const { data: customers, isLoading: customersLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/customers'],
     enabled: !!admin,
   });
+  const safeCustomers = customers || [];
 
   // Transactions query
   const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/transactions'],
     enabled: !!admin,
   });
+  const safeTransactions = transactions || [];
 
   // Admin balance query
   const { data: adminBalance, isLoading: balanceLoading, refetch: refetchBalance } = useQuery<AdminBalance | null>({
     queryKey: ['/api/admin/balance'],
     enabled: !!admin,
   });
+  const safeAdminBalance = adminBalance || { id: '', adminId: '', balance: '500000000.00', createdAt: '', updatedAt: '' };
 
   // Logout functionality
   const logoutMutation = useMutation({
@@ -853,6 +857,7 @@ function CustomersTab({
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('overview');
   const [newCustomer, setNewCustomer] = useState({
     username: '',
     email: '',
