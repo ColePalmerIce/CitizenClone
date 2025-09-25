@@ -372,7 +372,12 @@ export default function UserDashboard() {
 
   // Get specific account transactions
   const { data: accountTransactions, isLoading: accountTransactionsLoading } = useQuery({
-    queryKey: ['/api/user/account-transactions', selectedAccount?.id],
+    queryKey: ['account-transactions', selectedAccount?.id],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/user/account-transactions/${selectedAccount?.id}`);
+      if (!response.ok) throw new Error('Failed to fetch account transactions');
+      return response.json();
+    },
     enabled: !!selectedAccount?.id && selectedAccount.id !== 'credit-card',
   });
 
