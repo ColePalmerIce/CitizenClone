@@ -129,11 +129,47 @@ export default function UserDashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isDebitCardFrozen, setIsDebitCardFrozen] = useState(false);
+  const [isCreditCardFrozen, setIsCreditCardFrozen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [accountNumberVisible, setAccountNumberVisible] = useState(false);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const { toast } = useToast();
+
+  const handleDebitCardFreeze = () => {
+    setIsDebitCardFrozen(!isDebitCardFrozen);
+    if (!isDebitCardFrozen) {
+      toast({
+        title: "Card Frozen",
+        description: "Your debit card has been frozen for all purchases and transactions.",
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Card Unfrozen", 
+        description: "Your debit card can now be used for payments and transactions.",
+        variant: "default"
+      });
+    }
+  };
+
+  const handleCreditCardFreeze = () => {
+    setIsCreditCardFrozen(!isCreditCardFrozen);
+    if (!isCreditCardFrozen) {
+      toast({
+        title: "Card Frozen",
+        description: "Your credit card has been frozen for all purchases and transactions.",
+        variant: "default"
+      });
+    } else {
+      toast({
+        title: "Card Unfrozen",
+        description: "Your credit card can now be used for payments and transactions.", 
+        variant: "default"
+      });
+    }
+  };
 
   const handlePasswordChange = async () => {
     // Validation
@@ -549,7 +585,7 @@ export default function UserDashboard() {
                     <ChevronRight className="w-4 h-4 ml-auto" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>My Cards</DialogTitle>
                     <DialogDescription>
@@ -594,9 +630,18 @@ export default function UserDashboard() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium uppercase tracking-wide">{user?.firstName} {user?.lastName}</span>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="secondary" className="bg-blue-700 hover:bg-blue-600 text-white border-0">
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className={`text-white border-0 ${
+                              isDebitCardFrozen 
+                                ? "bg-red-600 hover:bg-red-500" 
+                                : "bg-blue-700 hover:bg-blue-600"
+                            }`}
+                            onClick={handleDebitCardFreeze}
+                          >
                             <Lock className="w-4 h-4 mr-1" />
-                            Freeze
+                            {isDebitCardFrozen ? "Unfreeze" : "Freeze"}
                           </Button>
                         </div>
                       </div>
@@ -631,9 +676,18 @@ export default function UserDashboard() {
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-sm font-medium uppercase tracking-wide">{user?.firstName} {user?.lastName}</span>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="secondary" className="bg-gray-700 hover:bg-gray-600 text-white border-0">
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className={`text-white border-0 ${
+                              isCreditCardFrozen 
+                                ? "bg-red-600 hover:bg-red-500" 
+                                : "bg-gray-700 hover:bg-gray-600"
+                            }`}
+                            onClick={handleCreditCardFreeze}
+                          >
                             <Lock className="w-4 h-4 mr-1" />
-                            Freeze
+                            {isCreditCardFrozen ? "Unfreeze" : "Freeze"}
                           </Button>
                         </div>
                       </div>
