@@ -83,6 +83,9 @@ export default function AdminDashboard() {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('overview');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
