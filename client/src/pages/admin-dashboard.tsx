@@ -454,6 +454,13 @@ function OverviewTab({
     }).format(num);
   };
 
+  // Format transaction ID to proper banking format
+  const formatTransactionId = (rawId: string) => {
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const shortId = rawId.slice(-6).toUpperCase();
+    return `FCB${date}-${shortId}`;
+  };
+
   // Handle admin self-credit
   const handleSelfCredit = () => {
     if (!creditAmount || !creditDescription) {
@@ -725,7 +732,7 @@ function OverviewTab({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-600 font-medium">Transaction ID</p>
-                  <p className="font-mono text-xs bg-gray-100 p-1 rounded">{selectedTransaction.id}</p>
+                  <p className="font-mono text-xs bg-gray-100 p-1 rounded">{formatTransactionId(selectedTransaction.id)}</p>
                 </div>
                 <div>
                   <p className="text-gray-600 font-medium">Status</p>
@@ -1076,7 +1083,10 @@ function CustomersTab({
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => deleteCustomerMutation.mutate(account.id)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering the row click
+                        deleteCustomerMutation.mutate(account.id);
+                      }}
                       disabled={deleteCustomerMutation.isPending}
                       data-testid={`button-delete-${account.id}`}
                     >
@@ -1114,6 +1124,13 @@ function TransactionsTab({
     amount: '',
     description: ''
   });
+
+  // Format transaction ID to proper banking format
+  const formatTransactionId = (rawId: string) => {
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const shortId = rawId.slice(-6).toUpperCase();
+    return `FCB${date}-${shortId}`;
+  };
 
   const handleCreateTransaction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1244,6 +1261,7 @@ function TransactionsTab({
                       <p className="text-sm text-gray-600 dark:text-gray-300">
                         {new Date(transaction.transactionDate).toLocaleString()}
                       </p>
+                      <p className="text-xs text-gray-500 font-mono">ID: {formatTransactionId(transaction.id)}</p>
                       {transaction.reference && (
                         <p className="text-xs text-gray-500">Ref: {transaction.reference}</p>
                       )}
