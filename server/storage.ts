@@ -9,6 +9,14 @@ import {
   type InsertAccountApplication,
   type ContactInquiry,
   type InsertContactInquiry,
+  type AdminUser,
+  type InsertAdminUser,
+  type BankAccount,
+  type InsertBankAccount,
+  type Transaction,
+  type InsertTransaction,
+  type CustomerProfile,
+  type InsertCustomerProfile,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -37,6 +45,37 @@ export interface IStorage {
   saveContactInquiry(inquiry: InsertContactInquiry): Promise<ContactInquiry>;
   getContactInquiries(status?: string): Promise<ContactInquiry[]>;
   updateContactInquiryStatus(id: string, status: string): Promise<ContactInquiry | undefined>;
+
+  // Admin users
+  getAdminByEmail(email: string): Promise<AdminUser | undefined>;
+  createAdmin(admin: InsertAdminUser): Promise<AdminUser>;
+  updateAdminLastLogin(id: string): Promise<AdminUser | undefined>;
+
+  // Bank accounts
+  createBankAccount(account: InsertBankAccount): Promise<BankAccount>;
+  getBankAccount(id: string): Promise<BankAccount | undefined>;
+  getBankAccountByNumber(accountNumber: string): Promise<BankAccount | undefined>;
+  getBankAccountsByUserId(userId: string): Promise<BankAccount[]>;
+  getAllBankAccounts(): Promise<BankAccount[]>;
+  updateBankAccountBalance(id: string, newBalance: string): Promise<BankAccount | undefined>;
+  updateBankAccountStatus(id: string, status: string): Promise<BankAccount | undefined>;
+  deleteBankAccount(id: string): Promise<boolean>;
+
+  // Transactions
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  getTransaction(id: string): Promise<Transaction | undefined>;
+  getTransactionsByAccountId(accountId: string, limit?: number): Promise<Transaction[]>;
+  getAllTransactions(limit?: number): Promise<Transaction[]>;
+
+  // Customer profiles
+  createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile>;
+  getCustomerProfile(userId: string): Promise<CustomerProfile | undefined>;
+  updateCustomerProfile(userId: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined>;
+
+  // Admin dashboard utilities
+  getTotalCustomers(): Promise<number>;
+  getTotalAccountBalance(): Promise<string>;
+  getRecentTransactions(limit?: number): Promise<Transaction[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -176,8 +215,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use in-memory storage for now during setup, can switch to PostgreSQL later
-const memStorage = new MemStorage();
+// Import PostgreSQL storage from db.ts
+import { storage as dbStorage } from "./db";
 
-console.log("Using in-memory storage for development");
-export const storage = memStorage;
+console.log("Using PostgreSQL storage for banking system");
+export const storage = dbStorage;
