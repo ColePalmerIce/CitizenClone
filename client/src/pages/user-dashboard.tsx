@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Card, 
@@ -12,6 +12,25 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   User,
   DollarSign,
@@ -23,7 +42,21 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Eye,
-  Building
+  Building,
+  Send,
+  Receipt,
+  Repeat,
+  Smartphone,
+  Wifi,
+  Zap,
+  Home,
+  Car,
+  Plus,
+  ArrowLeftRight,
+  History,
+  Settings,
+  PiggyBank,
+  Wallet
 } from "lucide-react";
 
 interface UserData {
@@ -57,7 +90,29 @@ export default function UserDashboard() {
   const [, setLocation] = useLocation();
   const [user, setUser] = useState<UserData | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
+  const [isBillPayDialogOpen, setIsBillPayDialogOpen] = useState(false);
+  const [isInternalTransferOpen, setIsInternalTransferOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
+
+  // Transfer form state
+  const [transferForm, setTransferForm] = useState({
+    recipient: '',
+    recipientAccount: '',
+    amount: '',
+    description: '',
+    transferType: 'external'
+  });
+
+  // Bill pay form state
+  const [billPayForm, setBillPayForm] = useState({
+    payee: '',
+    accountNumber: '',
+    amount: '',
+    description: '',
+    paymentDate: ''
+  });
 
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
@@ -102,6 +157,58 @@ export default function UserDashboard() {
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/user/transactions'],
     enabled: !!user,
+  });
+
+  // Transfer money mutation
+  const transferMutation = useMutation({
+    mutationFn: async (transferData: any) => {
+      const response = await apiRequest('POST', '/api/user/transfer', transferData);
+      if (!response.ok) throw new Error('Transfer failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
+      toast({
+        title: "Transfer Successful",
+        description: "Your money transfer has been completed.",
+      });
+      setIsTransferDialogOpen(false);
+      setTransferForm({ recipient: '', recipientAccount: '', amount: '', description: '', transferType: 'external' });
+    },
+    onError: () => {
+      toast({
+        title: "Transfer Failed",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Bill pay mutation
+  const billPayMutation = useMutation({
+    mutationFn: async (billData: any) => {
+      const response = await apiRequest('POST', '/api/user/billpay', billData);
+      if (!response.ok) throw new Error('Bill payment failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
+      toast({
+        title: "Bill Payment Successful",
+        description: "Your bill payment has been processed.",
+      });
+      setIsBillPayDialogOpen(false);
+      setBillPayForm({ payee: '', accountNumber: '', amount: '', description: '', paymentDate: '' });
+    },
+    onError: () => {
+      toast({
+        title: "Payment Failed",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleLogout = async () => {
@@ -209,99 +316,267 @@ export default function UserDashboard() {
         <div className="flex-1 lg:ml-0">
           <div className="p-4 lg:p-8">
             {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Account Overview
+            <div className="mb-6">
+              <h1 className="text-xl lg:text-2xl font-bold text-white mb-2">
+                {getTimeGreeting()}, {user?.firstName}!
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Welcome to your personal banking dashboard
+              <p className="text-blue-100">
+                Manage your finances with ease
               </p>
             </div>
 
-            {/* Account Summary Card */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
-                    Account Details
-                  </CardTitle>
-                  <CardDescription>Your primary banking account</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {accountLoading ? (
-                    <div className="space-y-4">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                      <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-                    </div>
-                  ) : bankAccount ? (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-600">Account Number</span>
-                        <span className="font-mono">**** {(bankAccount as BankAccount).accountNumber.slice(-4)}</span>
+            {/* Balance Card */}
+            <Card className="mb-6 bg-white/95 backdrop-blur border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Available Balance</p>
+                    {accountLoading ? (
+                      <div className="h-8 bg-gray-200 rounded animate-pulse w-32"></div>
+                    ) : bankAccount ? (
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        ${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}
+                      </h2>
+                    ) : (
+                      <h2 className="text-3xl font-bold text-gray-400">$0.00</h2>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500 mb-1">Account</p>
+                    {bankAccount ? (
+                      <p className="font-mono text-sm">****{(bankAccount as BankAccount).accountNumber.slice(-4)}</p>
+                    ) : (
+                      <p className="font-mono text-sm">****----</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex-col space-y-1 bg-blue-50 hover:bg-blue-100 border-blue-200"
+                        data-testid="button-transfer"
+                      >
+                        <Send className="w-5 h-5 text-blue-600" />
+                        <span className="text-xs text-blue-700">Transfer</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Transfer Money</DialogTitle>
+                        <DialogDescription>
+                          Send money to another account
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="recipient">Recipient Name</Label>
+                          <Input
+                            id="recipient"
+                            value={transferForm.recipient}
+                            onChange={(e) => setTransferForm({...transferForm, recipient: e.target.value})}
+                            placeholder="Enter recipient name"
+                            data-testid="input-recipient"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="recipientAccount">Recipient Account</Label>
+                          <Input
+                            id="recipientAccount"
+                            value={transferForm.recipientAccount}
+                            onChange={(e) => setTransferForm({...transferForm, recipientAccount: e.target.value})}
+                            placeholder="Enter account number"
+                            data-testid="input-recipient-account"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="amount">Amount ($)</Label>
+                          <Input
+                            id="amount"
+                            type="number"
+                            value={transferForm.amount}
+                            onChange={(e) => setTransferForm({...transferForm, amount: e.target.value})}
+                            placeholder="0.00"
+                            data-testid="input-transfer-amount"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Description</Label>
+                          <Input
+                            id="description"
+                            value={transferForm.description}
+                            onChange={(e) => setTransferForm({...transferForm, description: e.target.value})}
+                            placeholder="Optional note"
+                            data-testid="input-transfer-description"
+                          />
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-600">Routing Number</span>
-                        <span className="font-mono">{(bankAccount as BankAccount).routingNumber}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-600">Account Type</span>
-                        <Badge variant="outline">
-                          {(bankAccount as BankAccount).accountType.charAt(0).toUpperCase() + (bankAccount as BankAccount).accountType.slice(1)}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-600">Status</span>
-                        <Badge variant={(bankAccount as BankAccount).status === 'active' ? 'default' : 'secondary'}>
-                          {(bankAccount as BankAccount).status.charAt(0).toUpperCase() + (bankAccount as BankAccount).status.slice(1)}
-                        </Badge>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">No account information available</p>
-                  )}
-                </CardContent>
-              </Card>
+                      <DialogFooter>
+                        <Button 
+                          onClick={() => transferMutation.mutate(transferForm)}
+                          disabled={!transferForm.recipient || !transferForm.amount || transferMutation.isPending}
+                          className="w-full"
+                          data-testid="button-confirm-transfer"
+                        >
+                          {transferMutation.isPending ? 'Processing...' : `Transfer $${transferForm.amount || '0'}`}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-green-600" />
-                    Current Balance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {accountLoading ? (
-                    <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-                  ) : bankAccount ? (
-                    <div className="text-3xl font-bold text-green-600">
-                      ${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}
+                  <Dialog open={isBillPayDialogOpen} onOpenChange={setIsBillPayDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex-col space-y-1 bg-green-50 hover:bg-green-100 border-green-200"
+                        data-testid="button-bill-pay"
+                      >
+                        <Receipt className="w-5 h-5 text-green-600" />
+                        <span className="text-xs text-green-700">Bill Pay</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Pay Bills</DialogTitle>
+                        <DialogDescription>
+                          Pay your bills quickly and securely
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="payee">Payee</Label>
+                          <Select value={billPayForm.payee} onValueChange={(value) => setBillPayForm({...billPayForm, payee: value})}>
+                            <SelectTrigger data-testid="select-payee">
+                              <SelectValue placeholder="Select payee" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="electric">Electric Company</SelectItem>
+                              <SelectItem value="gas">Gas Company</SelectItem>
+                              <SelectItem value="water">Water Utility</SelectItem>
+                              <SelectItem value="internet">Internet Provider</SelectItem>
+                              <SelectItem value="phone">Phone Company</SelectItem>
+                              <SelectItem value="credit-card">Credit Card</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="billAmount">Amount ($)</Label>
+                          <Input
+                            id="billAmount"
+                            type="number"
+                            value={billPayForm.amount}
+                            onChange={(e) => setBillPayForm({...billPayForm, amount: e.target.value})}
+                            placeholder="0.00"
+                            data-testid="input-bill-amount"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="accountNumber">Account Number</Label>
+                          <Input
+                            id="accountNumber"
+                            value={billPayForm.accountNumber}
+                            onChange={(e) => setBillPayForm({...billPayForm, accountNumber: e.target.value})}
+                            placeholder="Your account number with payee"
+                            data-testid="input-bill-account"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button 
+                          onClick={() => billPayMutation.mutate(billPayForm)}
+                          disabled={!billPayForm.payee || !billPayForm.amount || billPayMutation.isPending}
+                          className="w-full"
+                          data-testid="button-confirm-bill-pay"
+                        >
+                          {billPayMutation.isPending ? 'Processing...' : `Pay $${billPayForm.amount || '0'}`}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex-col space-y-1 bg-purple-50 hover:bg-purple-100 border-purple-200"
+                    onClick={() => setIsInternalTransferOpen(true)}
+                    data-testid="button-internal-transfer"
+                  >
+                    <ArrowLeftRight className="w-5 h-5 text-purple-600" />
+                    <span className="text-xs text-purple-700">Between Accounts</span>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="h-16 flex-col space-y-1 bg-orange-50 hover:bg-orange-100 border-orange-200"
+                    data-testid="button-deposit"
+                  >
+                    <PiggyBank className="w-5 h-5 text-orange-600" />
+                    <span className="text-xs text-orange-700">Deposit</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Details */}
+            <Card className="mb-6 bg-white/95 backdrop-blur border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-900">
+                  <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+                  Account Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {accountLoading ? (
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                  </div>
+                ) : bankAccount ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Account Type</p>
+                      <p className="font-medium">{(bankAccount as BankAccount).accountType}</p>
                     </div>
-                  ) : (
-                    <div className="text-3xl font-bold text-gray-400">
-                      $0.00
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Status</p>
+                      <Badge variant={(bankAccount as BankAccount).status === 'active' ? 'default' : 'secondary'}>
+                        {(bankAccount as BankAccount).status}
+                      </Badge>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Routing Number</p>
+                      <p className="font-mono text-sm">{(bankAccount as BankAccount).routingNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Account Number</p>
+                      <p className="font-mono text-sm">****{(bankAccount as BankAccount).accountNumber.slice(-4)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No account information available</p>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Recent Transactions */}
-            <Card>
+            <Card className="bg-white/95 backdrop-blur border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
-                  Recent Transactions
+                <CardTitle className="flex items-center text-gray-900">
+                  <History className="w-5 h-5 mr-2 text-blue-600" />
+                  Recent Activity
                 </CardTitle>
-                <CardDescription>Your latest account activity</CardDescription>
+                <CardDescription>Your latest transactions</CardDescription>
               </CardHeader>
               <CardContent>
                 {transactionsLoading ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                      <div key={i} className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
                         <div className="flex-1 space-y-2">
                           <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                           <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3"></div>
@@ -311,36 +586,41 @@ export default function UserDashboard() {
                     ))}
                   </div>
                 ) : transactions && (transactions as Transaction[]).length > 0 ? (
-                  <div className="space-y-4">
-                    {(transactions as Transaction[]).map((transaction) => (
-                      <div key={transaction.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  <div className="space-y-3">
+                    {(transactions as Transaction[]).slice(0, 5).map((transaction) => (
+                      <div key={transaction.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                         }`}>
                           {transaction.type === 'credit' ? 
-                            <ArrowUpRight className="w-4 h-4" /> : 
-                            <ArrowDownRight className="w-4 h-4" />
+                            <ArrowUpRight className="w-5 h-5" /> : 
+                            <ArrowDownRight className="w-5 h-5" />
                           }
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{transaction.description}</p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(transaction.transactionDate).toLocaleDateString()}
-                          </p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{transaction.description}</p>
+                          <div className="flex items-center space-x-2 text-xs text-gray-500">
+                            <span>{new Date(transaction.transactionDate).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span className="font-mono">FCB{new Date(transaction.transactionDate).toISOString().slice(0, 10).replace(/-/g, '')}-{transaction.id.slice(-6).toUpperCase()}</span>
+                          </div>
                         </div>
-                        <div className={`font-bold ${
+                        <div className={`font-bold text-right ${
                           transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                          <div>{transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}</div>
+                          <div className="text-xs text-gray-500 font-normal">
+                            ${parseFloat(transaction.balanceAfter).toLocaleString()}
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No transactions yet</p>
-                    <p className="text-sm text-gray-400">Your transaction history will appear here</p>
+                    <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 font-medium">No transactions yet</p>
+                    <p className="text-sm text-gray-400">Your account activity will appear here</p>
                   </div>
                 )}
               </CardContent>
