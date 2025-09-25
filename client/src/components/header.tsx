@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Menu, X, ChevronDown, ChevronUp, MapPin, HelpCircle, ArrowRight, CreditCard, TrendingUp, Home, Car, Shield, DollarSign, Building } from "lucide-react";
+import { Search, Menu, X, ChevronDown, ChevronRight, ChevronUp, MapPin, HelpCircle, ArrowRight, CreditCard, TrendingUp, Home, Car, Shield, DollarSign, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -16,10 +16,18 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const navigationItems = [
-    { label: "PERSONAL", href: "#" },
-    { label: "SMALL BUSINESS", href: "#" },
-    { label: "COMMERCIAL", href: "#" },
-    { label: "WEALTH", href: "#" },
+    { label: "PERSONAL", href: "https://www.firstcitizens.com/personal" },
+    { label: "SMALL BUSINESS", href: "https://www.firstcitizens.com/small-business" },
+    { label: "COMMERCIAL", href: "https://www.firstcitizens.com/commercial" },
+    { label: "WEALTH", href: "https://www.firstcitizens.com/wealth" },
+  ];
+
+  // Mobile navigation sections
+  const mobileNavigationSections = [
+    { label: "Personal", href: "https://www.firstcitizens.com/personal" },
+    { label: "Small Business", href: "https://www.firstcitizens.com/small-business" },
+    { label: "Commercial", href: "https://www.firstcitizens.com/commercial" },
+    { label: "Wealth", href: "https://www.firstcitizens.com/wealth" },
   ];
 
   useEffect(() => {
@@ -1252,92 +1260,122 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                 Log In
               </Button>
 
-              {/* Mobile menu */}
+            </div>
+
+            {/* Mobile Menu Button - Top Right */}
+            <div className="md:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className="md:hidden"
+                    size="icon"
+                    className="p-2"
                     data-testid="button-mobile-menu"
                   >
-                    <Menu className="h-5 w-5" />
+                    <Menu className="h-6 w-6 text-gray-900" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:w-[350px] px-0">
-                  {/* Clean header with logo */}
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                    <img
-                      src="https://www.firstcitizens.com/etc.clientlibs/firstcitizens/clientlibs/clientlib-site/resources/fcb-main-logo.svg"
-                      alt="First Citizens Bank"
-                      className="h-6"
-                    />
+                <SheetContent side="right" className="w-full h-full p-0 flex flex-col">
+                  {/* FDIC Banner */}
+                  <div 
+                    className="bg-blue-900 text-white p-3 flex items-center justify-between cursor-pointer"
+                    onClick={() => setIsFdicExpanded(!isFdicExpanded)}
+                  >
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold">FDIC</div>
+                      <div className="text-xs opacity-90">FDIC Insured - Backed by the full faith and credit of the U.S. Government</div>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isFdicExpanded ? 'rotate-180' : ''}`} />
                   </div>
-                  
-                  {/* Simplified mobile navigation */}
-                  <div className="overflow-y-auto h-full">
-                    <nav className="py-6">
-                      {/* Main navigation sections */}
-                      <div className="space-y-1">
-                        {navigationItems.map((item) => (
-                          <a
-                            key={item.label}
-                            href={item.href}
-                            className="block px-6 py-4 text-gray-900 hover:bg-gray-50 font-semibold text-lg border-b border-gray-50 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            data-testid={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                          >
-                            {item.label}
-                          </a>
-                        ))}
-                      </div>
-                      
-                      {/* Additional services */}
-                      <div className="mt-8 px-6">
-                        <div className="space-y-3">
-                          <a
-                            href="https://www.firstcitizens.com/support"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-gray-700 hover:text-green-700 font-medium transition-colors py-3"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <HelpCircle className="h-5 w-5 mr-3 text-green-700" />
-                            Support
-                          </a>
-                          <button
-                            className="flex items-center text-gray-700 hover:text-green-700 font-medium transition-colors py-3 w-full text-left"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <MapPin className="h-5 w-5 mr-3 text-green-700" />
-                            Find a Location
-                          </button>
-                          <button
-                            onClick={() => {
-                              onSearchClick();
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className="flex items-center text-gray-700 hover:text-green-700 font-medium transition-colors py-3 w-full text-left"
-                          >
-                            <Search className="h-5 w-5 mr-3 text-green-700" />
-                            Search
-                          </button>
-                        </div>
-                        
-                        {/* Login button */}
-                        <div className="mt-8 pt-6 border-t border-gray-100">
-                          <Button
-                            onClick={() => {
-                              onLoginClick();
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-4 text-lg rounded-lg"
-                          >
-                            Log In
-                          </Button>
-                        </div>
-                      </div>
-                    </nav>
+
+                  {/* Header with Logo, Login, and Close */}
+                  <div className="flex justify-between items-center p-4 bg-white border-b border-gray-100">
+                    <div className="flex items-center">
+                      <img
+                        src="https://www.firstcitizens.com/etc.clientlibs/firstcitizens/clientlibs/clientlib-site/resources/fcb-main-logo.svg"
+                        alt="First Citizens Bank"
+                        className="h-6"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          onLoginClick();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="px-4 py-2 border-gray-900 text-gray-900 hover:bg-gray-50"
+                        data-testid="button-mobile-login"
+                      >
+                        Log In
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="ml-2"
+                        data-testid="button-close-mobile-menu"
+                      >
+                        <X className="h-6 w-6 text-gray-900" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Main Navigation Sections */}
+                  <div className="flex-1 bg-white overflow-y-auto">
+                    {mobileNavigationSections.map((item) => (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex justify-between items-center px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        data-testid={`mobile-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <span className="text-lg font-medium text-gray-900">{item.label}</span>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </a>
+                    ))}
+                  </div>
+
+                  {/* Bottom Navigation */}
+                  <div className="bg-gray-50 p-4 border-t border-gray-100">
+                    <div className="flex justify-around">
+                      <button 
+                        className="flex flex-col items-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => {
+                          window.open('https://www.firstcitizens.com/support', '_blank');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        data-testid="button-mobile-support"
+                      >
+                        <HelpCircle className="h-6 w-6 text-gray-600 mb-1" />
+                        <span className="text-xs text-gray-600 font-medium">Support</span>
+                      </button>
+                      <button 
+                        className="flex flex-col items-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => {
+                          window.open('https://www.firstcitizens.com/locations', '_blank');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        data-testid="button-mobile-locations"
+                      >
+                        <MapPin className="h-6 w-6 text-gray-600 mb-1" />
+                        <span className="text-xs text-gray-600 font-medium">Locations</span>
+                      </button>
+                      <button 
+                        className="flex flex-col items-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => {
+                          onSearchClick();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        data-testid="button-mobile-search"
+                      >
+                        <Search className="h-6 w-6 text-gray-600 mb-1" />
+                        <span className="text-xs text-gray-600 font-medium">Search</span>
+                      </button>
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
