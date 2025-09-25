@@ -343,6 +343,11 @@ export default function UserDashboard() {
     enabled: !!user,
   });
 
+  // Calculate total balance from all accounts
+  const totalBalance = allAccounts && (allAccounts as BankAccount[]).length > 0 
+    ? (allAccounts as BankAccount[]).reduce((sum, account) => sum + parseFloat(account.balance), 0)
+    : 0;
+
   // Get user's transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/user/transactions'],
@@ -358,6 +363,7 @@ export default function UserDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/accounts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
       toast({
         title: "Transfer Successful",
@@ -384,6 +390,7 @@ export default function UserDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/accounts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
       toast({
         title: "Bill Payment Successful",
@@ -410,6 +417,7 @@ export default function UserDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/accounts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
       toast({
         title: "Transfer Successful",
@@ -610,8 +618,8 @@ export default function UserDashboard() {
                           <SiVisa className="w-12 h-8 text-white mb-2" />
                           <p className="text-xs text-blue-200">Balance</p>
                           <p className="font-semibold text-lg">
-                            {bankAccount && balanceVisible 
-                              ? `$${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}`
+                            {allAccounts && balanceVisible 
+                              ? `$${totalBalance.toLocaleString()}`
                               : "••••••"
                             }
                           </p>
@@ -1158,12 +1166,12 @@ export default function UserDashboard() {
                         )}
                       </Button>
                     </div>
-                    {accountLoading ? (
+                    {allAccountsLoading ? (
                       <div className="h-8 bg-gray-200 rounded animate-pulse w-32"></div>
-                    ) : bankAccount ? (
+                    ) : allAccounts && (allAccounts as BankAccount[]).length > 0 ? (
                       <h2 className="text-3xl font-bold text-gray-900">
                         {balanceVisible 
-                          ? `$${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}`
+                          ? `$${totalBalance.toLocaleString()}`
                           : "••••••"
                         }
                       </h2>
