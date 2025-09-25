@@ -25,11 +25,21 @@ export default function AdminLogin() {
 
       if (response.ok) {
         const admin = await response.json();
+        
+        // Show success message
         toast({
           title: "Login successful",
           description: `Welcome back, ${admin.firstName}!`,
         });
-        setLocation("/admin/dashboard");
+        
+        // Store admin info in sessionStorage for dashboard access
+        sessionStorage.setItem('admin', JSON.stringify(admin));
+        
+        // Navigate to dashboard after a brief delay to show the success message
+        setTimeout(() => {
+          setLocation("/admin/dashboard");
+        }, 1000);
+        
       } else {
         const error = await response.json();
         toast({
@@ -39,6 +49,7 @@ export default function AdminLogin() {
         });
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
         description: "Network error. Please try again.",

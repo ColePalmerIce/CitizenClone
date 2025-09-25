@@ -68,7 +68,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await apiRequest('/api/admin/session');
+        // Check sessionStorage first for immediate login experience
+        const storedAdmin = sessionStorage.getItem('admin');
+        if (storedAdmin) {
+          setAdmin(JSON.parse(storedAdmin));
+          return;
+        }
+        
+        // Fallback to server session check
+        const response = await apiRequest('GET', '/api/admin/session');
         if (response.ok) {
           const adminData = await response.json();
           setAdmin(adminData);
@@ -102,7 +110,7 @@ export default function AdminDashboard() {
 
   // Logout functionality
   const logoutMutation = useMutation({
-    mutationFn: () => apiRequest('/api/admin/logout', { method: 'POST' }),
+    mutationFn: () => apiRequest('POST', '/api/admin/logout'),
     onSuccess: () => {
       setAdmin(null);
       setLocation('/admin/login');
