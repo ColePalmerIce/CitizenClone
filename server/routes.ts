@@ -683,6 +683,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/user/accounts", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch accounts" });
+    }
+  });
+
   app.get("/api/user/transactions", async (req, res) => {
     try {
       const userId = req.session.userId;

@@ -331,9 +331,15 @@ export default function UserDashboard() {
     checkSession();
   }, [setLocation]);
 
-  // Get user's bank account
+  // Get user's bank account (primary)
   const { data: bankAccount, isLoading: accountLoading } = useQuery({
     queryKey: ['/api/user/account'],
+    enabled: !!user,
+  });
+
+  // Get all user's accounts
+  const { data: allAccounts, isLoading: allAccountsLoading } = useQuery({
+    queryKey: ['/api/user/accounts'],
     enabled: !!user,
   });
 
@@ -1401,6 +1407,7 @@ export default function UserDashboard() {
                               <SelectItem value="checking">Checking (****{bankAccount ? (bankAccount as BankAccount).accountNumber.slice(-4) : '0000'})</SelectItem>
                               <SelectItem value="savings">Savings (****2468)</SelectItem>
                               <SelectItem value="business">Business (****3579)</SelectItem>
+                              <SelectItem value="credit-card">FCB Rewards Credit Card (****8492)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1482,40 +1489,87 @@ export default function UserDashboard() {
               </CardContent>
             </Card>
 
-            {/* Account Details */}
+            {/* All Accounts */}
             <Card className="mb-6 bg-white/95 backdrop-blur border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center text-gray-900">
                   <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
-                  Account Information
+                  My Accounts
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {accountLoading ? (
-                  <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                {allAccountsLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-4 border rounded-lg">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-6 bg-gray-200 rounded animate-pulse w-32 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                      </div>
+                    ))}
                   </div>
-                ) : bankAccount ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Account Type</p>
-                      <p className="font-medium">{(bankAccount as BankAccount).accountType}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Status</p>
-                      <Badge variant={(bankAccount as BankAccount).status === 'active' ? 'default' : 'secondary'}>
-                        {(bankAccount as BankAccount).status}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Routing Number</p>
-                      <p className="font-mono text-sm">{(bankAccount as BankAccount).routingNumber}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Account Number</p>
-                      <p className="font-mono text-sm">****{(bankAccount as BankAccount).accountNumber.slice(-4)}</p>
+                ) : allAccounts && (allAccounts as BankAccount[]).length > 0 ? (
+                  <div className="space-y-4">
+                    {(allAccounts as BankAccount[]).map((account) => (
+                      <div key={account.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-semibold text-lg text-gray-900">
+                              {account.accountType}
+                            </h3>
+                            <p className="text-sm text-gray-600 font-mono">
+                              Account ****{account.accountNumber.slice(-4)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-gray-900">
+                              ${parseFloat(account.balance).toLocaleString()}
+                            </p>
+                            <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
+                              {account.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Routing Number</p>
+                            <p className="font-mono">{account.routingNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Opened</p>
+                            <p>{new Date(account.openDate).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Credit Card Information */}
+                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors bg-gradient-to-r from-gray-50 to-gray-100">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-semibold text-lg text-gray-900">
+                            FCB Rewards Credit Card
+                          </h3>
+                          <p className="text-sm text-gray-600 font-mono">
+                            Card ****8492
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-green-600">
+                            $4,750 Available
+                          </p>
+                          <Badge variant="default">Active</Badge>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Credit Limit</p>
+                          <p className="font-semibold">$5,000</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Current Balance</p>
+                          <p className="font-semibold text-red-600">$250</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (
