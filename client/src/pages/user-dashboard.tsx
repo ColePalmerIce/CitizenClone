@@ -74,7 +74,8 @@ import {
   Calendar,
   ChevronRight,
   Copy,
-  Check
+  Check,
+  Mail
 } from "lucide-react";
 
 interface UserData {
@@ -114,6 +115,11 @@ export default function UserDashboard() {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isCardsDialogOpen, setIsCardsDialogOpen] = useState(false);
   const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
+  const [showEmailDropdown, setShowEmailDropdown] = useState(false);
+  const [isSecurityDialogOpen, setIsSecurityDialogOpen] = useState(false);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [isBranchLocatorOpen, setIsBranchLocatorOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [accountNumberVisible, setAccountNumberVisible] = useState(false);
@@ -484,14 +490,24 @@ export default function UserDashboard() {
                           </p>
                         </div>
                       </div>
-                      <div className="font-mono text-lg tracking-wider mb-2">
+                      <div className="font-mono text-lg tracking-wider mb-3">
                         {bankAccount 
                           ? `**** **** **** ${(bankAccount as BankAccount).accountNumber.slice(-4)}`
                           : "**** **** **** ----"
                         }
                       </div>
+                      <div className="flex justify-between items-center mb-3">
+                        <div>
+                          <div className="text-xs text-blue-200">Valid Thru</div>
+                          <div className="font-mono text-sm">12/28</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-blue-200">CVV</div>
+                          <div className="font-mono text-sm">***</div>
+                        </div>
+                      </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm">{user?.firstName} {user?.lastName}</span>
+                        <span className="text-sm font-medium">{user?.firstName} {user?.lastName}</span>
                         <div className="flex space-x-2">
                           <Button size="sm" variant="secondary">
                             <Lock className="w-4 h-4 mr-1" />
@@ -513,11 +529,21 @@ export default function UserDashboard() {
                           <p className="font-semibold">$4,750</p>
                         </div>
                       </div>
-                      <div className="font-mono text-lg tracking-wider mb-2">
+                      <div className="font-mono text-lg tracking-wider mb-3">
                         **** **** **** 8492
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">{user?.firstName} {user?.lastName}</span>
+                      <div className="flex justify-between items-center mb-3">
+                        <div>
+                          <div className="text-xs text-gray-300">Valid Thru</div>
+                          <div className="font-mono text-sm">03/27</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-300">CVV</div>
+                          <div className="font-mono text-sm">***</div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-sm font-medium">{user?.firstName} {user?.lastName}</span>
                         <div className="flex space-x-2">
                           <Button size="sm" variant="secondary">
                             <Lock className="w-4 h-4 mr-1" />
@@ -525,12 +551,12 @@ export default function UserDashboard() {
                           </Button>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-gray-600">
-                        <div className="flex justify-between text-xs">
+                      <div className="pt-3 border-t border-gray-600">
+                        <div className="flex justify-between text-xs mb-2">
                           <span className="text-gray-300">Payment Due</span>
                           <span>Dec 15, 2025</span>
                         </div>
-                        <div className="flex justify-between text-xs mt-1">
+                        <div className="flex justify-between text-xs">
                           <span className="text-gray-300">Minimum Payment</span>
                           <span className="font-semibold">$125.00</span>
                         </div>
@@ -555,15 +581,57 @@ export default function UserDashboard() {
                 <ChevronRight className="w-4 h-4 ml-auto" />
               </Button>
 
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
-                data-testid="button-security"
-              >
-                <Shield className="w-4 h-4 mr-3" />
-                Security
-                <ChevronRight className="w-4 h-4 ml-auto" />
-              </Button>
+              <Dialog open={isSecurityDialogOpen} onOpenChange={setIsSecurityDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-security"
+                  >
+                    <Shield className="w-4 h-4 mr-3" />
+                    Security
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Security Settings</DialogTitle>
+                    <DialogDescription>
+                      Manage your account security and privacy settings
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Lock className="w-4 h-4 mr-3" />
+                        Change Password
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Shield className="w-4 h-4 mr-3" />
+                        Two-Factor Authentication
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <FileText className="w-4 h-4 mr-3" />
+                        Security Questions
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Bell className="w-4 h-4 mr-3" />
+                        Security Alerts
+                        <ChevronRight className="w-4 h-4 ml-auto" />
+                      </Button>
+                    </div>
+                    <div className="p-4 bg-red-50 rounded-lg">
+                      <h4 className="font-medium text-red-900 mb-2">Security Tip</h4>
+                      <p className="text-sm text-red-700">
+                        Never share your login credentials or personal information via email or phone calls.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               <div className="text-blue-200 text-xs font-semibold uppercase tracking-wide mb-3 mt-6">
                 Support & Help
@@ -594,9 +662,13 @@ export default function UserDashboard() {
                         <Phone className="w-6 h-6 text-blue-600" />
                         <span className="text-xs">Call Support</span>
                       </Button>
-                      <Button variant="outline" className="h-20 flex-col space-y-2">
-                        <MessageCircle className="w-6 h-6 text-green-600" />
-                        <span className="text-xs">Live Chat</span>
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex-col space-y-2"
+                        onClick={() => setShowEmailDropdown(!showEmailDropdown)}
+                      >
+                        <Mail className="w-6 h-6 text-green-600" />
+                        <span className="text-xs">Email Support</span>
                       </Button>
                       <Button variant="outline" className="h-20 flex-col space-y-2">
                         <HelpCircle className="w-6 h-6 text-purple-600" />
@@ -607,6 +679,44 @@ export default function UserDashboard() {
                         <span className="text-xs">Report Fraud</span>
                       </Button>
                     </div>
+
+                    {showEmailDropdown && (
+                      <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <h4 className="font-medium text-green-900 mb-2">Email Support</h4>
+                        <p className="text-sm text-green-700 mb-3">
+                          You can reach our support team via email and one of our customer representatives will attend to you promptly.
+                        </p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-2 bg-white rounded border">
+                            <span className="font-mono text-sm text-green-900">support@fiirstcitizens.com</span>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => {
+                                navigator.clipboard.writeText('support@fiirstcitizens.com');
+                                toast({ title: "Email copied to clipboard!" });
+                              }}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-white rounded border">
+                            <span className="font-mono text-sm text-green-900">help@fiirstcitizens.com</span>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => {
+                                navigator.clipboard.writeText('help@fiirstcitizens.com');
+                                toast({ title: "Email copied to clipboard!" });
+                              }}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <h4 className="font-medium text-blue-900 mb-2">24/7 Support</h4>
                       <p className="text-sm text-blue-700 mb-2">
@@ -618,35 +728,193 @@ export default function UserDashboard() {
                 </DialogContent>
               </Dialog>
 
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
-                data-testid="button-contact"
-              >
-                <MessageCircle className="w-4 h-4 mr-3" />
-                Contact Us
-                <ChevronRight className="w-4 h-4 ml-auto" />
-              </Button>
+              <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-contact"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-3" />
+                    Contact Us
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Contact Us</DialogTitle>
+                    <DialogDescription>
+                      Get in touch with First Citizens Bank
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center p-3 border rounded-lg">
+                        <Phone className="w-5 h-5 text-blue-600 mr-3" />
+                        <div>
+                          <p className="font-medium">Phone Support</p>
+                          <p className="text-sm text-gray-600">1-800-CITIZENS</p>
+                          <p className="text-xs text-gray-500">24/7 Available</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center p-3 border rounded-lg">
+                        <Mail className="w-5 h-5 text-green-600 mr-3" />
+                        <div>
+                          <p className="font-medium">Email Support</p>
+                          <p className="text-sm text-gray-600">support@fiirstcitizens.com</p>
+                          <p className="text-xs text-gray-500">Response within 24 hours</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center p-3 border rounded-lg">
+                        <MapPin className="w-5 h-5 text-purple-600 mr-3" />
+                        <div>
+                          <p className="font-medium">Visit Us</p>
+                          <p className="text-sm text-gray-600">Find a branch near you</p>
+                          <p className="text-xs text-gray-500">Use our branch locator</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2">Business Hours</h4>
+                      <p className="text-sm text-blue-700">
+                        Monday - Friday: 8:00 AM - 6:00 PM<br/>
+                        Saturday: 9:00 AM - 2:00 PM<br/>
+                        Sunday: Closed
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
-                data-testid="button-locations"
-              >
-                <MapPin className="w-4 h-4 mr-3" />
-                Branch Locator
-                <ChevronRight className="w-4 h-4 ml-auto" />
-              </Button>
+              <Dialog open={isBranchLocatorOpen} onOpenChange={setIsBranchLocatorOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-locations"
+                  >
+                    <MapPin className="w-4 h-4 mr-3" />
+                    Branch Locator
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Branch Locator</DialogTitle>
+                    <DialogDescription>
+                      Find First Citizens Bank branches and ATMs near you
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-4 border rounded-lg bg-blue-50">
+                        <div className="flex items-start space-x-3">
+                          <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium text-blue-900">Main Branch</h4>
+                            <p className="text-sm text-blue-700">123 Financial Street</p>
+                            <p className="text-sm text-blue-700">Banking City, BC 12345</p>
+                            <p className="text-xs text-blue-600 mt-1">Open: Mon-Fri 9AM-5PM</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-start space-x-3">
+                          <MapPin className="w-5 h-5 text-gray-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium">Downtown Branch</h4>
+                            <p className="text-sm text-gray-600">456 Commerce Ave</p>
+                            <p className="text-sm text-gray-600">Banking City, BC 12346</p>
+                            <p className="text-xs text-gray-500 mt-1">Open: Mon-Sat 9AM-4PM</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-start space-x-3">
+                          <CreditCard className="w-5 h-5 text-green-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium">ATM Network</h4>
+                            <p className="text-sm text-gray-600">50+ ATM locations</p>
+                            <p className="text-xs text-gray-500 mt-1">24/7 Access • Surcharge-free</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-700">
+                        <strong>Need directions?</strong> Call 1-800-CITIZENS or visit our website for the complete branch locator with maps and driving directions.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white hover:bg-blue-500 mb-1"
-                data-testid="button-notifications"
-              >
-                <Bell className="w-4 h-4 mr-3" />
-                Notifications
-                <ChevronRight className="w-4 h-4 ml-auto" />
-              </Button>
+              <Dialog open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                    data-testid="button-notifications"
+                  >
+                    <Bell className="w-4 h-4 mr-3" />
+                    Notifications
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Notifications</DialogTitle>
+                    <DialogDescription>
+                      Manage your account notifications and alerts
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center p-3 border rounded-lg">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">Account Balance Alert</p>
+                          <p className="text-xs text-gray-500">Your account balance has exceeded $50,000</p>
+                          <p className="text-xs text-gray-400">2 hours ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center p-3 border rounded-lg">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">Transfer Complete</p>
+                          <p className="text-xs text-gray-500">$1,500 transfer to John Smith completed</p>
+                          <p className="text-xs text-gray-400">Yesterday</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center p-3 border rounded-lg">
+                        <div className="w-2 h-2 bg-gray-300 rounded-full mr-3"></div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">Security Update</p>
+                          <p className="text-xs text-gray-500">Password was successfully updated</p>
+                          <p className="text-xs text-gray-400">3 days ago</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Notification Preferences</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 border rounded">
+                          <span className="text-sm">Email Alerts</span>
+                          <div className="w-8 h-4 bg-blue-500 rounded-full relative">
+                            <div className="absolute right-0 top-0 w-4 h-4 bg-white rounded-full shadow"></div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-2 border rounded">
+                          <span className="text-sm">SMS Alerts</span>
+                          <div className="w-8 h-4 bg-gray-300 rounded-full relative">
+                            <div className="absolute left-0 top-0 w-4 h-4 bg-white rounded-full shadow"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Logout */}
