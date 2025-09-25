@@ -416,8 +416,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName
       });
 
-      // Generate random account number (8-12 digits)
-      const accountNumber = Math.floor(Math.random() * 900000000000) + 100000000000;
+      // Generate realistic Citizens Bank account number (8-10 digits)
+      const accountNumber = Math.floor(Math.random() * 9000000000) + 1000000000; // 10 digits
       
       // First Citizens Bank routing number (fictional for demo)
       const routingNumber = "053000196";

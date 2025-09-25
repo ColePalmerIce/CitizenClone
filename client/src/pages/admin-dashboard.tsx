@@ -236,7 +236,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-100 dark:from-gray-900 dark:via-blue-950 dark:to-gray-800">
       {/* Mobile Header */}
       <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -651,7 +651,12 @@ function OverviewTab({
                 <Plus className="w-4 h-4 mr-2" />
                 Add Funds
               </Button>
-              <Button variant="outline" className="border-blue-200">
+              <Button 
+                variant="outline" 
+                className="border-blue-200 hover:bg-blue-50"
+                onClick={() => setActiveTab('transactions')}
+                data-testid="button-view-history"
+              >
                 <Eye className="w-4 h-4 mr-2" />
                 View History
               </Button>
@@ -955,9 +960,12 @@ function CustomersTab({
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
                       <div>
-                        <p className="font-medium">Account #{account.accountNumber}</p>
+                        <p className="font-medium text-lg">{account.firstName} {account.lastName}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {account.accountType} • Routing: {account.routingNumber}
+                          Account #{account.accountNumber} • {account.accountType} • Routing: {account.routingNumber}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Email: {account.email}
                         </p>
                       </div>
                       <div className="mt-2 sm:mt-0">
@@ -1059,7 +1067,7 @@ function TransactionsTab({
                   <SelectContent>
                     {customers?.map((account: any) => (
                       <SelectItem key={account.id} value={account.id}>
-                        #{account.accountNumber} - ${account.balance}
+                        {account.firstName} {account.lastName} - #{account.accountNumber} - ${account.balance}
                       </SelectItem>
                     ))}
                   </SelectContent>
