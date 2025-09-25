@@ -545,7 +545,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="flex items-center space-x-8" ref={dropdownRef}>
+            <nav className="hidden md:flex items-center space-x-8" ref={dropdownRef}>
               {navigationItems.map((item) => (
                 <div
                   key={item.label}
@@ -1213,7 +1213,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
             </nav>
 
             {/* Right side actions */}
-            <div className="flex items-center space-x-6">
+            <div className="hidden md:flex items-center space-x-6">
               {/* Support */}
               <a 
                 href="https://www.firstcitizens.com/support" 
@@ -1258,7 +1258,7 @@ export default function Header({ onLoginClick, onSearchClick }: HeaderProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="lg:hidden"
+                    className="md:hidden"
                     data-testid="button-mobile-menu"
                   >
                     <Menu className="h-5 w-5" />
