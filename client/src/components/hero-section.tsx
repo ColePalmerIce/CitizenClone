@@ -74,13 +74,13 @@ export default function HeroSection({ onAccountClick }: HeroSectionProps) {
 
   return (
     <section 
-      className="relative bg-cover bg-center bg-no-repeat text-gray-900 overflow-hidden min-h-[600px]"
+      className="relative bg-cover bg-center bg-no-repeat text-gray-900 overflow-hidden min-h-[600px] hero-section"
       style={{
         backgroundImage: `url('https://www.firstcitizens.com/adobe/dynamicmedia/deliver/dm-aid--643f9c8b-129d-4e4f-9b1b-70da53f214a2/personal-09-2025-2x-jpg.webp?format=webp&width=4800')`,
       }}
     >
-      {/* Background overlay for better text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent"></div>
+      {/* Background overlay with improved containment */}
+      <div className="absolute inset-0 bg-gradient-to-r from-white/90 to-transparent" style={{background: 'linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 55%, transparent 100%)'}}></div>
       
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full h-full flex flex-col justify-between">
         {/* Title and Start Investing Button */}

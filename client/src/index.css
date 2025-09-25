@@ -116,3 +116,21 @@
     @apply transition-colors;
   }
 }
+
+/* Hero section containment mask that matches content wrapper border-box width */
+.hero-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100vw, 72rem); /* Match max-w-6xl wrapper exactly */
+  background: linear-gradient(to right, transparent 0%, transparent 60%, rgba(0,0,0,0.05) 80%, rgba(0,0,0,0.15) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-section > .relative {
+  z-index: 2;
+}
