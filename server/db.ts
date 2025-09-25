@@ -183,8 +183,29 @@ export class PostgreSQLStorage implements IStorage {
     return await db.select().from(bankAccounts).where(eq(bankAccounts.userId, userId));
   }
 
-  async getAllBankAccounts(): Promise<BankAccount[]> {
-    return await db.select().from(bankAccounts).orderBy(desc(bankAccounts.createdAt));
+  async getAllBankAccounts(): Promise<any[]> {
+    // Join bank accounts with user information to get complete customer details
+    const result = await db.select({
+      // Bank account fields
+      id: bankAccounts.id,
+      userId: bankAccounts.userId,
+      accountNumber: bankAccounts.accountNumber,
+      routingNumber: bankAccounts.routingNumber,
+      accountType: bankAccounts.accountType,
+      balance: bankAccounts.balance,
+      status: bankAccounts.status,
+      createdAt: bankAccounts.createdAt,
+      // User fields
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      username: users.username
+    })
+    .from(bankAccounts)
+    .innerJoin(users, eq(bankAccounts.userId, users.id))
+    .orderBy(desc(bankAccounts.createdAt));
+    
+    return result;
   }
 
   async updateBankAccountBalance(id: string, newBalance: string): Promise<BankAccount | undefined> {

@@ -236,7 +236,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-100 dark:from-gray-900 dark:via-blue-950 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
       {/* Mobile Header */}
       <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -801,6 +801,8 @@ function CustomersTab({
   deleteCustomerMutation: any;
 }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [newCustomer, setNewCustomer] = useState({
     username: '',
     email: '',
@@ -956,7 +958,15 @@ function CustomersTab({
           ) : customers?.length > 0 ? (
             <div className="space-y-3">
               {customers.map((account: any) => (
-                <div key={account.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2 sm:space-y-0">
+                <div 
+                  key={account.id} 
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 space-y-2 sm:space-y-0 cursor-pointer hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-700 transition-all"
+                  onClick={() => {
+                    setSelectedCustomer(account);
+                    setIsCustomerDetailsDialogOpen(true);
+                  }}
+                  data-testid={`customer-${account.id}`}
+                >
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
                       <div>
