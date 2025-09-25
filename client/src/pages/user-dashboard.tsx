@@ -77,6 +77,7 @@ import {
   Check,
   Mail
 } from "lucide-react";
+import { SiVisa, SiMastercard } from 'react-icons/si';
 
 interface UserData {
   id: string;
@@ -557,15 +558,16 @@ export default function UserDashboard() {
                   </DialogHeader>
                   <div className="space-y-4">
                     {/* Debit Card */}
-                    <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg text-white">
+                    <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl text-white shadow-lg">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <p className="text-xs text-blue-200">Debit Card</p>
-                          <p className="font-semibold">First Citizens Debit</p>
+                          <p className="text-xs text-blue-200 uppercase tracking-wide">Debit Card</p>
+                          <p className="font-semibold text-lg">First Citizens Debit</p>
                         </div>
                         <div className="text-right">
+                          <SiVisa className="w-12 h-8 text-white mb-2" />
                           <p className="text-xs text-blue-200">Balance</p>
-                          <p className="font-semibold">
+                          <p className="font-semibold text-lg">
                             {bankAccount && balanceVisible 
                               ? `$${parseFloat((bankAccount as BankAccount).balance).toLocaleString()}`
                               : "••••••"
@@ -573,26 +575,26 @@ export default function UserDashboard() {
                           </p>
                         </div>
                       </div>
-                      <div className="font-mono text-lg tracking-wider mb-3">
+                      <div className="font-mono text-xl tracking-wider mb-4 mt-6">
                         {bankAccount 
                           ? `**** **** **** ${(bankAccount as BankAccount).accountNumber.slice(-4)}`
                           : "**** **** **** ----"
                         }
                       </div>
-                      <div className="flex justify-between items-center mb-3">
+                      <div className="flex justify-between items-center mb-4">
                         <div>
-                          <div className="text-xs text-blue-200">Valid Thru</div>
-                          <div className="font-mono text-sm">12/28</div>
+                          <div className="text-xs text-blue-200 uppercase tracking-wide">Valid Thru</div>
+                          <div className="font-mono text-sm font-medium">12/28</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-xs text-blue-200">CVV</div>
-                          <div className="font-mono text-sm">***</div>
+                          <div className="text-xs text-blue-200 uppercase tracking-wide">CVV</div>
+                          <div className="font-mono text-sm font-medium">***</div>
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">{user?.firstName} {user?.lastName}</span>
+                        <span className="text-sm font-medium uppercase tracking-wide">{user?.firstName} {user?.lastName}</span>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="secondary">
+                          <Button size="sm" variant="secondary" className="bg-blue-700 hover:bg-blue-600 text-white border-0">
                             <Lock className="w-4 h-4 mr-1" />
                             Freeze
                           </Button>
@@ -601,47 +603,67 @@ export default function UserDashboard() {
                     </div>
 
                     {/* Credit Card */}
-                    <div className="p-4 bg-gradient-to-r from-gray-700 to-gray-900 rounded-lg text-white">
+                    <div className="p-4 bg-gradient-to-r from-gray-800 to-black rounded-xl text-white shadow-lg">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <p className="text-xs text-gray-300">Credit Card</p>
-                          <p className="font-semibold">FCB Rewards Card</p>
+                          <p className="text-xs text-gray-300 uppercase tracking-wide">Credit Card</p>
+                          <p className="font-semibold text-lg">FCB Rewards Card</p>
                         </div>
                         <div className="text-right">
+                          <SiMastercard className="w-12 h-8 text-white mb-2" />
                           <p className="text-xs text-gray-300">Available Credit</p>
-                          <p className="font-semibold">$4,750</p>
+                          <p className="font-semibold text-lg text-green-400">$4,750</p>
                         </div>
                       </div>
-                      <div className="font-mono text-lg tracking-wider mb-3">
+                      <div className="font-mono text-xl tracking-wider mb-4 mt-6">
                         **** **** **** 8492
                       </div>
-                      <div className="flex justify-between items-center mb-3">
+                      <div className="flex justify-between items-center mb-4">
                         <div>
-                          <div className="text-xs text-gray-300">Valid Thru</div>
-                          <div className="font-mono text-sm">03/27</div>
+                          <div className="text-xs text-gray-300 uppercase tracking-wide">Valid Thru</div>
+                          <div className="font-mono text-sm font-medium">03/27</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-xs text-gray-300">CVV</div>
-                          <div className="font-mono text-sm">***</div>
+                          <div className="text-xs text-gray-300 uppercase tracking-wide">CVV</div>
+                          <div className="font-mono text-sm font-medium">***</div>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-medium">{user?.firstName} {user?.lastName}</span>
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-sm font-medium uppercase tracking-wide">{user?.firstName} {user?.lastName}</span>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="secondary">
+                          <Button size="sm" variant="secondary" className="bg-gray-700 hover:bg-gray-600 text-white border-0">
                             <Lock className="w-4 h-4 mr-1" />
                             Freeze
                           </Button>
                         </div>
                       </div>
-                      <div className="pt-3 border-t border-gray-600">
-                        <div className="flex justify-between text-xs mb-2">
-                          <span className="text-gray-300">Payment Due</span>
-                          <span>Dec 15, 2025</span>
+                      
+                      {/* Credit Card Details */}
+                      <div className="pt-4 border-t border-gray-600 space-y-3">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Credit Limit</div>
+                            <div className="font-semibold text-sm">$5,000</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Current Balance</div>
+                            <div className="font-semibold text-sm text-red-400">$250</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Available</div>
+                            <div className="font-semibold text-sm text-green-400">$4,750</div>
+                          </div>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-300">Minimum Payment</span>
-                          <span className="font-semibold">$125.00</span>
+                        
+                        <div className="flex justify-between text-xs pt-2 border-t border-gray-700">
+                          <div>
+                            <span className="text-gray-400">Payment Due:</span>
+                            <span className="ml-1 font-medium">Dec 15, 2025</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Min Payment:</span>
+                            <span className="ml-1 font-semibold text-yellow-400">$25.00</span>
+                          </div>
                         </div>
                       </div>
                     </div>
