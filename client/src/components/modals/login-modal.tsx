@@ -14,6 +14,11 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" data-testid="modal-login">
+        <DialogTitle className="text-lg font-semibold">Welcome Back</DialogTitle>
+        <DialogDescription className="text-muted-foreground">
+          Sign in to access your First Citizens Bank account and manage your finances securely.
+        </DialogDescription>
+        
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <img 
@@ -21,7 +26,6 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
               alt="First Citizens Bank" 
               className="h-6 w-auto"
             />
-            <DialogTitle className="text-lg font-semibold">Welcome Back</DialogTitle>
           </div>
           <Button 
             variant="ghost" 
@@ -32,10 +36,6 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
-        <DialogDescription className="text-muted-foreground mb-6">
-          Sign in to access your First Citizens Bank account and manage your finances securely.
-        </DialogDescription>
 
         <div className="space-y-6">
           <div>

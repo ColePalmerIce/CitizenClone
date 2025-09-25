@@ -12,9 +12,13 @@ export default function AccountOpener({ open, onOpenChange }: AccountOpenerProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" data-testid="modal-account-opener">
+        <DialogTitle className="text-xl font-semibold">Open a Personal Account</DialogTitle>
+        <DialogDescription className="text-muted-foreground">
+          Choose whether you already have a checking account with us to get started with the right option.
+        </DialogDescription>
+        
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold">Open a Personal Account</DialogTitle>
+          <div className="flex items-center justify-end">
             <Button 
               variant="ghost" 
               size="sm" 
@@ -24,10 +28,6 @@ export default function AccountOpener({ open, onOpenChange }: AccountOpenerProps
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
-          <DialogDescription className="text-muted-foreground">
-            Choose whether you already have a checking account with us to get started with the right option.
-          </DialogDescription>
 
           <div className="space-y-4">
             <h4 className="text-lg font-medium">Do you have a First Citizens checking account?</h4>

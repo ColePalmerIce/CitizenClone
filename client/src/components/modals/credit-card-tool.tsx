@@ -61,9 +61,13 @@ export default function CreditCardTool({ open, onOpenChange }: CreditCardToolPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-credit-card-tool">
+        <DialogTitle className="text-xl font-semibold">Get a credit card recommendation</DialogTitle>
+        <DialogDescription className="text-muted-foreground">
+          Answer a quick question to get a personalized credit card recommendation that fits your needs.
+        </DialogDescription>
+        
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold">Get a credit card recommendation</DialogTitle>
+          <div className="flex items-center justify-end">
             <Button 
               variant="ghost" 
               size="sm" 
@@ -73,10 +77,6 @@ export default function CreditCardTool({ open, onOpenChange }: CreditCardToolPro
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
-          <DialogDescription className="text-muted-foreground">
-            Answer a quick question to get a personalized credit card recommendation that fits your needs.
-          </DialogDescription>
 
           {step === 'question' && (
             <div className="space-y-6">
