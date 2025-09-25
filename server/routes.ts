@@ -330,6 +330,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin self-credit endpoint
+  app.post("/api/admin/credit-self", requireAdmin, async (req, res) => {
+    try {
+      const adminId = (req.session as any).adminId;
+      const { amount, description } = req.body;
+      
+      if (!amount || !description) {
+        return res.status(400).json({ message: "Amount and description are required" });
+      }
+      
+      const numAmount = parseFloat(amount);
+      if (isNaN(numAmount) || numAmount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      // Get current admin balance
+      const currentBalance = await storage.getAdminBalance(adminId);
+      if (!currentBalance) {
+        return res.status(404).json({ message: "Admin balance not found" });
+      }
+      
+      // Calculate new balance
+      const currentAmount = parseFloat(currentBalance.balance);
+      const newAmount = currentAmount + numAmount;
+      
+      // Update admin balance
+      await storage.updateAdminBalance(adminId, newAmount.toFixed(2));
+      
+      // Get updated balance to return
+      const updatedBalance = await storage.getAdminBalance(adminId);
+      
+      res.json({
+        success: true,
+        message: "Admin balance updated successfully",
+        balance: updatedBalance
+      });
+    } catch (error) {
+      console.error('Admin credit error:', error);
+      res.status(500).json({ message: "Failed to credit admin balance" });
+    }
+  });
+
   app.get("/api/admin/dashboard/stats", requireAdmin, async (req, res) => {
     try {
       const totalCustomers = await storage.getTotalCustomers();

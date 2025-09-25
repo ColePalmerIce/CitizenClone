@@ -48,6 +48,28 @@ interface DashboardStats {
   accounts: any[];
 }
 
+interface AdminBalance {
+  id: string;
+  adminId: string;
+  balance: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TransactionDetail {
+  id: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: string;
+  type: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  fromAccount?: any;
+  toAccount?: any;
+  user?: any;
+}
+
 interface AdminUser {
   id: string;
   email: string;
@@ -91,20 +113,26 @@ export default function AdminDashboard() {
   }, [setLocation]);
 
   // Dashboard stats query
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['/api/admin/dashboard/stats'],
     enabled: !!admin,
   });
 
   // Customers query
-  const { data: customers, isLoading: customersLoading } = useQuery({
+  const { data: customers, isLoading: customersLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/customers'],
     enabled: !!admin,
   });
 
   // Transactions query
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/transactions'],
+    enabled: !!admin,
+  });
+
+  // Admin balance query
+  const { data: adminBalance, isLoading: balanceLoading, refetch: refetchBalance } = useQuery<AdminBalance | null>({
+    queryKey: ['/api/admin/balance'],
     enabled: !!admin,
   });
 
@@ -161,6 +189,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      refetchBalance(); // Refresh admin balance
       toast({
         title: "Transaction processed",
         description: "Transaction completed successfully.",
@@ -170,6 +199,26 @@ export default function AdminDashboard() {
       toast({
         title: "Transaction failed",
         description: error.message || "Failed to process transaction.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Admin self-credit mutation
+  const adminCreditMutation = useMutation({
+    mutationFn: (data: { amount: string; description: string }) => 
+      apiRequest('POST', '/api/admin/credit-self', data),
+    onSuccess: () => {
+      refetchBalance();
+      toast({
+        title: "Balance Updated",
+        description: "Admin balance credited successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Credit Failed",
+        description: error.message || "Failed to credit admin balance.",
         variant: "destructive",
       });
     },
@@ -311,7 +360,16 @@ export default function AdminDashboard() {
         <div className="flex-1 lg:ml-0">
           <main className="p-4 lg:p-8">
             {selectedTab === "overview" && (
-              <OverviewTab stats={stats} statsLoading={statsLoading} admin={admin} />
+              <OverviewTab 
+                stats={stats} 
+                statsLoading={statsLoading} 
+                admin={admin} 
+                adminBalance={adminBalance}
+                balanceLoading={balanceLoading}
+                adminCreditMutation={adminCreditMutation}
+                transactions={transactions}
+                transactionsLoading={transactionsLoading}
+              />
             )}
             {selectedTab === "customers" && (
               <CustomersTab 
@@ -337,12 +395,58 @@ export default function AdminDashboard() {
 }
 
 // Overview Tab Component
-function OverviewTab({ stats, statsLoading, admin }: { stats: DashboardStats, statsLoading: boolean, admin: AdminUser | null }) {
-  if (statsLoading) {
+function OverviewTab({ 
+  stats, 
+  statsLoading, 
+  admin, 
+  adminBalance, 
+  balanceLoading,
+  adminCreditMutation,
+  transactions,
+  transactionsLoading 
+}: { 
+  stats: DashboardStats; 
+  statsLoading: boolean; 
+  admin: AdminUser | null;
+  adminBalance: AdminBalance | null;
+  balanceLoading: boolean;
+  adminCreditMutation: any;
+  transactions: any[];
+  transactionsLoading: boolean;
+}) {
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionDetail | null>(null);
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditDescription, setCreditDescription] = useState("");
+
+  // Format currency
+  const formatCurrency = (amount: string | number) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(num);
+  };
+
+  // Handle admin self-credit
+  const handleSelfCredit = () => {
+    if (!creditAmount || !creditDescription) {
+      return;
+    }
+    adminCreditMutation.mutate({
+      amount: creditAmount,
+      description: creditDescription
+    });
+    setShowCreditModal(false);
+    setCreditAmount("");
+    setCreditDescription("");
+  };
+  if (statsLoading || balanceLoading) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
           ))}
         </div>
@@ -379,17 +483,44 @@ function OverviewTab({ stats, statsLoading, admin }: { stats: DashboardStats, st
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Total Balance
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center justify-between">
+              Admin Balance
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowCreditModal(true)}
+                className="text-xs"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Credit
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              <span className="text-2xl font-bold">${stats?.totalBalance || '0.00'}</span>
+              <Shield className="w-5 h-5 text-green-600" />
+              <span className="text-2xl font-bold text-green-600">
+                {adminBalance ? formatCurrency(adminBalance.balance) : '$0.00'}
+              </span>
             </div>
+            <p className="text-xs text-gray-500 mt-1">Available for transactions</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              Customer Total Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              <DollarSign className="w-5 h-5 text-blue-600" />
+              <span className="text-2xl font-bold">{formatCurrency(stats?.totalBalance || '0.00')}</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">All customer accounts combined</p>
           </CardContent>
         </Card>
 
@@ -416,49 +547,238 @@ function OverviewTab({ stats, statsLoading, admin }: { stats: DashboardStats, st
           <CardContent>
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-orange-600" />
-              <span className="text-2xl font-bold">{stats?.recentTransactions?.length || 0}</span>
+              <span className="text-2xl font-bold">{transactions?.length || 0}</span>
             </div>
+            <p className="text-xs text-gray-500 mt-1">Last 7 days</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>Latest banking activities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {stats?.recentTransactions?.length > 0 ? (
-            <div className="space-y-3">
-              {stats.recentTransactions.map((transaction: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    {transaction.type === 'credit' ? (
-                      <ArrowUpRight className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 text-red-600" />
-                    )}
-                    <div>
-                      <p className="font-medium text-sm">{transaction.description}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">
-                        {new Date(transaction.transactionDate).toLocaleDateString()}
+      {/* Enhanced Recent Transactions Section */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Latest Admin Transactions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Recent Admin Transactions
+              <Badge variant="secondary">{transactions?.slice(0, 5).length || 0}</Badge>
+            </CardTitle>
+            <CardDescription>Your recent banking activities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!transactionsLoading && transactions && transactions.length > 0 ? (
+              <div className="space-y-3">
+                {transactions.slice(0, 5).map((transaction: any) => (
+                  <div 
+                    key={transaction.id} 
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    onClick={() => setSelectedTransaction(transaction)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {transaction.type === 'credit' ? (
+                        <div className="p-1 bg-green-100 rounded-full">
+                          <ArrowUpRight className="w-3 h-3 text-green-600" />
+                        </div>
+                      ) : (
+                        <div className="p-1 bg-red-100 rounded-full">
+                          <ArrowDownRight className="w-3 h-3 text-red-600" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-sm">{transaction.description}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                          {new Date(transaction.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-bold text-sm ${
+                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {transaction.type === 'credit' ? '+' : ''}{formatCurrency(transaction.amount)}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        <Eye className="w-3 h-3 inline mr-1" />
+                        Click for details
                       </p>
                     </div>
                   </div>
-                  <div className={`font-bold text-sm ${
-                    transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                ))}
+              </div>
+            ) : transactionsLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex space-x-4">
+                    <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+                    <div className="flex-1 space-y-2 py-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No recent transactions</p>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Admin Balance Management */}
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between text-blue-700">
+              <span className="flex items-center">
+                <Shield className="w-5 h-5 mr-2" />
+                Admin Balance Management
+              </span>
+            </CardTitle>
+            <CardDescription>Manage your administrative funds</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">Current Balance</p>
+              <p className="text-3xl font-bold text-green-600">
+                {adminBalance ? formatCurrency(adminBalance.balance) : '$0.00'}
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                onClick={() => setShowCreditModal(true)}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={adminCreditMutation.isPending}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Funds
+              </Button>
+              <Button variant="outline" className="border-blue-200">
+                <Eye className="w-4 h-4 mr-2" />
+                View History
+              </Button>
+            </div>
+            
+            <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+              <p><strong>Note:</strong> Admin balance automatically adjusts when processing customer transactions.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Transaction Details Modal */}
+      <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+          </DialogHeader>
+          {selectedTransaction && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-semibold">Transaction Amount</p>
+                  <p className={`text-lg font-bold ${
+                    selectedTransaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {transaction.type === 'credit' ? '+' : '-'}${transaction.amount}
+                    {selectedTransaction.type === 'credit' ? '+' : ''}{formatCurrency(selectedTransaction.amount)}
+                  </p>
+                </div>
+                <div className={`p-2 rounded-full ${
+                  selectedTransaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                }`}>
+                  {selectedTransaction.type === 'credit' ? (
+                    <ArrowUpRight className="w-6 h-6 text-green-600" />
+                  ) : (
+                    <ArrowDownRight className="w-6 h-6 text-red-600" />
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600 font-medium">Transaction ID</p>
+                  <p className="font-mono text-xs bg-gray-100 p-1 rounded">{selectedTransaction.id}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Status</p>
+                  <Badge variant={selectedTransaction.status === 'completed' ? 'default' : 'secondary'}>
+                    {selectedTransaction.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Date & Time</p>
+                  <p>{new Date(selectedTransaction.createdAt).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-medium">Type</p>
+                  <p className="capitalize">{selectedTransaction.type}</p>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-gray-600 font-medium mb-2">Description</p>
+                <p className="bg-gray-50 p-3 rounded text-sm">{selectedTransaction.description}</p>
+              </div>
+              
+              {selectedTransaction.toAccount && (
+                <div>
+                  <p className="text-gray-600 font-medium mb-2">Customer Details</p>
+                  <div className="bg-blue-50 p-3 rounded space-y-1">
+                    <p><strong>Name:</strong> {selectedTransaction.toAccount.user?.firstName} {selectedTransaction.toAccount.user?.lastName}</p>
+                    <p><strong>Email:</strong> {selectedTransaction.toAccount.user?.email}</p>
+                    <p><strong>Account:</strong> {selectedTransaction.toAccount.accountNumber}</p>
+                    <p><strong>Account Type:</strong> {selectedTransaction.toAccount.accountType}</p>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No recent transactions</p>
           )}
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Admin Credit Modal */}
+      <Dialog open={showCreditModal} onOpenChange={setShowCreditModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Funds to Admin Balance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="credit-amount">Amount</Label>
+              <Input
+                id="credit-amount"
+                type="number"
+                placeholder="Enter amount"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="credit-description">Description</Label>
+              <Input
+                id="credit-description"
+                placeholder="Reason for credit (e.g., Balance top-up)"
+                value={creditDescription}
+                onChange={(e) => setCreditDescription(e.target.value)}
+              />
+            </div>
+            <div className="flex space-x-2 pt-4">
+              <Button
+                onClick={handleSelfCredit}
+                disabled={!creditAmount || !creditDescription || adminCreditMutation.isPending}
+                className="flex-1"
+              >
+                {adminCreditMutation.isPending ? 'Processing...' : 'Add Funds'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreditModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
