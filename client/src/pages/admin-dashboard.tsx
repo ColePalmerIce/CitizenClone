@@ -123,11 +123,7 @@ export default function AdminDashboard() {
 
   // Create customer mutation
   const createCustomerMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/admin/customers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: any) => apiRequest('POST', '/api/admin/customers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
@@ -147,9 +143,7 @@ export default function AdminDashboard() {
 
   // Delete customer mutation
   const deleteCustomerMutation = useMutation({
-    mutationFn: (accountId: string) => apiRequest(`/api/admin/customers/${accountId}`, {
-      method: 'DELETE',
-    }),
+    mutationFn: (accountId: string) => apiRequest('DELETE', `/api/admin/customers/${accountId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
@@ -162,11 +156,7 @@ export default function AdminDashboard() {
 
   // Create transaction mutation
   const createTransactionMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/admin/transactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: any) => apiRequest('POST', '/api/admin/transactions', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
