@@ -64,6 +64,14 @@ export class PostgreSQLStorage implements IStorage {
     return result[0];
   }
 
+  async updateUserPassword(userId: string, hashedPassword: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
   // Search queries
   async saveSearchQuery(query: InsertSearchQuery): Promise<SearchQuery> {
     const result = await db.insert(searchQueries).values(query).returning();

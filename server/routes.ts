@@ -617,6 +617,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.post("/api/user/change-password", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      // Password requirements validation
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters long" });
+      }
+
+      // Get current user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const validCurrentPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!validCurrentPassword) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      const updatedUser = await storage.updateUserPassword(userId, hashedNewPassword);
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update password" });
+      }
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
   // User account endpoints
   app.get("/api/user/account", async (req, res) => {
     try {
