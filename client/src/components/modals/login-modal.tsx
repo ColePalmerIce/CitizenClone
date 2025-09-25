@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
               alt="First Citizens Bank" 
               className="h-6 w-auto"
             />
-            <h3 className="text-lg font-semibold">Welcome Back</h3>
+            <DialogTitle className="text-lg font-semibold">Welcome Back</DialogTitle>
           </div>
           <Button 
             variant="ghost" 
@@ -32,6 +32,10 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
             <X className="h-4 w-4" />
           </Button>
         </div>
+        
+        <DialogDescription className="text-muted-foreground mb-6">
+          Sign in to access your First Citizens Bank account and manage your finances securely.
+        </DialogDescription>
 
         <div className="space-y-6">
           <div>

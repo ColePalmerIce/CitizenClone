@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -63,7 +63,7 @@ export default function CreditCardTool({ open, onOpenChange }: CreditCardToolPro
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-credit-card-tool">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold">Get a credit card recommendation</h3>
+            <DialogTitle className="text-xl font-semibold">Get a credit card recommendation</DialogTitle>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -73,6 +73,10 @@ export default function CreditCardTool({ open, onOpenChange }: CreditCardToolPro
               <X className="h-4 w-4" />
             </Button>
           </div>
+          
+          <DialogDescription className="text-muted-foreground">
+            Answer a quick question to get a personalized credit card recommendation that fits your needs.
+          </DialogDescription>
 
           {step === 'question' && (
             <div className="space-y-6">
