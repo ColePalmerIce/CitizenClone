@@ -32,6 +32,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   User,
   DollarSign,
   CreditCard,
@@ -41,6 +47,7 @@ import {
   X,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowDownLeft,
   Eye,
   EyeOff,
   Building,
@@ -73,6 +80,7 @@ import {
   UserCircle,
   Calendar,
   ChevronRight,
+  ShoppingBag,
   Copy,
   Check,
   Mail
@@ -135,6 +143,14 @@ export default function UserDashboard() {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [accountNumberVisible, setAccountNumberVisible] = useState(false);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
+  const [accountTransferForm, setAccountTransferForm] = useState({
+    fromAccount: '',
+    toAccount: '',
+    amount: '',
+    description: '',
+    transferType: 'domestic' // domestic or international
+  });
   const { toast } = useToast();
 
   const handleDebitCardFreeze = () => {
@@ -352,6 +368,12 @@ export default function UserDashboard() {
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/user/transactions'],
     enabled: !!user,
+  });
+
+  // Get specific account transactions
+  const { data: accountTransactions, isLoading: accountTransactionsLoading } = useQuery({
+    queryKey: ['/api/user/account-transactions', selectedAccount?.id],
+    enabled: !!selectedAccount?.id && selectedAccount.id !== 'credit-card',
   });
 
   // Transfer money mutation
@@ -1519,10 +1541,15 @@ export default function UserDashboard() {
                 ) : allAccounts && (allAccounts as BankAccount[]).length > 0 ? (
                   <div className="space-y-4">
                     {(allAccounts as BankAccount[]).map((account) => (
-                      <div key={account.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div 
+                        key={account.id} 
+                        className="p-4 border rounded-lg hover:bg-blue-50 transition-colors cursor-pointer group"
+                        onClick={() => setSelectedAccount(account)}
+                        data-testid={`account-card-${account.accountType.toLowerCase()}`}
+                      >
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h3 className="font-semibold text-lg text-gray-900">
+                            <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                               {account.accountType}
                             </h3>
                             <p className="text-sm text-gray-600 font-mono">
@@ -1548,13 +1575,30 @@ export default function UserDashboard() {
                             <p>{new Date(account.openDate).toLocaleDateString()}</p>
                           </div>
                         </div>
+                        <div className="flex items-center justify-end mt-3 text-blue-600 group-hover:text-blue-700">
+                          <span className="text-sm font-medium">View Details</span>
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </div>
                       </div>
                     ))}
                     {/* Credit Card Information */}
-                    <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors bg-gradient-to-r from-gray-50 to-gray-100">
+                    <div 
+                      className="p-4 border rounded-lg hover:bg-blue-50 transition-colors bg-gradient-to-r from-gray-50 to-gray-100 cursor-pointer group"
+                      onClick={() => setSelectedAccount({
+                        id: 'credit-card',
+                        accountType: 'Credit Card',
+                        accountNumber: '****8492',
+                        routingNumber: '053100300',
+                        balance: '-250.00',
+                        status: 'active',
+                        openDate: new Date().toISOString(),
+                        userId: user?.id || ''
+                      } as any)}
+                      data-testid="account-card-credit"
+                    >
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h3 className="font-semibold text-lg text-gray-900">
+                          <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                             FCB Rewards Credit Card
                           </h3>
                           <p className="text-sm text-gray-600 font-mono">
@@ -1577,6 +1621,10 @@ export default function UserDashboard() {
                           <p className="text-xs text-gray-500 mb-1">Current Balance</p>
                           <p className="font-semibold text-red-600">$250</p>
                         </div>
+                      </div>
+                      <div className="flex items-center justify-end mt-3 text-blue-600 group-hover:text-blue-700">
+                        <span className="text-sm font-medium">View Details</span>
+                        <ChevronRight className="w-4 h-4 ml-1" />
                       </div>
                     </div>
                   </div>
@@ -1877,6 +1925,337 @@ export default function UserDashboard() {
               setIsSecurityAlertsOpen(false);
             }}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Detail Dialog */}
+      <Dialog open={!!selectedAccount} onOpenChange={() => setSelectedAccount(null)}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Wallet className="w-5 h-5 mr-2 text-blue-600" />
+              {selectedAccount?.accountType} Details
+            </DialogTitle>
+            <DialogDescription>
+              Complete account information and transaction history
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedAccount && (
+            <div className="space-y-6">
+              {/* Account Summary */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Account Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Account Type:</span>
+                        <span className="font-medium">{selectedAccount.accountType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Account Number:</span>
+                        <span className="font-mono">{selectedAccount.id === 'credit-card' ? '****8492' : `****${selectedAccount.accountNumber.slice(-4)}`}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Routing Number:</span>
+                        <span className="font-mono">{selectedAccount.routingNumber}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <Badge variant={selectedAccount.status === 'active' ? 'default' : 'secondary'}>
+                          {selectedAccount.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Balance Details</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {selectedAccount.id === 'credit-card' ? 'Available Credit:' : 'Current Balance:'}
+                        </span>
+                        <span className="font-bold text-2xl text-green-600">
+                          {selectedAccount.id === 'credit-card' 
+                            ? '$4,750' 
+                            : `$${parseFloat(selectedAccount.balance).toLocaleString()}`
+                          }
+                        </span>
+                      </div>
+                      {selectedAccount.id === 'credit-card' && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Credit Limit:</span>
+                            <span className="font-medium">$5,000</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Current Balance:</span>
+                            <span className="font-medium text-red-600">$250</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Opened:</span>
+                        <span className="font-medium">{new Date(selectedAccount.openDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transfer Options */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center">
+                  <ArrowLeftRight className="w-5 h-5 mr-2 text-blue-600" />
+                  Transfer Options
+                </h3>
+                
+                <Tabs defaultValue="domestic" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="domestic">Domestic Transfer</TabsTrigger>
+                    <TabsTrigger value="international">International Transfer</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="domestic" className="space-y-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="toAccount">To Account</Label>
+                        <Select 
+                          value={accountTransferForm.toAccount} 
+                          onValueChange={(value) => setAccountTransferForm({...accountTransferForm, toAccount: value})}
+                        >
+                          <SelectTrigger data-testid="select-transfer-to-account">
+                            <SelectValue placeholder="Select destination" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allAccounts && (allAccounts as BankAccount[])
+                              .filter(acc => acc.id !== selectedAccount.id)
+                              .map(account => (
+                                <SelectItem key={account.id} value={account.id}>
+                                  {account.accountType} (****{account.accountNumber.slice(-4)})
+                                </SelectItem>
+                              ))
+                            }
+                            <SelectItem value="external">External Bank Account</SelectItem>
+                            <SelectItem value="credit-card">FCB Credit Card (****8492)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="transferAmount">Amount ($)</Label>
+                        <Input
+                          id="transferAmount"
+                          type="number"
+                          value={accountTransferForm.amount}
+                          onChange={(e) => setAccountTransferForm({...accountTransferForm, amount: e.target.value})}
+                          placeholder="0.00"
+                          data-testid="input-transfer-amount"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="transferDescription">Description (Optional)</Label>
+                      <Input
+                        id="transferDescription"
+                        value={accountTransferForm.description}
+                        onChange={(e) => setAccountTransferForm({...accountTransferForm, description: e.target.value})}
+                        placeholder="Transfer purpose"
+                        data-testid="input-transfer-description"
+                      />
+                    </div>
+                    <div className="p-3 bg-blue-50 rounded-lg text-sm">
+                      <p className="text-blue-800">
+                        <strong>Routing:</strong> Domestic transfers use ACH routing ({selectedAccount.routingNumber})
+                      </p>
+                      <p className="text-blue-600 mt-1">Processing time: 1-3 business days</p>
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      data-testid="button-domestic-transfer"
+                      disabled={!accountTransferForm.toAccount || !accountTransferForm.amount}
+                    >
+                      Transfer ${accountTransferForm.amount || '0'}
+                    </Button>
+                  </TabsContent>
+                  
+                  <TabsContent value="international" className="space-y-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="recipientBank">Recipient Bank</Label>
+                        <Input
+                          id="recipientBank"
+                          placeholder="Bank name"
+                          data-testid="input-recipient-bank"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="swiftCode">SWIFT/BIC Code</Label>
+                        <Input
+                          id="swiftCode"
+                          placeholder="e.g., FCBTUS33"
+                          data-testid="input-swift-code"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="recipientAccount">Recipient Account</Label>
+                        <Input
+                          id="recipientAccount"
+                          placeholder="International account number"
+                          data-testid="input-recipient-account"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="intlAmount">Amount ($)</Label>
+                        <Input
+                          id="intlAmount"
+                          type="number"
+                          placeholder="0.00"
+                          data-testid="input-intl-amount"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="recipientName">Recipient Name</Label>
+                      <Input
+                        id="recipientName"
+                        placeholder="Full name as shown on account"
+                        data-testid="input-recipient-name"
+                      />
+                    </div>
+                    <div className="p-3 bg-orange-50 rounded-lg text-sm">
+                      <p className="text-orange-800">
+                        <strong>Wire Transfer:</strong> Uses wire routing (053100300) + SWIFT (FCBTUS33)
+                      </p>
+                      <p className="text-orange-600 mt-1">Fee: $25 | Processing time: Same day</p>
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      data-testid="button-international-transfer"
+                    >
+                      Send Wire Transfer
+                    </Button>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              {/* Transaction History */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center">
+                  <History className="w-5 h-5 mr-2 text-blue-600" />
+                  Transaction History
+                </h3>
+                
+                {selectedAccount.id === 'credit-card' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                          <ShoppingBag className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Amazon Purchase</p>
+                          <p className="text-sm text-gray-600">Sep 24, 2025 • 3:45 PM</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-red-600">-$125.99</div>
+                        <div className="text-xs text-gray-500">Balance: $250.00</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                          <Car className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Shell Gas Station</p>
+                          <p className="text-sm text-gray-600">Sep 22, 2025 • 8:30 AM</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-red-600">-$45.20</div>
+                        <div className="text-xs text-gray-500">Balance: $124.01</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                          <CreditCard className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Payment - Thank You</p>
+                          <p className="text-sm text-gray-600">Sep 20, 2025 • 2:15 PM</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-600">-$150.00</div>
+                        <div className="text-xs text-gray-500">Balance: $78.81</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : accountTransactionsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3"></div>
+                        </div>
+                        <div className="h-6 bg-gray-200 rounded animate-pulse w-20"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : accountTransactions && (accountTransactions as any[]).length > 0 ? (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {(accountTransactions as any[]).map((transaction: any) => (
+                      <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                          }`}>
+                            {transaction.type === 'credit' ? 
+                              <ArrowDownLeft className="w-5 h-5" /> : 
+                              <ArrowUpRight className="w-5 h-5" />
+                            }
+                          </div>
+                          <div>
+                            <p className="font-medium">{transaction.description}</p>
+                            <p className="text-sm text-gray-600">{new Date(transaction.transaction_date).toLocaleString()}</p>
+                            <p className="text-xs text-gray-500">Ref: {transaction.reference}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`font-bold ${
+                            transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Balance: ${parseFloat(transaction.balance_after).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No transaction history available</p>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedAccount(null)}>
+              Close
+            </Button>
+            <Button onClick={() => setSelectedAccount(null)} className="bg-blue-600 hover:bg-blue-700">
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>

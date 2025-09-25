@@ -716,6 +716,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/user/account-transactions/:accountId", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const { accountId } = req.params;
+      
+      // Verify the account belongs to the user
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      const accountExists = accounts.some(account => account.id === accountId);
+      
+      if (!accountExists) {
+        return res.status(404).json({ message: "Account not found or access denied" });
+      }
+      
+      const transactions = await storage.getTransactionsByAccountId(accountId, 50);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch account transactions" });
+    }
+  });
+
   // User transfer endpoint
   app.post("/api/user/transfer", async (req, res) => {
     try {
