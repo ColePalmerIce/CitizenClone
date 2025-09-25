@@ -114,6 +114,14 @@ export default function UserDashboard() {
     paymentDate: ''
   });
 
+  // Internal transfer form state
+  const [internalTransferForm, setInternalTransferForm] = useState({
+    fromAccount: '',
+    toAccount: '',
+    amount: '',
+    description: ''
+  });
+
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -205,6 +213,32 @@ export default function UserDashboard() {
     onError: () => {
       toast({
         title: "Payment Failed",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Internal transfer mutation
+  const internalTransferMutation = useMutation({
+    mutationFn: async (transferData: any) => {
+      const response = await apiRequest('POST', '/api/user/internal-transfer', transferData);
+      if (!response.ok) throw new Error('Internal transfer failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
+      toast({
+        title: "Transfer Successful",
+        description: "Your internal transfer has been completed.",
+      });
+      setIsInternalTransferOpen(false);
+      setInternalTransferForm({ fromAccount: '', toAccount: '', amount: '', description: '' });
+    },
+    onError: () => {
+      toast({
+        title: "Transfer Failed",
         description: "Please try again or contact support.",
         variant: "destructive",
       });
@@ -498,23 +532,94 @@ export default function UserDashboard() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button 
-                    variant="outline" 
-                    className="h-16 flex-col space-y-1 bg-purple-50 hover:bg-purple-100 border-purple-200"
-                    onClick={() => setIsInternalTransferOpen(true)}
-                    data-testid="button-internal-transfer"
-                  >
-                    <ArrowLeftRight className="w-5 h-5 text-purple-600" />
-                    <span className="text-xs text-purple-700">Between Accounts</span>
-                  </Button>
+                  <Dialog open={isInternalTransferOpen} onOpenChange={setIsInternalTransferOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex-col space-y-1 bg-purple-50 hover:bg-purple-100 border-purple-200"
+                        data-testid="button-internal-transfer"
+                      >
+                        <ArrowLeftRight className="w-5 h-5 text-purple-600" />
+                        <span className="text-xs text-purple-700">Between Accounts</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Transfer Between Accounts</DialogTitle>
+                        <DialogDescription>
+                          Move money between your First Citizens Bank accounts
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="fromAccount">From Account</Label>
+                          <Select value={internalTransferForm.fromAccount} onValueChange={(value) => setInternalTransferForm({...internalTransferForm, fromAccount: value})}>
+                            <SelectTrigger data-testid="select-from-account">
+                              <SelectValue placeholder="Select source account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="checking">Checking (****{bankAccount ? (bankAccount as BankAccount).accountNumber.slice(-4) : '0000'})</SelectItem>
+                              <SelectItem value="savings">Savings (****2468)</SelectItem>
+                              <SelectItem value="business">Business (****3579)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="toAccount">To Account</Label>
+                          <Select value={internalTransferForm.toAccount} onValueChange={(value) => setInternalTransferForm({...internalTransferForm, toAccount: value})}>
+                            <SelectTrigger data-testid="select-to-account">
+                              <SelectValue placeholder="Select destination account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="checking">Checking (****{bankAccount ? (bankAccount as BankAccount).accountNumber.slice(-4) : '0000'})</SelectItem>
+                              <SelectItem value="savings">Savings (****2468)</SelectItem>
+                              <SelectItem value="business">Business (****3579)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="internalAmount">Amount ($)</Label>
+                          <Input
+                            id="internalAmount"
+                            type="number"
+                            value={internalTransferForm.amount}
+                            onChange={(e) => setInternalTransferForm({...internalTransferForm, amount: e.target.value})}
+                            placeholder="0.00"
+                            data-testid="input-internal-amount"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="internalDescription">Description (Optional)</Label>
+                          <Input
+                            id="internalDescription"
+                            value={internalTransferForm.description}
+                            onChange={(e) => setInternalTransferForm({...internalTransferForm, description: e.target.value})}
+                            placeholder="Transfer note"
+                            data-testid="input-internal-description"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button 
+                          onClick={() => internalTransferMutation.mutate(internalTransferForm)}
+                          disabled={!internalTransferForm.fromAccount || !internalTransferForm.toAccount || !internalTransferForm.amount || internalTransferForm.fromAccount === internalTransferForm.toAccount || internalTransferMutation.isPending}
+                          className="w-full"
+                          data-testid="button-confirm-internal-transfer"
+                        >
+                          {internalTransferMutation.isPending ? 'Processing...' : `Transfer $${internalTransferForm.amount || '0'}`}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
 
                   <Button 
                     variant="outline" 
                     className="h-16 flex-col space-y-1 bg-orange-50 hover:bg-orange-100 border-orange-200"
+                    disabled
                     data-testid="button-deposit"
                   >
-                    <PiggyBank className="w-5 h-5 text-orange-600" />
-                    <span className="text-xs text-orange-700">Deposit</span>
+                    <PiggyBank className="w-5 h-5 text-orange-400" />
+                    <span className="text-xs text-orange-500">Coming Soon</span>
                   </Button>
                 </div>
               </CardContent>

@@ -656,6 +656,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User transfer endpoint
+  app.post("/api/user/transfer", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { recipient, recipientAccount, amount, description } = req.body;
+      
+      if (!recipient || !recipientAccount || !amount) {
+        return res.status(400).json({ message: "Recipient, account, and amount are required" });
+      }
+
+      const transferAmount = parseFloat(amount);
+      if (isNaN(transferAmount) || transferAmount <= 0) {
+        return res.status(400).json({ message: "Invalid transfer amount" });
+      }
+
+      // Get user's account
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      if (accounts.length === 0) {
+        return res.status(404).json({ message: "No account found" });
+      }
+
+      const account = accounts[0];
+      const currentBalance = parseFloat(account.balance || '0');
+
+      if (currentBalance < transferAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+
+      const newBalance = currentBalance - transferAmount;
+
+      // Create transaction
+      const transaction = await storage.createTransaction({
+        accountId: account.id,
+        type: 'debit',
+        amount: amount.toString(),
+        description: `Transfer to ${recipient} (${recipientAccount}) - ${description || 'External transfer'}`,
+        balanceAfter: newBalance.toFixed(2)
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(account.id, newBalance.toFixed(2));
+
+      res.json({ 
+        success: true, 
+        transaction,
+        message: `Transfer of $${amount} to ${recipient} completed successfully` 
+      });
+    } catch (error) {
+      console.error('Transfer error:', error);
+      res.status(500).json({ message: "Transfer failed" });
+    }
+  });
+
+  // User bill pay endpoint
+  app.post("/api/user/billpay", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { payee, accountNumber, amount, description } = req.body;
+      
+      if (!payee || !amount) {
+        return res.status(400).json({ message: "Payee and amount are required" });
+      }
+
+      const paymentAmount = parseFloat(amount);
+      if (isNaN(paymentAmount) || paymentAmount <= 0) {
+        return res.status(400).json({ message: "Invalid payment amount" });
+      }
+
+      // Get user's account
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      if (accounts.length === 0) {
+        return res.status(404).json({ message: "No account found" });
+      }
+
+      const account = accounts[0];
+      const currentBalance = parseFloat(account.balance || '0');
+
+      if (currentBalance < paymentAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+
+      const newBalance = currentBalance - paymentAmount;
+
+      // Create transaction
+      const transaction = await storage.createTransaction({
+        accountId: account.id,
+        type: 'debit',
+        amount: amount.toString(),
+        description: `Bill Payment - ${payee}${accountNumber ? ` (${accountNumber})` : ''} - ${description || 'Bill payment'}`,
+        balanceAfter: newBalance.toFixed(2)
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(account.id, newBalance.toFixed(2));
+
+      res.json({ 
+        success: true, 
+        transaction,
+        message: `Payment of $${amount} to ${payee} completed successfully` 
+      });
+    } catch (error) {
+      console.error('Bill pay error:', error);
+      res.status(500).json({ message: "Bill payment failed" });
+    }
+  });
+
+  // User internal transfer endpoint
+  app.post("/api/user/internal-transfer", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { fromAccount, toAccount, amount, description } = req.body;
+      
+      if (!fromAccount || !toAccount || !amount) {
+        return res.status(400).json({ message: "From account, to account, and amount are required" });
+      }
+
+      if (fromAccount === toAccount) {
+        return res.status(400).json({ message: "Cannot transfer to the same account" });
+      }
+
+      const transferAmount = parseFloat(amount);
+      if (isNaN(transferAmount) || transferAmount <= 0) {
+        return res.status(400).json({ message: "Invalid transfer amount" });
+      }
+
+      // Get user's primary account (simulate multiple accounts)
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      if (accounts.length === 0) {
+        return res.status(404).json({ message: "No account found" });
+      }
+
+      const account = accounts[0];
+      const currentBalance = parseFloat(account.balance || '0');
+
+      if (currentBalance < transferAmount) {
+        return res.status(400).json({ message: "Insufficient funds in source account" });
+      }
+
+      const newBalance = currentBalance - transferAmount;
+
+      // Create debit transaction for source account
+      const debitTransaction = await storage.createTransaction({
+        accountId: account.id,
+        type: 'debit',
+        amount: amount.toString(),
+        description: `Internal Transfer from ${fromAccount} to ${toAccount} - ${description || 'Account transfer'}`,
+        balanceAfter: newBalance.toFixed(2)
+      });
+
+      // Create credit transaction for destination (simulated)
+      const creditTransaction = await storage.createTransaction({
+        accountId: account.id, // Same account for demo, real system would have separate accounts
+        type: 'credit',
+        amount: amount.toString(),
+        description: `Internal Transfer from ${fromAccount} to ${toAccount} - ${description || 'Account transfer'}`,
+        balanceAfter: currentBalance.toFixed(2) // Keep balance same for demo
+      });
+
+      // Update account balance (only debit for demo)
+      await storage.updateBankAccountBalance(account.id, newBalance.toFixed(2));
+
+      res.json({ 
+        success: true, 
+        debitTransaction,
+        creditTransaction,
+        message: `Transfer of $${amount} from ${fromAccount} to ${toAccount} completed successfully` 
+      });
+    } catch (error) {
+      console.error('Internal transfer error:', error);
+      res.status(500).json({ message: "Internal transfer failed" });
+    }
+  });
+
   // Seed admin user on first run
   app.post("/api/admin/seed", async (req, res) => {
     try {
