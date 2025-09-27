@@ -910,6 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(statements);
     } catch (error) {
+      console.error('Error fetching statements:', error);
       res.status(500).json({ message: "Failed to fetch statements" });
     }
   });

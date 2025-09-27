@@ -260,15 +260,12 @@ export default function UserDashboard() {
   // Credit limit increase mutation
   const creditLimitMutation = useMutation({
     mutationFn: async (data: z.infer<typeof creditLimitFormSchema>) => {
-      return apiRequest('/api/user/credit-limit-increase', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('POST', '/api/user/credit-limit-increase', data);
     },
     onSuccess: (data) => {
       toast({
         title: "Credit Limit Increase Requested",
-        description: `Your request to increase limit to $${data.requestedLimit.toLocaleString()} has been submitted for review. You'll receive an update within 2-3 business days.`,
+        description: `Your request to increase credit limit has been submitted for review. You'll receive an update within 2-3 business days.`,
         duration: 5000,
       });
       setIsCreditLimitIncreaseOpen(false);
@@ -288,10 +285,7 @@ export default function UserDashboard() {
   // Debit limit increase mutation
   const debitLimitMutation = useMutation({
     mutationFn: async (data: z.infer<typeof debitLimitFormSchema>) => {
-      return apiRequest('/api/user/debit-limit-increase', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('POST', '/api/user/debit-limit-increase', data);
     },
     onSuccess: (data) => {
       toast({
@@ -1087,6 +1081,7 @@ export default function UserDashboard() {
                                 placeholder="Optional: Explain why you need a credit limit increase"
                                 className="h-20 resize-none"
                                 {...field}
+                                value={field.value || ''}
                                 data-testid="textarea-credit-reason"
                               />
                             </FormControl>
@@ -2531,13 +2526,14 @@ export default function UserDashboard() {
                             <SelectValue placeholder="Select destination" />
                           </SelectTrigger>
                           <SelectContent>
-                            {allAccounts && (allAccounts as BankAccount[])
-                              .filter(acc => acc.id !== selectedAccount.id)
-                              .map(account => (
-                                <SelectItem key={account.id} value={account.id}>
-                                  {account.accountType} (****{account.accountNumber.slice(-4)})
-                                </SelectItem>
-                              ))
+                            {allAccounts && Array.isArray(allAccounts) && 
+                              (allAccounts as BankAccount[])
+                                .filter(acc => acc.id !== selectedAccount.id)
+                                .map((account: BankAccount) => (
+                                  <SelectItem key={account.id} value={account.id}>
+                                    {account.accountType} (****{account.accountNumber.slice(-4)})
+                                  </SelectItem>
+                                )) as React.ReactNode[]
                             }
                             <SelectItem value="external">External Bank Account</SelectItem>
                             <SelectItem value="credit-card">FCB Credit Card (****8492)</SelectItem>
@@ -2778,11 +2774,11 @@ export default function UserDashboard() {
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
-          ) : statements && statements.length > 0 ? (
+          ) : statements && Array.isArray(statements) && statements.length > 0 ? (
             <div className="space-y-6">
               {/* Group statements by month */}
               {['September 2025', 'August 2025', 'July 2025'].map((month) => {
-                const monthStatements = statements.filter((stmt: any) => stmt.month === month);
+                const monthStatements = Array.isArray(statements) ? statements.filter((stmt: any) => stmt.month === month) : [];
                 if (monthStatements.length === 0) return null;
                 
                 return (
