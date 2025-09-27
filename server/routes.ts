@@ -14,6 +14,7 @@ import {
   insertUserSchema,
   insertCreditLimitIncreaseRequestSchema,
   insertDebitLimitIncreaseRequestSchema,
+  insertPendingExternalTransferSchema,
   type Transaction,
 } from "@shared/schema";
 import bcrypt from "bcrypt";
@@ -1430,6 +1431,243 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Internal transfer error:', error);
       res.status(500).json({ message: "Internal transfer failed" });
+    }
+  });
+
+  // External transfer submission (user side)
+  app.post("/api/user/external-transfer", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const validatedData = insertPendingExternalTransferSchema.parse({
+        ...req.body,
+        userId
+      });
+
+      // Validate the from account belongs to the user
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      const fromAccount = accounts.find(acc => acc.id === validatedData.fromAccountId);
+      
+      if (!fromAccount) {
+        return res.status(404).json({ message: "Source account not found" });
+      }
+
+      // Check if user has sufficient funds
+      const balance = parseFloat(fromAccount.balance || '0');
+      const transferAmount = parseFloat(validatedData.amount);
+      
+      if (balance < transferAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+
+      // Create pending external transfer request
+      const pendingTransfer = await storage.createPendingExternalTransfer(validatedData);
+
+      res.json({ 
+        success: true,
+        transfer: pendingTransfer,
+        message: "External transfer request submitted. Waiting for administrative approval."
+      });
+    } catch (error) {
+      console.error('External transfer submission error:', error);
+      res.status(400).json({ message: "Invalid transfer data" });
+    }
+  });
+
+  // Get pending external transfers for admin
+  app.get("/api/admin/pending-external-transfers", requireAdmin, async (req, res) => {
+    try {
+      const pendingTransfers = await storage.getAllPendingExternalTransfers();
+      
+      // Enrich with user and account details
+      const enrichedTransfers = await Promise.all(pendingTransfers.map(async (transfer) => {
+        const user = await storage.getUser(transfer.userId);
+        const account = await storage.getBankAccount(transfer.fromAccountId);
+        
+        return {
+          ...transfer,
+          userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown User',
+          userEmail: user?.email,
+          fromAccountNumber: account?.accountNumber,
+          fromAccountType: account?.accountType
+        };
+      }));
+
+      res.json(enrichedTransfers);
+    } catch (error) {
+      console.error('Get pending external transfers error:', error);
+      res.status(500).json({ message: "Failed to fetch pending transfers" });
+    }
+  });
+
+  // Get user's pending external transfers
+  app.get("/api/user/pending-external-transfers", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const pendingTransfers = await storage.getPendingExternalTransfersByUserId(userId);
+      res.json(pendingTransfers);
+    } catch (error) {
+      console.error('Get user pending external transfers error:', error);
+      res.status(500).json({ message: "Failed to fetch pending transfers" });
+    }
+  });
+
+  // Approve external transfer (admin side)
+  app.post("/api/admin/approve-external-transfer/:transferId", requireAdmin, async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      const adminId = req.session.adminId;
+
+      // Get the pending transfer
+      const pendingTransfer = await storage.getPendingExternalTransfer(transferId);
+      if (!pendingTransfer) {
+        return res.status(404).json({ message: "Transfer request not found" });
+      }
+
+      if (pendingTransfer.status !== 'pending') {
+        return res.status(400).json({ message: "Transfer request has already been processed" });
+      }
+
+      // CRITICAL: Re-fetch account balance to prevent race conditions
+      const fromAccount = await storage.getBankAccount(pendingTransfer.fromAccountId);
+      if (!fromAccount) {
+        // Mark as disapproved if account no longer exists
+        await storage.updatePendingExternalTransferStatus(
+          transferId, 
+          'disapproved', 
+          adminId, 
+          'Source account not found'
+        );
+        return res.status(404).json({ message: "Source account not found" });
+      }
+
+      const currentBalance = parseFloat(fromAccount.balance || '0');
+      const transferAmount = parseFloat(pendingTransfer.amount);
+
+      // SECURITY: Always re-check funds at approval time (not just submission time)
+      if (currentBalance < transferAmount) {
+        // Update transfer status to disapproved due to insufficient funds
+        await storage.updatePendingExternalTransferStatus(
+          transferId, 
+          'disapproved', 
+          adminId, 
+          `Insufficient funds at approval time. Available: $${currentBalance.toFixed(2)}, Required: $${transferAmount.toFixed(2)}`
+        );
+        return res.status(400).json({ 
+          message: `Transfer rejected: Insufficient funds. Available: $${currentBalance.toFixed(2)}, Required: $${transferAmount.toFixed(2)}`
+        });
+      }
+
+      const newBalance = currentBalance - transferAmount;
+
+      // ATOMICITY: All database operations should be performed together
+      // Note: In a production system, these would be wrapped in a database transaction
+      // For this demo, we'll perform operations in logical order with error handling
+      
+      try {
+        // 1. Deduct funds from user's account
+        const updatedAccount = await storage.updateBankAccountBalance(fromAccount.id, newBalance.toFixed(2));
+        if (!updatedAccount) {
+          throw new Error("Failed to update account balance");
+        }
+
+        // 2. Create a transaction record for the approved external transfer
+        const transaction = await storage.createTransaction({
+          accountId: fromAccount.id,
+          type: 'debit',
+          amount: pendingTransfer.amount,
+          description: `External Transfer to ${pendingTransfer.recipientName} - ${pendingTransfer.recipientBankName}`,
+          merchantName: pendingTransfer.recipientBankName,
+          merchantCategory: 'External Transfer',
+          reference: `EXT${Date.now().toString().slice(-8)}`,
+          balanceAfter: newBalance.toFixed(2),
+          processedBy: adminId,
+          status: 'completed'
+        });
+
+        // 3. Update transfer status to approved
+        const updatedTransfer = await storage.updatePendingExternalTransferStatus(
+          transferId, 
+          'approved', 
+          adminId
+        );
+
+        if (!updatedTransfer) {
+          throw new Error("Failed to update transfer status");
+        }
+
+        res.json({ 
+          success: true,
+          transfer: updatedTransfer,
+          transaction,
+          message: `External transfer of $${transferAmount.toFixed(2)} approved and processed`
+        });
+      } catch (operationError) {
+        // ROLLBACK: If any operation fails, we need to handle partial state
+        console.error('External transfer approval failed:', operationError);
+        
+        // Mark transfer as failed and try to update status
+        try {
+          await storage.updatePendingExternalTransferStatus(
+            transferId, 
+            'disapproved', 
+            adminId, 
+            `Processing failed: ${operationError instanceof Error ? operationError.message : 'Unknown error'}`
+          );
+        } catch (statusError) {
+          console.error('Failed to update transfer status after error:', statusError);
+        }
+        
+        return res.status(500).json({ 
+          message: "Transfer approval failed due to processing error. Transfer has been disapproved." 
+        });
+      }
+    } catch (error) {
+      console.error('Approve external transfer error:', error);
+      res.status(500).json({ message: "Failed to approve transfer" });
+    }
+  });
+
+  // Disapprove external transfer (admin side)
+  app.post("/api/admin/disapprove-external-transfer/:transferId", requireAdmin, async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      const { rejectionReason } = req.body;
+      const adminId = req.session.adminId;
+
+      // Get the pending transfer
+      const pendingTransfer = await storage.getPendingExternalTransfer(transferId);
+      if (!pendingTransfer) {
+        return res.status(404).json({ message: "Transfer request not found" });
+      }
+
+      if (pendingTransfer.status !== 'pending') {
+        return res.status(400).json({ message: "Transfer request has already been processed" });
+      }
+
+      // Update transfer status to disapproved
+      const updatedTransfer = await storage.updatePendingExternalTransferStatus(
+        transferId, 
+        'disapproved', 
+        adminId,
+        rejectionReason || 'Transfer request denied by administrator'
+      );
+
+      res.json({ 
+        success: true,
+        transfer: updatedTransfer,
+        message: "External transfer request has been disapproved"
+      });
+    } catch (error) {
+      console.error('Disapprove external transfer error:', error);
+      res.status(500).json({ message: "Failed to disapprove transfer" });
     }
   });
 
