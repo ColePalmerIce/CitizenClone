@@ -14,6 +14,7 @@ import {
   insertUserSchema,
   insertCreditLimitIncreaseRequestSchema,
   insertDebitLimitIncreaseRequestSchema,
+  type Transaction,
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 import session from "express-session";
@@ -939,8 +940,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
       
-      const transactions = await storage.getTransactionsByAccountId(accounts[0].id, 20);
-      res.json(transactions);
+      // Fetch transactions from ALL user accounts, not just the first one
+      const allTransactions: Transaction[] = [];
+      for (const account of accounts) {
+        const accountTransactions = await storage.getTransactionsByAccountId(account.id, 20);
+        allTransactions.push(...accountTransactions);
+      }
+      
+      // Sort all transactions by date (newest first) and limit to 20 most recent
+      const sortedTransactions = allTransactions
+        .sort((a, b) => {
+          const dateA = a.transactionDate ? new Date(a.transactionDate).getTime() : 0;
+          const dateB = b.transactionDate ? new Date(b.transactionDate).getTime() : 0;
+          return dateB - dateA;
+        })
+        .slice(0, 20);
+      
+      res.json(sortedTransactions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch transactions" });
     }
