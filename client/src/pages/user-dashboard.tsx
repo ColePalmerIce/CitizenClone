@@ -159,6 +159,22 @@ export default function UserDashboard() {
     transferType: 'domestic' // domestic or international
   });
   const [expandedStatements, setExpandedStatements] = useState<Set<string>>(new Set());
+  const [isCreditLimitIncreaseOpen, setIsCreditLimitIncreaseOpen] = useState(false);
+  const [isDebitLimitIncreaseOpen, setIsDebitLimitIncreaseOpen] = useState(false);
+  const [creditLimitForm, setCreditLimitForm] = useState({
+    currentLimit: 5000,
+    requestedLimit: 10000,
+    annualIncome: '',
+    employmentStatus: '',
+    reason: ''
+  });
+  const [debitLimitForm, setDebitLimitForm] = useState({
+    dailyATMLimit: 500,
+    requestedATMLimit: 1000,
+    dailyPurchaseLimit: 2500,
+    requestedPurchaseLimit: 5000,
+    reason: ''
+  });
   const { toast } = useToast();
 
   // Generate professional avatar for user
@@ -198,6 +214,42 @@ export default function UserDashboard() {
       newExpanded.add(statementId);
     }
     setExpandedStatements(newExpanded);
+  };
+
+  const handleCreditLimitIncrease = async () => {
+    try {
+      // Here you could make an API call to submit the credit limit increase request
+      toast({
+        title: "Credit Limit Increase Requested",
+        description: `Your request to increase limit to $${creditLimitForm.requestedLimit.toLocaleString()} has been submitted for review. You'll receive an update within 2-3 business days.`,
+        duration: 5000,
+      });
+      setIsCreditLimitIncreaseOpen(false);
+    } catch (error) {
+      toast({
+        title: "Request Failed",
+        description: "Unable to submit your credit limit increase request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDebitLimitIncrease = async () => {
+    try {
+      // Here you could make an API call to submit the debit limit increase request
+      toast({
+        title: "Debit Limit Increase Requested",
+        description: `Your ATM and purchase limit increase request has been submitted. New limits will be active within 24 hours.`,
+        duration: 5000,
+      });
+      setIsDebitLimitIncreaseOpen(false);
+    } catch (error) {
+      toast({
+        title: "Request Failed",
+        description: "Unable to submit your debit limit increase request. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDebitCardFreeze = () => {
