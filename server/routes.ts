@@ -481,6 +481,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin customer fund management endpoints
+  app.post("/api/admin/customer/add-funds", requireAdmin, async (req, res) => {
+    try {
+      const adminId = req.session.adminId;
+      const { accountId, amount, description } = req.body;
+      
+      if (!accountId || !amount || !description) {
+        return res.status(400).json({ message: "Account ID, amount, and description are required" });
+      }
+
+      const creditAmount = parseFloat(amount);
+      if (isNaN(creditAmount) || creditAmount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      // Get the account
+      const account = await storage.getBankAccount(accountId);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      const currentBalance = parseFloat(account.balance || '0');
+      const newBalance = currentBalance + creditAmount;
+
+      // Create transaction
+      const transaction = await storage.createTransaction({
+        accountId: accountId,
+        type: 'credit',
+        amount: amount,
+        description: `Admin Credit: ${description}`,
+        balanceAfter: newBalance.toFixed(2),
+        status: 'completed',
+        processedBy: adminId,
+        merchantName: 'First Citizens Bank Admin',
+        merchantLocation: 'Administrative Office',
+        merchantCategory: 'banking'
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
+
+      res.json({ 
+        success: true, 
+        transaction,
+        newBalance: newBalance.toFixed(2),
+        message: `Successfully added $${amount} to account` 
+      });
+    } catch (error) {
+      console.error('Add funds error:', error);
+      res.status(500).json({ message: "Failed to add funds" });
+    }
+  });
+
+  app.post("/api/admin/customer/withdraw-funds", requireAdmin, async (req, res) => {
+    try {
+      const adminId = req.session.adminId;
+      const { accountId, amount, description } = req.body;
+      
+      if (!accountId || !amount || !description) {
+        return res.status(400).json({ message: "Account ID, amount, and description are required" });
+      }
+
+      const debitAmount = parseFloat(amount);
+      if (isNaN(debitAmount) || debitAmount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      // Get the account
+      const account = await storage.getBankAccount(accountId);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      const currentBalance = parseFloat(account.balance || '0');
+      const newBalance = currentBalance - debitAmount;
+
+      // Create transaction
+      const transaction = await storage.createTransaction({
+        accountId: accountId,
+        type: 'debit',
+        amount: amount,
+        description: `Admin Withdrawal: ${description}`,
+        balanceAfter: newBalance.toFixed(2),
+        status: 'completed',
+        processedBy: adminId,
+        merchantName: 'First Citizens Bank Admin',
+        merchantLocation: 'Administrative Office',
+        merchantCategory: 'banking'
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
+
+      res.json({ 
+        success: true, 
+        transaction,
+        newBalance: newBalance.toFixed(2),
+        message: `Successfully withdrew $${amount} from account` 
+      });
+    } catch (error) {
+      console.error('Withdraw funds error:', error);
+      res.status(500).json({ message: "Failed to withdraw funds" });
+    }
+  });
+
   // Transaction Management Routes
   app.post("/api/admin/transactions", requireAdmin, async (req, res) => {
     try {
@@ -968,28 +1073,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Insufficient funds" });
       }
 
-      const newBalance = currentBalance - transferAmount;
-
-      // Create transaction
+      // Create pending transaction instead of immediately processing
       const transaction = await storage.createTransaction({
         accountId: account.id,
         type: 'debit',
         amount: amount.toString(),
         description: `Transfer to ${recipient} (${recipientAccount}) - ${description || 'External transfer'}`,
-        balanceAfter: newBalance.toFixed(2)
+        balanceAfter: currentBalance.toFixed(2), // Keep current balance until approved
+        status: 'pending', // Set as pending for admin approval
+        reference: `TXN${Date.now()}`,
+        merchantName: recipient,
+        merchantLocation: 'External Account',
+        merchantCategory: 'transfer'
       });
 
-      // Update account balance
-      await storage.updateBankAccountBalance(account.id, newBalance.toFixed(2));
+      // Don't update account balance yet - wait for admin approval
 
       res.json({ 
         success: true, 
         transaction,
-        message: `Transfer of $${amount} to ${recipient} completed successfully` 
+        message: `Transfer of $${amount} to ${recipient} is pending approval` 
       });
     } catch (error) {
       console.error('Transfer error:', error);
       res.status(500).json({ message: "Transfer failed" });
+    }
+  });
+
+  // Admin transfer approval endpoints
+  app.get("/api/admin/pending-transfers", requireAdmin, async (req, res) => {
+    try {
+      // Get all pending transactions
+      const allTransactions = await storage.getAllTransactions();
+      const pendingTransfers = allTransactions.filter(t => 
+        t.status === 'pending' && t.type === 'debit' && t.description?.includes('Transfer to')
+      );
+      
+      // Get account details for each transfer
+      const transfersWithDetails = await Promise.all(
+        pendingTransfers.map(async (transfer) => {
+          const account = await storage.getBankAccount(transfer.accountId);
+          return {
+            ...transfer,
+            account
+          };
+        })
+      );
+      
+      res.json(transfersWithDetails);
+    } catch (error) {
+      console.error('Failed to fetch pending transfers:', error);
+      res.status(500).json({ message: "Failed to fetch pending transfers" });
+    }
+  });
+
+  app.post("/api/admin/approve-transfer/:transactionId", requireAdmin, async (req, res) => {
+    try {
+      const { transactionId } = req.params;
+      const adminId = req.session.adminId;
+      
+      // Get the transaction
+      const allTransactions = await storage.getAllTransactions();
+      const transaction = allTransactions.find(t => t.id === transactionId);
+      
+      if (!transaction || transaction.status !== 'pending') {
+        return res.status(404).json({ message: "Pending transaction not found" });
+      }
+      
+      // Get the account
+      const account = await storage.getBankAccount(transaction.accountId);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      
+      const currentBalance = parseFloat(account.balance || '0');
+      const transferAmount = parseFloat(transaction.amount);
+      
+      // Check if sufficient funds still available
+      if (currentBalance < transferAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+      
+      const newBalance = currentBalance - transferAmount;
+      
+      // Update transaction status to approved and set new balance
+      await storage.updateTransactionStatus(transactionId, 'completed');
+      
+      // Update account balance
+      await storage.updateBankAccountBalance(transaction.accountId, newBalance.toFixed(2));
+      
+      res.json({ 
+        success: true, 
+        message: "Transfer approved and processed",
+        newBalance: newBalance.toFixed(2)
+      });
+    } catch (error) {
+      console.error('Approve transfer error:', error);
+      res.status(500).json({ message: "Failed to approve transfer" });
+    }
+  });
+
+  app.post("/api/admin/reject-transfer/:transactionId", requireAdmin, async (req, res) => {
+    try {
+      const { transactionId } = req.params;
+      const { reason } = req.body;
+      
+      // Get the transaction
+      const allTransactions = await storage.getAllTransactions();
+      const transaction = allTransactions.find(t => t.id === transactionId);
+      
+      if (!transaction || transaction.status !== 'pending') {
+        return res.status(404).json({ message: "Pending transaction not found" });
+      }
+      
+      // Update transaction status to rejected
+      await storage.updateTransactionStatus(transactionId, 'rejected');
+      
+      // Update description to include rejection reason
+      if (reason) {
+        const updatedDescription = `${transaction.description} - REJECTED: ${reason}`;
+        // Note: This would require a method to update transaction description
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Transfer rejected"
+      });
+    } catch (error) {
+      console.error('Reject transfer error:', error);
+      res.status(500).json({ message: "Failed to reject transfer" });
     }
   });
 

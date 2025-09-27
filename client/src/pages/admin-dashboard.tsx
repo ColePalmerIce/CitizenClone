@@ -29,6 +29,7 @@ import {
   CreditCard,
   TrendingUp,
   Plus,
+  Minus,
   Trash2,
   LogOut,
   Menu,
@@ -85,6 +86,12 @@ export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [isCustomerFundDialogOpen, setIsCustomerFundDialogOpen] = useState(false);
+  const [isCustomerWithdrawDialogOpen, setIsCustomerWithdrawDialogOpen] = useState(false);
+  const [customerFundAmount, setCustomerFundAmount] = useState("");
+  const [customerFundDescription, setCustomerFundDescription] = useState("");
+  const [customerWithdrawAmount, setCustomerWithdrawAmount] = useState("");
+  const [customerWithdrawDescription, setCustomerWithdrawDescription] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -184,6 +191,61 @@ export default function AdminDashboard() {
       toast({
         title: "Account deleted",
         description: "Customer account deleted successfully.",
+      });
+    },
+  });
+
+  // Customer fund management mutations
+  const customerAddFundsMutation = useMutation({
+    mutationFn: async (data: { accountId: string; amount: string; description: string }) => {
+      const response = await apiRequest('POST', '/api/admin/customer/add-funds', data);
+      if (!response.ok) throw new Error('Failed to add funds');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      toast({
+        title: "Funds Added",
+        description: "Customer account has been credited successfully.",
+      });
+      setIsCustomerFundDialogOpen(false);
+      setCustomerFundAmount("");
+      setCustomerFundDescription("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add funds to customer account.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const customerWithdrawFundsMutation = useMutation({
+    mutationFn: async (data: { accountId: string; amount: string; description: string }) => {
+      const response = await apiRequest('POST', '/api/admin/customer/withdraw-funds', data);
+      if (!response.ok) throw new Error('Failed to withdraw funds');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      toast({
+        title: "Funds Withdrawn",
+        description: "Amount has been withdrawn from customer account.",
+      });
+      setIsCustomerWithdrawDialogOpen(false);
+      setCustomerWithdrawAmount("");
+      setCustomerWithdrawDescription("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to withdraw funds from customer account.",
+        variant: "destructive",
       });
     },
   });
@@ -329,6 +391,18 @@ export default function AdminDashboard() {
               <CreditCard className="w-4 h-4 mr-2" />
               Transactions
             </Button>
+            <Button
+              variant={selectedTab === "pending-transfers" ? "secondary" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => {
+                setSelectedTab("pending-transfers");
+                setIsSidebarOpen(false);
+              }}
+              data-testid="nav-pending-transfers"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Pending Transfers
+            </Button>
           </nav>
 
           <div className="absolute bottom-4 left-4 right-4 space-y-4">
@@ -401,6 +475,9 @@ export default function AdminDashboard() {
                 customers={safeCustomers}
                 createTransactionMutation={createTransactionMutation}
               />
+            )}
+            {selectedTab === "pending-transfers" && (
+              <PendingTransfersTab />
             )}
           </main>
         </div>
@@ -816,8 +893,165 @@ function OverviewTab({
                 </p>
               </div>
               
+              {/* Fund Management Actions */}
+              <div className="grid grid-cols-2 gap-3">
+                <Dialog open={isCustomerFundDialogOpen} onOpenChange={setIsCustomerFundDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="default" 
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid="button-add-funds"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Funds
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+                
+                <Dialog open={isCustomerWithdrawDialogOpen} onOpenChange={setIsCustomerWithdrawDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      data-testid="button-withdraw-funds"
+                    >
+                      <Minus className="w-4 h-4 mr-2" />
+                      Withdraw
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
+              
               <div className="text-sm text-gray-500 text-center">
                 Account opened: {selectedCustomer.createdAt ? new Date(selectedCustomer.createdAt).toLocaleDateString() : 'N/A'}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Customer Fund Management Dialogs */}
+      <Dialog open={isCustomerFundDialogOpen} onOpenChange={setIsCustomerFundDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Funds to Customer Account</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Account #{selectedCustomer.accountNumber}</p>
+                <p className="text-sm font-medium">Current Balance: ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div>
+                <Label htmlFor="fund-amount">Amount to Add</Label>
+                <Input
+                  id="fund-amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={customerFundAmount}
+                  onChange={(e) => setCustomerFundAmount(e.target.value)}
+                  data-testid="input-customer-fund-amount"
+                />
+              </div>
+              <div>
+                <Label htmlFor="fund-description">Description</Label>
+                <Input
+                  id="fund-description"
+                  placeholder="Reason for adding funds"
+                  value={customerFundDescription}
+                  onChange={(e) => setCustomerFundDescription(e.target.value)}
+                  data-testid="input-customer-fund-description"
+                />
+              </div>
+              <div className="flex space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCustomerFundDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (customerFundAmount && customerFundDescription) {
+                      customerAddFundsMutation.mutate({
+                        accountId: selectedCustomer.id,
+                        amount: customerFundAmount,
+                        description: customerFundDescription
+                      });
+                    }
+                  }}
+                  disabled={!customerFundAmount || !customerFundDescription || customerAddFundsMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-confirm-add-funds"
+                >
+                  {customerAddFundsMutation.isPending ? 'Adding...' : `Add $${customerFundAmount || '0'}`}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isCustomerWithdrawDialogOpen} onOpenChange={setIsCustomerWithdrawDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Withdraw Funds from Customer Account</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Account #{selectedCustomer.accountNumber}</p>
+                <p className="text-sm font-medium">Current Balance: ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div>
+                <Label htmlFor="withdraw-amount">Amount to Withdraw</Label>
+                <Input
+                  id="withdraw-amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={customerWithdrawAmount}
+                  onChange={(e) => setCustomerWithdrawAmount(e.target.value)}
+                  data-testid="input-customer-withdraw-amount"
+                />
+              </div>
+              <div>
+                <Label htmlFor="withdraw-description">Description</Label>
+                <Input
+                  id="withdraw-description"
+                  placeholder="Reason for withdrawal"
+                  value={customerWithdrawDescription}
+                  onChange={(e) => setCustomerWithdrawDescription(e.target.value)}
+                  data-testid="input-customer-withdraw-description"
+                />
+              </div>
+              <div className="flex space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCustomerWithdrawDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (customerWithdrawAmount && customerWithdrawDescription) {
+                      customerWithdrawFundsMutation.mutate({
+                        accountId: selectedCustomer.id,
+                        amount: customerWithdrawAmount,
+                        description: customerWithdrawDescription
+                      });
+                    }
+                  }}
+                  disabled={!customerWithdrawAmount || !customerWithdrawDescription || customerWithdrawFundsMutation.isPending}
+                  variant="destructive"
+                  className="flex-1"
+                  data-testid="button-confirm-withdraw-funds"
+                >
+                  {customerWithdrawFundsMutation.isPending ? 'Withdrawing...' : `Withdraw $${customerWithdrawAmount || '0'}`}
+                </Button>
               </div>
             </div>
           )}
@@ -1104,6 +1338,211 @@ function CustomersTab({
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Pending Transfers Tab Component
+function PendingTransfersTab() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Pending transfers query
+  const { data: pendingTransfers, isLoading: pendingTransfersLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/pending-transfers'],
+  });
+  const safePendingTransfers = pendingTransfers || [];
+
+  // Approve transfer mutation
+  const approveTransferMutation = useMutation({
+    mutationFn: async (transactionId: string) => {
+      const response = await apiRequest('POST', `/api/admin/approve-transfer/${transactionId}`);
+      if (!response.ok) throw new Error('Failed to approve transfer');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      toast({
+        title: "Transfer Approved",
+        description: "The transfer has been approved and processed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to approve transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reject transfer mutation
+  const rejectTransferMutation = useMutation({
+    mutationFn: async (data: { transactionId: string; reason: string }) => {
+      const response = await apiRequest('POST', `/api/admin/reject-transfer/${data.transactionId}`, { reason: data.reason });
+      if (!response.ok) throw new Error('Failed to reject transfer');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      toast({
+        title: "Transfer Rejected",
+        description: "The transfer has been rejected.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reject transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Pending Transfers</h1>
+        <Badge variant="outline" className="mt-2 sm:mt-0">
+          {safePendingTransfers.length} pending
+        </Badge>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Transfer Approval Queue</CardTitle>
+          <CardDescription>Review and approve customer transfer requests</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pendingTransfersLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : safePendingTransfers.length > 0 ? (
+            <div className="space-y-4">
+              {safePendingTransfers.map((transfer: any) => (
+                <div 
+                  key={transfer.id} 
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800"
+                >
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center space-x-3">
+                      <Shield className="w-5 h-5 text-yellow-600" />
+                      <div>
+                        <p className="font-medium text-lg">
+                          ${parseFloat(transfer.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{transfer.description}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <p><span className="font-medium">From:</span> {transfer.account?.firstName} {transfer.account?.lastName}</p>
+                      <p><span className="font-medium">Account:</span> {transfer.account?.accountNumber}</p>
+                      <p><span className="font-medium">Date:</span> {new Date(transfer.transactionDate).toLocaleString()}</p>
+                      <p><span className="font-medium">Reference:</span> {transfer.reference}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2 mt-4 lg:mt-0">
+                    <Button
+                      onClick={() => approveTransferMutation.mutate(transfer.id)}
+                      disabled={approveTransferMutation.isPending || rejectTransferMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid={`button-approve-${transfer.id}`}
+                    >
+                      {approveTransferMutation.isPending ? 'Approving...' : 'Approve'}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setSelectedTransfer(transfer);
+                        setIsRejectDialogOpen(true);
+                      }}
+                      disabled={approveTransferMutation.isPending || rejectTransferMutation.isPending}
+                      data-testid={`button-reject-${transfer.id}`}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No pending transfers</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">All customer transfers have been processed</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Reject Transfer Dialog */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Transfer</DialogTitle>
+          </DialogHeader>
+          {selectedTransfer && (
+            <div className="space-y-4">
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                <p className="font-medium">${parseFloat(selectedTransfer.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{selectedTransfer.description}</p>
+              </div>
+              <div>
+                <Label htmlFor="reject-reason">Rejection Reason</Label>
+                <Input
+                  id="reject-reason"
+                  placeholder="Enter reason for rejection"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  data-testid="input-reject-reason"
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsRejectDialogOpen(false);
+                    setRejectReason("");
+                    setSelectedTransfer(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (rejectReason.trim()) {
+                      rejectTransferMutation.mutate({
+                        transactionId: selectedTransfer.id,
+                        reason: rejectReason
+                      });
+                      setIsRejectDialogOpen(false);
+                      setRejectReason("");
+                      setSelectedTransfer(null);
+                    }
+                  }}
+                  disabled={!rejectReason.trim() || rejectTransferMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-confirm-reject"
+                >
+                  {rejectTransferMutation.isPending ? 'Rejecting...' : 'Reject Transfer'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

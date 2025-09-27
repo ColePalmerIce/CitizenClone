@@ -320,6 +320,14 @@ export class PostgreSQLStorage implements IStorage {
       .limit(limit);
   }
 
+  async updateTransactionStatus(id: string, status: string): Promise<Transaction | undefined> {
+    const result = await db.update(transactions)
+      .set({ status })
+      .where(eq(transactions.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Customer profiles
   async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> {
     const result = await db.insert(customerProfiles).values(profile).returning();
