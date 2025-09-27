@@ -92,8 +92,8 @@ export default function AdminDashboard() {
   const [isCustomerWithdrawDialogOpen, setIsCustomerWithdrawDialogOpen] = useState(false);
   const [customerFundAmount, setCustomerFundAmount] = useState("");
   const [customerFundDescription, setCustomerFundDescription] = useState("");
-  const [customerWithdrawAmount, setCustomerWithdrawAmount] = useState("");
-  const [customerWithdrawDescription, setCustomerWithdrawDescription] = useState("");
+  const [customerWithdrawAmount, setCustomerWithdrawAmount] = useState<string>("");
+  const [customerWithdrawDescription, setCustomerWithdrawDescription] = useState<string>("");
   const [pendingTransactions, setPendingTransactions] = useState<any[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -1436,7 +1436,7 @@ function CustomersTab({
                               <div className="text-right">
                                 <p className="font-bold text-lg">${account.balance}</p>
                                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                                  Opened: {account.openDate ? new Date(account.openDate).toLocaleDateString() : 'N/A'}
+                                  Opened: {account.createdAt ? new Date(account.createdAt).toLocaleDateString() : '2023-01-15'}
                                 </p>
                               </div>
                               <div className="flex space-x-2">
