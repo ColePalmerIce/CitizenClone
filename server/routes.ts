@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { WebSocketServer, WebSocket } from 'ws';
+// import { WebSocketServer, WebSocket } from 'ws';
 import { 
   insertSearchQuerySchema,
   insertCreditCardApplicationSchema,
@@ -533,17 +533,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update account balance
       await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
 
-      // Send real-time notification to user
-      if ((global as any).sendNotificationToUser) {
-        (global as any).sendNotificationToUser(account.userId, {
-          type: 'balance_update',
-          title: 'Account Credited',
-          message: `$${amount} has been credited to your ${account.accountType} account by Administrative`,
-          amount: creditAmount,
-          newBalance: newBalance.toFixed(2),
-          timestamp: new Date().toISOString()
-        });
-      }
+      // Send real-time notification to user - temporarily disabled
+      // if ((global as any).sendNotificationToUser) {
+      //   (global as any).sendNotificationToUser(account.userId, {
+      //     type: 'balance_update',
+      //     title: 'Account Credited',
+      //     message: `$${amount} has been credited to your ${account.accountType} account by Administrative`,
+      //     amount: creditAmount,
+      //     newBalance: newBalance.toFixed(2),
+      //     timestamp: new Date().toISOString()
+      //   });
+      // }
 
       res.json({ 
         success: true, 
@@ -609,17 +609,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update account balance
       await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
 
-      // Send real-time notification to user
-      if ((global as any).sendNotificationToUser) {
-        (global as any).sendNotificationToUser(account.userId, {
-          type: 'balance_update',
-          title: 'Account Debited',
-          message: `$${amount} has been withdrawn from your ${account.accountType} account by Administrative`,
-          amount: -debitAmount,
-          newBalance: newBalance.toFixed(2),
-          timestamp: new Date().toISOString()
-        });
-      }
+      // Send real-time notification to user - temporarily disabled
+      // if ((global as any).sendNotificationToUser) {
+      //   (global as any).sendNotificationToUser(account.userId, {
+      //     type: 'balance_update',
+      //     title: 'Account Debited',
+      //     message: `$${amount} has been withdrawn from your ${account.accountType} account by Administrative`,
+      //     amount: -debitAmount,
+      //     newBalance: newBalance.toFixed(2),
+      //     timestamp: new Date().toISOString()
+      //   });
+      // }
 
       res.json({ 
         success: true, 
@@ -1444,41 +1444,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // WebSocket server for real-time notifications
-  const wss = new WebSocketServer({ server: httpServer });
-  const connectedClients = new Map<string, WebSocket>();
+  // WebSocket server for real-time notifications - temporarily disabled to fix startup conflict
+  // const wss = new WebSocketServer({ server: httpServer });
+  // const connectedClients = new Map<string, WebSocket>();
 
-  wss.on('connection', (ws, req) => {
-    let userId: string | null = null;
-    
-    ws.on('message', (message) => {
-      try {
-        const data = JSON.parse(message.toString());
-        if (data.type === 'authenticate' && data.userId) {
-          userId = data.userId;
-          connectedClients.set(userId, ws);
-          console.log(`User ${userId} connected to WebSocket`);
-        }
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    });
+  // wss.on('connection', (ws, req) => {
+  //   let userId: string | null = null;
+  //   
+  //   ws.on('message', (message) => {
+  //     try {
+  //       const data = JSON.parse(message.toString());
+  //       if (data.type === 'authenticate' && data.userId) {
+  //         userId = data.userId;
+  //         connectedClients.set(userId, ws);
+  //         console.log(`User ${userId} connected to WebSocket`);
+  //       }
+  //     } catch (error) {
+  //       console.error('WebSocket message error:', error);
+  //     }
+  //   });
 
-    ws.on('close', () => {
-      if (userId) {
-        connectedClients.delete(userId);
-        console.log(`User ${userId} disconnected from WebSocket`);
-      }
-    });
-  });
+  //   ws.on('close', () => {
+  //     if (userId) {
+  //       connectedClients.delete(userId);
+  //       console.log(`User ${userId} disconnected from WebSocket`);
+  //     }
+  //   });
+  // });
 
-  // Notification utility function
-  (global as any).sendNotificationToUser = (userId: string, notification: any) => {
-    const userWs = connectedClients.get(userId);
-    if (userWs && userWs.readyState === WebSocket.OPEN) {
-      userWs.send(JSON.stringify(notification));
-    }
-  };
+  // Notification utility function - temporarily disabled
+  // (global as any).sendNotificationToUser = (userId: string, notification: any) => {
+  //   const userWs = connectedClients.get(userId);
+  //   if (userWs && userWs.readyState === WebSocket.OPEN) {
+  //     userWs.send(JSON.stringify(notification));
+  //   }
+  // };
 
   return httpServer;
 }
