@@ -337,6 +337,9 @@ export class MemStorage implements IStorage {
       rejectionReason: null,
       submittedAt: new Date(),
       createdAt: new Date(),
+      // Ensure proper null handling for new fields
+      recipientPhoneNumber: transfer.recipientPhoneNumber || null,
+      recipientAddress: transfer.recipientAddress || null,
     };
     this.pendingExternalTransfers.set(id, pendingTransfer);
     return pendingTransfer;

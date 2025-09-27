@@ -255,6 +255,8 @@ export const pendingExternalTransfers = pgTable("pending_external_transfers", {
   recipientAccountNumber: text("recipient_account_number").notNull(),
   recipientRoutingNumber: text("recipient_routing_number").notNull(),
   recipientBankName: text("recipient_bank_name").notNull(),
+  recipientPhoneNumber: text("recipient_phone_number"),
+  recipientAddress: jsonb("recipient_address"), // {street, city, state, zip}
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   transferType: text("transfer_type").notNull(), // ACH, Wire, etc.
   purpose: text("purpose"), // reason for transfer

@@ -415,6 +415,18 @@ export default function AdminDashboard() {
               <Shield className="w-4 h-4 mr-2" />
               Pending Transfers
             </Button>
+            <Button
+              variant={selectedTab === "external-transfers" ? "secondary" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => {
+                setSelectedTab("external-transfers");
+                setIsSidebarOpen(false);
+              }}
+              data-testid="nav-external-transfers"
+            >
+              <ArrowUpRight className="w-4 h-4 mr-2" />
+              External Transfers
+            </Button>
           </nav>
 
           <div className="absolute bottom-4 left-4 right-4 space-y-4">
@@ -518,6 +530,9 @@ export default function AdminDashboard() {
             )}
             {selectedTab === "pending-transfers" && (
               <PendingTransfersTab />
+            )}
+            {selectedTab === "external-transfers" && (
+              <ExternalTransfersTab />
             )}
           </main>
         </div>
@@ -1523,6 +1538,260 @@ function CustomersTab({
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// External Transfers Tab Component  
+function ExternalTransfersTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Pending external transfers query
+  const { data: pendingExternalTransfers, isLoading: externalTransfersLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/pending-external-transfers'],
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+  });
+
+  const safePendingExternalTransfers = pendingExternalTransfers || [];
+
+  // Approve external transfer mutation
+  const approveExternalTransferMutation = useMutation({
+    mutationFn: async (transferId: string) => {
+      const response = await apiRequest('POST', `/api/admin/approve-external-transfer/${transferId}`);
+      if (!response.ok) throw new Error('Failed to approve external transfer');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-external-transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard-stats'] });
+      toast({
+        title: "External Transfer Approved",
+        description: "The external transfer has been approved and processed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Approval Failed",
+        description: "Failed to approve external transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Disapprove external transfer mutation
+  const disapproveExternalTransferMutation = useMutation({
+    mutationFn: async (data: { transferId: string; reason: string }) => {
+      const response = await apiRequest('POST', `/api/admin/disapprove-external-transfer/${data.transferId}`, { 
+        reason: data.reason 
+      });
+      if (!response.ok) throw new Error('Failed to disapprove external transfer');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-external-transfers'] });
+      toast({
+        title: "External Transfer Disapproved",
+        description: "The external transfer has been disapproved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Disapproval Failed",
+        description: "Failed to disapprove external transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const [selectedExternalTransfer, setSelectedExternalTransfer] = useState<any>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">External Transfers</h1>
+        <Badge variant="secondary" className="text-sm">
+          {safePendingExternalTransfers.length} pending
+        </Badge>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>External Transfer Approval Queue</CardTitle>
+          <CardDescription>Review and approve customer external transfer requests with comprehensive recipient details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {externalTransfersLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-300">Loading external transfers...</p>
+              </div>
+            </div>
+          ) : safePendingExternalTransfers.length > 0 ? (
+            <div className="space-y-6">
+              {safePendingExternalTransfers.map((transfer: any) => (
+                <Card 
+                  key={transfer.id} 
+                  className="p-6 border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950"
+                >
+                  <div className="space-y-4">
+                    {/* Transfer Header */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          ${parseFloat(transfer.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                          {transfer.transferType} Transfer • {transfer.purpose || 'No reason provided'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Submitted: {new Date(transfer.submittedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                        Pending Approval
+                      </Badge>
+                    </div>
+
+                    {/* Transfer Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {/* From Account */}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">From Account</h4>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <p>Account: ****{transfer.fromAccountId.slice(-4)}</p>
+                          <p>User ID: {transfer.userId}</p>
+                        </div>
+                      </div>
+
+                      {/* Recipient Information */}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Recipient Details</h4>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <p className="font-medium text-base">{transfer.recipientName}</p>
+                          {transfer.recipientPhoneNumber ? (
+                            <p className="flex items-center gap-1 mt-1">
+                              <span>📞</span> {transfer.recipientPhoneNumber}
+                            </p>
+                          ) : (
+                            <p className="text-gray-400 italic">No phone provided</p>
+                          )}
+                          {transfer.recipientAddress ? (
+                            <div className="mt-3 p-2 bg-white dark:bg-gray-700 rounded border">
+                              <p className="font-medium text-gray-900 dark:text-white mb-1">📍 Address:</p>
+                              <div className="space-y-1">
+                                <p>{transfer.recipientAddress.street}</p>
+                                <p>{transfer.recipientAddress.city}, {transfer.recipientAddress.state} {transfer.recipientAddress.zip}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 italic mt-3">No address provided</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Banking Information */}
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Banking Details</h4>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <p className="font-medium">{transfer.recipientBankName}</p>
+                          <p>Account: {transfer.recipientAccountNumber}</p>
+                          <p>Routing: {transfer.recipientRoutingNumber}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3 pt-4 border-t">
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => approveExternalTransferMutation.mutate(transfer.id)}
+                        disabled={approveExternalTransferMutation.isPending || disapproveExternalTransferMutation.isPending}
+                        data-testid={`button-approve-external-${transfer.id}`}
+                      >
+                        {approveExternalTransferMutation.isPending ? 'Approving...' : '✓ Approve Transfer'}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          setSelectedExternalTransfer(transfer);
+                        }}
+                        disabled={approveExternalTransferMutation.isPending || disapproveExternalTransferMutation.isPending}
+                        data-testid={`button-disapprove-external-${transfer.id}`}
+                      >
+                        ✗ Disapprove
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <ArrowUpRight className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No pending external transfers</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">All external transfer requests have been processed</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Disapprove External Transfer Dialog */}
+      <Dialog open={selectedExternalTransfer !== null} onOpenChange={() => setSelectedExternalTransfer(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Disapprove External Transfer</DialogTitle>
+          </DialogHeader>
+          {selectedExternalTransfer && (
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p className="font-medium">${parseFloat(selectedExternalTransfer.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">To: {selectedExternalTransfer.recipientName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Bank: {selectedExternalTransfer.recipientBankName}</p>
+              </div>
+              <div>
+                <Label htmlFor="rejectReason">Reason for disapproval</Label>
+                <Input
+                  id="rejectReason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Enter reason for disapproving this transfer..."
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedExternalTransfer(null);
+                    setRejectReason("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (selectedExternalTransfer) {
+                      disapproveExternalTransferMutation.mutate({
+                        transferId: selectedExternalTransfer.id,
+                        reason: rejectReason
+                      });
+                      setSelectedExternalTransfer(null);
+                      setRejectReason("");
+                    }
+                  }}
+                  disabled={!rejectReason.trim() || disapproveExternalTransferMutation.isPending}
+                >
+                  {disapproveExternalTransferMutation.isPending ? 'Disapproving...' : 'Disapprove Transfer'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

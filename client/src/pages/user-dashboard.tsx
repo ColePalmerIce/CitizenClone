@@ -456,20 +456,34 @@ export default function UserDashboard() {
     description: ''
   });
 
-  // External transfer validation schema as requested by architect
+  // External transfer validation schema with enhanced recipient details
   const externalTransferValidationSchema = insertPendingExternalTransferSchema.extend({
     amount: z.coerce.number().min(0.01, "Amount must be at least $0.01"),
     recipientAccountNumber: z.string().min(8, "Account number must be at least 8 digits"),
     recipientRoutingNumber: z.string().min(9, "Routing number must be 9 digits").max(9, "Routing number must be 9 digits"),
+    recipientPhoneNumber: z.string().transform(val => val.trim() === '' ? undefined : val).optional().refine(val => !val || val.length >= 10, "Phone number must be at least 10 digits"),
+    recipientAddress: z.object({
+      street: z.string().min(1, "Street address is required"),
+      city: z.string().min(1, "City is required"),
+      state: z.string().min(2, "State is required"),
+      zip: z.string().min(5, "ZIP code must be at least 5 digits"),
+    }).optional().or(z.undefined()),
   }).omit({ userId: true });
 
-  // External transfer form state with proper validation
+  // External transfer form state with enhanced recipient details
   const [externalTransferForm, setExternalTransferForm] = useState({
     fromAccountId: '',
     recipientName: '',
     recipientAccountNumber: '',
     recipientRoutingNumber: '',
     recipientBankName: '',
+    recipientPhoneNumber: '',
+    recipientAddress: {
+      street: '',
+      city: '',
+      state: '',
+      zip: ''
+    },
     amount: '',
     transferType: 'ACH',
     purpose: ''
@@ -694,6 +708,13 @@ export default function UserDashboard() {
         recipientAccountNumber: '',
         recipientRoutingNumber: '',
         recipientBankName: '',
+        recipientPhoneNumber: '',
+        recipientAddress: {
+          street: '',
+          city: '',
+          state: '',
+          zip: ''
+        },
         amount: '',
         transferType: 'ACH',
         purpose: ''
@@ -2725,36 +2746,61 @@ export default function UserDashboard() {
                     </Button>
                   </TabsContent>
                   
-                  <TabsContent value="external" className="space-y-4 mt-4">
-                    <div className="p-3 bg-yellow-50 rounded-lg text-sm border border-yellow-200">
-                      <p className="text-yellow-800 font-medium">⚠️ Administrative Approval Required</p>
-                      <p className="text-yellow-700 mt-1">External transfers require admin approval and may take 1-3 business days to process.</p>
+                  <TabsContent value="external" className="space-y-6 mt-4">
+                    {/* Administrative Approval Notice */}
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-5 h-5 text-amber-600 mt-0.5">⚠️</div>
+                        <div>
+                          <h4 className="font-medium text-amber-800">Administrative Approval Required</h4>
+                          <p className="text-sm text-amber-700 mt-1">External transfers require admin approval and may take 1-3 business days to process.</p>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {/* From Account Section */}
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-gray-900">Transfer From</h3>
                       <div>
-                        <Label htmlFor="fromAccountExternal">From Account</Label>
+                        <Label htmlFor="fromAccountExternal" className="text-gray-700 font-medium">Select Account</Label>
                         <Select value={externalTransferForm.fromAccountId} onValueChange={(value) => 
                           setExternalTransferForm({...externalTransferForm, fromAccountId: value})
                         }>
-                          <SelectTrigger data-testid="select-from-account-external">
-                            <SelectValue placeholder="Select source account" />
+                          <SelectTrigger className="mt-2 h-12" data-testid="select-from-account-external">
+                            <SelectValue placeholder="Choose account to transfer from" />
                           </SelectTrigger>
                           <SelectContent>
                             {(allAccounts as BankAccount[])?.map((account) => (
                               <SelectItem key={account.id} value={account.id}>
-                                {account.accountType} - ****{account.accountNumber.slice(-4)} 
-                                (${parseFloat(account.balance || '0').toLocaleString()})
+                                <div className="flex justify-between items-center w-full">
+                                  <div>
+                                    <div className="font-medium">{account.accountType}</div>
+                                    <div className="text-sm text-gray-500">****{account.accountNumber.slice(-4)}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-semibold text-green-600">
+                                      ${parseFloat(account.balance || '0').toLocaleString()}
+                                    </div>
+                                    <div className="text-xs text-gray-500">Available</div>
+                                  </div>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
+                    </div>
+
+                    {/* Transfer Amount */}
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-gray-900">Transfer Amount</h3>
                       <div>
-                        <Label htmlFor="externalAmount">Amount</Label>
+                        <Label htmlFor="externalAmount" className="text-gray-700 font-medium">Amount ($)</Label>
                         <Input
                           id="externalAmount"
                           type="number"
+                          step="0.01"
+                          className="mt-2 h-12 text-lg"
                           value={externalTransferForm.amount}
                           onChange={(e) => setExternalTransferForm({...externalTransferForm, amount: e.target.value})}
                           placeholder="0.00"
@@ -2762,110 +2808,191 @@ export default function UserDashboard() {
                         />
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="recipientNameExternal">Recipient Name</Label>
-                        <Input
-                          id="recipientNameExternal"
-                          value={externalTransferForm.recipientName}
-                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientName: e.target.value})}
-                          placeholder="Full name as shown on account"
-                          data-testid="input-external-recipient-name"
-                        />
+
+                    {/* Recipient Details */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Recipient Information</h3>
+                      
+                      {/* Recipient Name & Phone */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="recipientName" className="text-gray-700 font-medium">Full Name</Label>
+                          <Input
+                            id="recipientName"
+                            className="mt-2"
+                            value={externalTransferForm.recipientName}
+                            onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientName: e.target.value})}
+                            placeholder="Enter recipient's full name"
+                            data-testid="input-recipient-name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="recipientPhone" className="text-gray-700 font-medium">Phone Number</Label>
+                          <Input
+                            id="recipientPhone"
+                            className="mt-2"
+                            value={externalTransferForm.recipientPhoneNumber}
+                            onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientPhoneNumber: e.target.value})}
+                            placeholder="(555) 123-4567"
+                            data-testid="input-recipient-phone"
+                          />
+                        </div>
                       </div>
+
+                      {/* Address */}
                       <div>
-                        <Label htmlFor="recipientBankName">Bank Name</Label>
-                        <Input
-                          id="recipientBankName"
-                          value={externalTransferForm.recipientBankName}
-                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientBankName: e.target.value})}
-                          placeholder="e.g., Chase Bank, Wells Fargo"
-                          data-testid="input-external-bank-name"
-                        />
+                        <Label className="text-gray-700 font-medium">Address</Label>
+                        <div className="mt-2 space-y-3">
+                          <Input
+                            placeholder="Street Address"
+                            value={externalTransferForm.recipientAddress.street}
+                            onChange={(e) => setExternalTransferForm({
+                              ...externalTransferForm, 
+                              recipientAddress: {...externalTransferForm.recipientAddress, street: e.target.value}
+                            })}
+                            data-testid="input-recipient-street"
+                          />
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <Input
+                              placeholder="City"
+                              value={externalTransferForm.recipientAddress.city}
+                              onChange={(e) => setExternalTransferForm({
+                                ...externalTransferForm, 
+                                recipientAddress: {...externalTransferForm.recipientAddress, city: e.target.value}
+                              })}
+                              data-testid="input-recipient-city"
+                            />
+                            <Input
+                              placeholder="State"
+                              value={externalTransferForm.recipientAddress.state}
+                              onChange={(e) => setExternalTransferForm({
+                                ...externalTransferForm, 
+                                recipientAddress: {...externalTransferForm.recipientAddress, state: e.target.value}
+                              })}
+                              data-testid="input-recipient-state"
+                            />
+                            <Input
+                              placeholder="ZIP Code"
+                              value={externalTransferForm.recipientAddress.zip}
+                              onChange={(e) => setExternalTransferForm({
+                                ...externalTransferForm, 
+                                recipientAddress: {...externalTransferForm.recipientAddress, zip: e.target.value}
+                              })}
+                              data-testid="input-recipient-zip"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {/* Banking Details */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Banking Information</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="recipientBank" className="text-gray-700 font-medium">Bank Name</Label>
+                          <Input
+                            id="recipientBank"
+                            className="mt-2"
+                            value={externalTransferForm.recipientBankName}
+                            onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientBankName: e.target.value})}
+                            placeholder="e.g., Chase Bank, Wells Fargo"
+                            data-testid="input-recipient-bank"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="routingNumber" className="text-gray-700 font-medium">Routing Number</Label>
+                          <Input
+                            id="routingNumber"
+                            className="mt-2"
+                            value={externalTransferForm.recipientRoutingNumber}
+                            onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientRoutingNumber: e.target.value})}
+                            placeholder="9-digit routing number"
+                            data-testid="input-routing-number"
+                          />
+                        </div>
+                      </div>
+
                       <div>
-                        <Label htmlFor="recipientAccountNumber">Account Number</Label>
+                        <Label htmlFor="accountNumber" className="text-gray-700 font-medium">Account Number</Label>
                         <Input
-                          id="recipientAccountNumber"
+                          id="accountNumber"
+                          className="mt-2"
                           value={externalTransferForm.recipientAccountNumber}
                           onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientAccountNumber: e.target.value})}
                           placeholder="Recipient's account number"
-                          data-testid="input-external-account-number"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="recipientRoutingNumber">Routing Number</Label>
-                        <Input
-                          id="recipientRoutingNumber"
-                          value={externalTransferForm.recipientRoutingNumber}
-                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientRoutingNumber: e.target.value})}
-                          placeholder="9-digit routing number"
-                          data-testid="input-external-routing-number"
+                          data-testid="input-account-number"
                         />
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="transferTypeExternal">Transfer Type</Label>
-                        <Select value={externalTransferForm.transferType} onValueChange={(value) => 
-                          setExternalTransferForm({...externalTransferForm, transferType: value})
-                        }>
-                          <SelectTrigger data-testid="select-transfer-type">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="ACH">ACH (1-3 business days)</SelectItem>
-                            <SelectItem value="Wire">Wire Transfer (Same day - $25 fee)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="transferPurpose">Purpose (Optional)</Label>
-                        <Input
-                          id="transferPurpose"
-                          value={externalTransferForm.purpose}
-                          onChange={(e) => setExternalTransferForm({...externalTransferForm, purpose: e.target.value})}
-                          placeholder="e.g., Gift, Bill payment"
-                          data-testid="input-transfer-purpose"
-                        />
+
+                    {/* Transfer Options */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Transfer Options</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="transferType" className="text-gray-700 font-medium">Transfer Type</Label>
+                          <Select value={externalTransferForm.transferType} onValueChange={(value) => 
+                            setExternalTransferForm({...externalTransferForm, transferType: value})
+                          }>
+                            <SelectTrigger className="mt-2" data-testid="select-transfer-type">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ACH">ACH Transfer (1-3 business days)</SelectItem>
+                              <SelectItem value="Wire">Wire Transfer (Same day - $25 fee)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="purpose" className="text-gray-700 font-medium">Reason for Transfer</Label>
+                          <Input
+                            id="purpose"
+                            className="mt-2"
+                            value={externalTransferForm.purpose}
+                            onChange={(e) => setExternalTransferForm({...externalTransferForm, purpose: e.target.value})}
+                            placeholder="e.g., Gift, Payment, Family support"
+                            data-testid="input-purpose"
+                          />
+                        </div>
                       </div>
                     </div>
-                    
-                    <Button 
-                      className="w-full" 
-                      disabled={!externalTransferForm.fromAccountId || !externalTransferForm.amount || 
-                               !externalTransferForm.recipientName || !externalTransferForm.recipientAccountNumber || 
-                               !externalTransferForm.recipientRoutingNumber || !externalTransferForm.recipientBankName ||
-                               externalTransferMutation.isPending}
-                      onClick={() => {
-                        // Proper validation using Zod schema as requested by architect
-                        try {
-                          const validatedData = externalTransferValidationSchema.parse({
-                            ...externalTransferForm,
-                            amount: parseFloat(externalTransferForm.amount) || 0 // Number coercion for API contract
-                          });
-                          // Show confirmation dialog with validated data
-                          setConfirmationData(validatedData);
-                          setShowTransferConfirmation(true);
-                        } catch (error: any) {
-                          // Proper error handling for validation failures
-                          const errorMessage = error.errors?.[0]?.message || "Please check your form data";
-                          toast({
-                            title: "Validation Error",
-                            description: errorMessage,
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                      data-testid="button-submit-external-transfer"
-                    >
-                      {externalTransferMutation.isPending ? 'Submitting...' : 'Review Transfer Request'}
-                    </Button>
+
+                    {/* Submit Button */}
+                    <div className="pt-4">
+                      <Button 
+                        className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700" 
+                        disabled={!externalTransferForm.fromAccountId || !externalTransferForm.amount || 
+                                 !externalTransferForm.recipientName || !externalTransferForm.recipientAccountNumber || 
+                                 !externalTransferForm.recipientRoutingNumber || !externalTransferForm.recipientBankName ||
+                                 externalTransferMutation.isPending}
+                        onClick={() => {
+                          // Proper validation using Zod schema as requested by architect
+                          try {
+                            const validatedData = externalTransferValidationSchema.parse({
+                              ...externalTransferForm,
+                              amount: parseFloat(externalTransferForm.amount) || 0 // Number coercion for API contract
+                            });
+                            // Show confirmation dialog with validated data
+                            setConfirmationData(validatedData);
+                            setShowTransferConfirmation(true);
+                          } catch (error: any) {
+                            // Proper error handling for validation failures
+                            const errorMessage = error.errors?.[0]?.message || "Please check your form data";
+                            toast({
+                              title: "Validation Error",
+                              description: errorMessage,
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        data-testid="button-submit-external-transfer"
+                      >
+                        {externalTransferMutation.isPending ? 'Submitting Transfer...' : 'Review & Submit Transfer'}
+                      </Button>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
