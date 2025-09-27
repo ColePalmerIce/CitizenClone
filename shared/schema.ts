@@ -91,11 +91,15 @@ export const transactions = pgTable("transactions", {
   type: text("type").notNull(), // credit, debit
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   description: text("description").notNull(),
+  merchantName: text("merchant_name"), // e.g., "Starbucks", "Whole Foods Market"
+  merchantLocation: text("merchant_location"), // e.g., "New York, NY", "Chicago, IL"
+  merchantCategory: text("merchant_category"), // e.g., "Restaurant", "Grocery", "Gas Station"
   reference: text("reference"), // reference number or check number
   balanceAfter: decimal("balance_after", { precision: 12, scale: 2 }).notNull(),
   processedBy: varchar("processed_by"), // admin ID who processed
   status: text("status").default("completed"), // pending, completed, failed
   transactionDate: timestamp("transaction_date").defaultNow(),
+  postedDate: timestamp("posted_date"), // actual posting date (can differ from transaction date)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
