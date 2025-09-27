@@ -34,6 +34,7 @@ import {
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import type { IStorage } from "./storage";
+import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
@@ -253,6 +254,58 @@ export class PostgreSQLStorage implements IStorage {
       .where(eq(transactions.accountId, accountId))
       .orderBy(desc(transactions.transactionDate))
       .limit(limit);
+  }
+
+  async seedAccountWithProfessionalTransactions(accountId: string): Promise<Transaction[]> {
+    const professionalTransactions = generateComprehensiveTransactionHistory();
+    const seededTransactions: Transaction[] = [];
+    
+    // Get current account to calculate running balance
+    const account = await this.getBankAccount(accountId);
+    if (!account) {
+      throw new Error("Account not found");
+    }
+    
+    let runningBalance = parseFloat(account.balance) || 50000; // Starting balance
+    
+    // Process transactions in chronological order (oldest first)
+    const sortedTransactions = professionalTransactions.sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    for (const profTransaction of sortedTransactions) {
+      const amount = parseFloat(profTransaction.amount);
+      
+      // Calculate new balance
+      if (profTransaction.type === 'credit') {
+        runningBalance += amount;
+      } else {
+        runningBalance -= amount;
+      }
+      
+      // Create transaction with professional data
+      const transaction = await this.createTransaction({
+        accountId,
+        type: profTransaction.type,
+        amount: profTransaction.amount,
+        description: profTransaction.description,
+        merchantName: profTransaction.merchantName,
+        merchantLocation: profTransaction.merchantLocation, 
+        merchantCategory: profTransaction.merchantCategory,
+        reference: profTransaction.reference,
+        balanceAfter: runningBalance.toFixed(2),
+        transactionDate: new Date(profTransaction.date),
+        postedDate: new Date(profTransaction.postedDate),
+        status: "completed"
+      });
+      
+      seededTransactions.push(transaction);
+    }
+    
+    // Update final account balance
+    await this.updateBankAccountBalance(accountId, runningBalance.toFixed(2));
+    
+    return seededTransactions;
   }
 
   async getAllTransactions(limit = 100): Promise<Transaction[]> {

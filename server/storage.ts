@@ -21,6 +21,7 @@ import {
   type InsertCustomerProfile,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
 
 export interface IStorage {
   // Users
@@ -73,6 +74,7 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransaction(id: string): Promise<Transaction | undefined>;
   getTransactionsByAccountId(accountId: string, limit?: number): Promise<Transaction[]>;
+  seedAccountWithProfessionalTransactions(accountId: string): Promise<Transaction[]>;
   getAllTransactions(limit?: number): Promise<Transaction[]>;
 
   // Customer profiles

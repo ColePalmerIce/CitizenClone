@@ -740,6 +740,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Seed professional transactions for a user's account
+  app.post("/api/admin/seed-transactions/:accountId", requireAdmin, async (req, res) => {
+    try {
+      const { accountId } = req.params;
+      
+      // First, clear existing transactions for this account
+      const existingTransactions = await storage.getTransactionsByAccountId(accountId, 1000);
+      
+      // Seed with professional transactions
+      const seededTransactions = await storage.seedAccountWithProfessionalTransactions(accountId);
+      
+      res.json({ 
+        success: true, 
+        message: `Seeded ${seededTransactions.length} professional transactions for account ${accountId}`,
+        transactionCount: seededTransactions.length
+      });
+    } catch (error) {
+      console.error('Seed transactions error:', error);
+      res.status(500).json({ message: "Failed to seed professional transactions" });
+    }
+  });
+
   // Get user's account statements (3 months)
   app.get("/api/user/statements", async (req, res) => {
     try {
