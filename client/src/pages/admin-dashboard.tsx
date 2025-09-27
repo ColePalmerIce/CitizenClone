@@ -522,6 +522,134 @@ export default function AdminDashboard() {
           </main>
         </div>
       </div>
+      
+      {/* Global Customer Fund Management Dialogs */}
+      <Dialog open={isCustomerFundDialogOpen} onOpenChange={setIsCustomerFundDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Funds to Customer Account</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Account #{selectedCustomer.accountNumber}</p>
+                <p className="text-sm font-medium">Current Balance: ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div>
+                <Label htmlFor="fund-amount">Amount to Add</Label>
+                <Input
+                  id="fund-amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={customerFundAmount}
+                  onChange={(e) => setCustomerFundAmount(e.target.value)}
+                  data-testid="input-customer-fund-amount"
+                />
+              </div>
+              <div>
+                <Label htmlFor="fund-description">Description</Label>
+                <Input
+                  id="fund-description"
+                  placeholder="Reason for adding funds"
+                  value={customerFundDescription}
+                  onChange={(e) => setCustomerFundDescription(e.target.value)}
+                  data-testid="input-customer-fund-description"
+                />
+              </div>
+              <div className="flex space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCustomerFundDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (customerFundAmount && customerFundDescription) {
+                      customerAddFundsMutation.mutate({
+                        accountId: selectedCustomer.id,
+                        amount: customerFundAmount,
+                        description: customerFundDescription
+                      });
+                    }
+                  }}
+                  disabled={!customerFundAmount || !customerFundDescription || customerAddFundsMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-confirm-add-funds"
+                >
+                  {customerAddFundsMutation.isPending ? 'Adding...' : `Add $${customerFundAmount || '0'}`}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isCustomerWithdrawDialogOpen} onOpenChange={setIsCustomerWithdrawDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Withdraw Funds from Customer Account</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Account #{selectedCustomer.accountNumber}</p>
+                <p className="text-sm font-medium">Current Balance: ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div>
+                <Label htmlFor="withdraw-amount">Amount to Withdraw</Label>
+                <Input
+                  id="withdraw-amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={customerWithdrawAmount}
+                  onChange={(e) => setCustomerWithdrawAmount(e.target.value)}
+                  data-testid="input-customer-withdraw-amount"
+                />
+              </div>
+              <div>
+                <Label htmlFor="withdraw-description">Description</Label>
+                <Input
+                  id="withdraw-description"
+                  placeholder="Reason for withdrawal"
+                  value={customerWithdrawDescription}
+                  onChange={(e) => setCustomerWithdrawDescription(e.target.value)}
+                  data-testid="input-customer-withdraw-description"
+                />
+              </div>
+              <div className="flex space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCustomerWithdrawDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (customerWithdrawAmount && customerWithdrawDescription) {
+                      customerWithdrawFundsMutation.mutate({
+                        accountId: selectedCustomer.id,
+                        amount: customerWithdrawAmount,
+                        description: customerWithdrawDescription
+                      });
+                    }
+                  }}
+                  disabled={!customerWithdrawAmount || !customerWithdrawDescription || customerWithdrawFundsMutation.isPending}
+                  variant="destructive"
+                  className="flex-1"
+                  data-testid="button-confirm-withdraw-funds"
+                >
+                  {customerWithdrawFundsMutation.isPending ? 'Withdrawing...' : `Withdraw $${customerWithdrawAmount || '0'}`}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -998,133 +1126,6 @@ function OverviewTab({
         </DialogContent>
       </Dialog>
       
-      {/* Customer Fund Management Dialogs */}
-      <Dialog open={isCustomerFundDialogOpen} onOpenChange={setIsCustomerFundDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Funds to Customer Account</DialogTitle>
-          </DialogHeader>
-          {selectedCustomer && (
-            <div className="space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Account #{selectedCustomer.accountNumber}</p>
-                <p className="text-sm font-medium">Current Balance: ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              </div>
-              <div>
-                <Label htmlFor="fund-amount">Amount to Add</Label>
-                <Input
-                  id="fund-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={customerFundAmount}
-                  onChange={(e) => setCustomerFundAmount(e.target.value)}
-                  data-testid="input-customer-fund-amount"
-                />
-              </div>
-              <div>
-                <Label htmlFor="fund-description">Description</Label>
-                <Input
-                  id="fund-description"
-                  placeholder="Reason for adding funds"
-                  value={customerFundDescription}
-                  onChange={(e) => setCustomerFundDescription(e.target.value)}
-                  data-testid="input-customer-fund-description"
-                />
-              </div>
-              <div className="flex space-x-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCustomerFundDialogOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (customerFundAmount && customerFundDescription) {
-                      customerAddFundsMutation.mutate({
-                        accountId: selectedCustomer.id,
-                        amount: customerFundAmount,
-                        description: customerFundDescription
-                      });
-                    }
-                  }}
-                  disabled={!customerFundAmount || !customerFundDescription || customerAddFundsMutation.isPending}
-                  className="flex-1"
-                  data-testid="button-confirm-add-funds"
-                >
-                  {customerAddFundsMutation.isPending ? 'Adding...' : `Add $${customerFundAmount || '0'}`}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isCustomerWithdrawDialogOpen} onOpenChange={setIsCustomerWithdrawDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Withdraw Funds from Customer Account</DialogTitle>
-          </DialogHeader>
-          {selectedCustomer && (
-            <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Account #{selectedCustomer.accountNumber}</p>
-                <p className="text-sm font-medium">Current Balance: ${parseFloat(selectedCustomer.balance || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              </div>
-              <div>
-                <Label htmlFor="withdraw-amount">Amount to Withdraw</Label>
-                <Input
-                  id="withdraw-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={customerWithdrawAmount}
-                  onChange={(e) => setCustomerWithdrawAmount(e.target.value)}
-                  data-testid="input-customer-withdraw-amount"
-                />
-              </div>
-              <div>
-                <Label htmlFor="withdraw-description">Description</Label>
-                <Input
-                  id="withdraw-description"
-                  placeholder="Reason for withdrawal"
-                  value={customerWithdrawDescription}
-                  onChange={(e) => setCustomerWithdrawDescription(e.target.value)}
-                  data-testid="input-customer-withdraw-description"
-                />
-              </div>
-              <div className="flex space-x-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCustomerWithdrawDialogOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (customerWithdrawAmount && customerWithdrawDescription) {
-                      customerWithdrawFundsMutation.mutate({
-                        accountId: selectedCustomer.id,
-                        amount: customerWithdrawAmount,
-                        description: customerWithdrawDescription
-                      });
-                    }
-                  }}
-                  disabled={!customerWithdrawAmount || !customerWithdrawDescription || customerWithdrawFundsMutation.isPending}
-                  variant="destructive"
-                  className="flex-1"
-                  data-testid="button-confirm-withdraw-funds"
-                >
-                  {customerWithdrawFundsMutation.isPending ? 'Withdrawing...' : `Withdraw $${customerWithdrawAmount || '0'}`}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
       
       {/* Admin Credit Modal */}
       <Dialog open={showCreditModal} onOpenChange={setShowCreditModal}>
