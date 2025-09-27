@@ -111,8 +111,13 @@ interface Transaction {
   type: string;
   amount: string;
   description: string;
+  merchantName?: string;
+  merchantLocation?: string;
+  merchantCategory?: string;
+  reference?: string;
   balanceAfter: string;
   transactionDate: string;
+  postedDate?: string;
 }
 
 export default function UserDashboard() {
@@ -2415,19 +2420,50 @@ export default function UserDashboard() {
                                     ? statement.transactions 
                                     : statement.transactions.slice(0, 5)
                                   ).map((transaction: any) => (
-                                    <div key={transaction.id} className="flex justify-between items-center py-1 text-sm">
-                                      <div className="flex items-center">
-                                        {transaction.type === 'credit' ? (
-                                          <ArrowDownRight className="w-3 h-3 mr-2 text-green-600" />
-                                        ) : (
-                                          <ArrowUpRight className="w-3 h-3 mr-2 text-red-600" />
-                                        )}
-                                        <span className="truncate max-w-48">{transaction.description}</span>
-                                      </div>
-                                      <div className={`font-medium ${
-                                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                                      }`}>
-                                        {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                                    <div key={transaction.id} className="border rounded-lg p-3 hover:bg-gray-50">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex items-start space-x-3 flex-1">
+                                          {transaction.type === 'credit' ? (
+                                            <ArrowDownRight className="w-4 h-4 mt-1 text-green-600" />
+                                          ) : (
+                                            <ArrowUpRight className="w-4 h-4 mt-1 text-red-600" />
+                                          )}
+                                          <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-gray-900">
+                                              {transaction.merchantName || transaction.description}
+                                            </div>
+                                            {transaction.merchantLocation && (
+                                              <div className="text-xs text-gray-500">
+                                                {transaction.merchantLocation}
+                                              </div>
+                                            )}
+                                            {transaction.merchantCategory && (
+                                              <div className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded mt-1 inline-block">
+                                                {transaction.merchantCategory}
+                                              </div>
+                                            )}
+                                            <div className="text-xs text-gray-500 mt-1">
+                                              {new Date(transaction.transactionDate).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                              })}
+                                              {transaction.reference && (
+                                                <span className="ml-2">• Ref: {transaction.reference}</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className={`font-semibold ${
+                                            transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                                          }`}>
+                                            {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                                          </div>
+                                          <div className="text-xs text-gray-500">
+                                            Balance: ${parseFloat(transaction.balanceAfter).toLocaleString()}
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   ))}
