@@ -17,6 +17,16 @@ import {
 import bcrypt from "bcrypt";
 import session from "express-session";
 
+// Extend express-session
+declare module 'express-session' {
+  interface SessionData {
+    userId?: string;
+    userType?: 'customer' | 'admin';
+    adminId?: string;
+    adminEmail?: string;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Search queries
   app.post("/api/search", async (req, res) => {

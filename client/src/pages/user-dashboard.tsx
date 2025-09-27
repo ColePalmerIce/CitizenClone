@@ -742,7 +742,7 @@ export default function UserDashboard() {
               </div>
               
               <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-                <DialogTrigger asChild>
+                <DialogTrigger asChild data-testid="trigger-profile-dialog">
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white hover:bg-blue-500 mb-1"
@@ -794,7 +794,7 @@ export default function UserDashboard() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" data-testid="button-edit-profile">
                       Edit Profile
                     </Button>
                   </DialogFooter>
@@ -802,7 +802,7 @@ export default function UserDashboard() {
               </Dialog>
 
               <Dialog open={isCardsDialogOpen} onOpenChange={setIsCardsDialogOpen}>
-                <DialogTrigger asChild>
+                <DialogTrigger asChild data-testid="trigger-cards-dialog">
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white hover:bg-blue-500 mb-1"
@@ -867,6 +867,7 @@ export default function UserDashboard() {
                                 : "bg-blue-700 hover:bg-blue-600"
                             }`}
                             onClick={handleDebitCardFreeze}
+                            data-testid="button-toggle-debit-freeze"
                           >
                             <Lock className="w-4 h-4 mr-1" />
                             {isDebitCardFrozen ? "Unfreeze" : "Freeze"}
@@ -923,6 +924,7 @@ export default function UserDashboard() {
                                 : "bg-gray-700 hover:bg-gray-600"
                             }`}
                             onClick={handleCreditCardFreeze}
+                            data-testid="button-toggle-credit-freeze"
                           >
                             <Lock className="w-4 h-4 mr-1" />
                             {isCreditCardFrozen ? "Unfreeze" : "Freeze"}
@@ -971,7 +973,7 @@ export default function UserDashboard() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" data-testid="button-add-card">
                       Add New Card
                     </Button>
                   </DialogFooter>
@@ -2749,10 +2751,10 @@ export default function UserDashboard() {
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedAccount(null)}>
+            <Button variant="outline" onClick={() => setSelectedAccount(null)} data-testid="button-close-account">
               Close
             </Button>
-            <Button onClick={() => setSelectedAccount(null)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setSelectedAccount(null)} className="bg-blue-600 hover:bg-blue-700" data-testid="button-done-account">
               Done
             </Button>
           </DialogFooter>
@@ -2934,10 +2936,10 @@ export default function UserDashboard() {
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsStatementsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsStatementsDialogOpen(false)} data-testid="button-close-statements">
               Close
             </Button>
-            <Button onClick={() => setIsStatementsDialogOpen(false)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setIsStatementsDialogOpen(false)} className="bg-blue-600 hover:bg-blue-700" data-testid="button-done-statements">
               Done
             </Button>
           </DialogFooter>
