@@ -802,6 +802,16 @@ export default function UserDashboard() {
                             <Lock className="w-4 h-4 mr-1" />
                             {isDebitCardFrozen ? "Unfreeze" : "Freeze"}
                           </Button>
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="text-white bg-green-600 hover:bg-green-500 border-0"
+                            onClick={() => setIsDebitLimitIncreaseOpen(true)}
+                            data-testid="button-increase-debit-limits"
+                          >
+                            <TrendingUp className="w-4 h-4 mr-1" />
+                            Increase Limits
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -847,6 +857,16 @@ export default function UserDashboard() {
                           >
                             <Lock className="w-4 h-4 mr-1" />
                             {isCreditCardFrozen ? "Unfreeze" : "Freeze"}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="text-white bg-green-600 hover:bg-green-500 border-0"
+                            onClick={() => setIsCreditLimitIncreaseOpen(true)}
+                            data-testid="button-increase-credit-limit"
+                          >
+                            <TrendingUp className="w-4 h-4 mr-1" />
+                            Increase Limit
                           </Button>
                         </div>
                       </div>
