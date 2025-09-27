@@ -37,6 +37,9 @@ import {
   type SelectCreditLimitIncreaseRequest,
   type InsertDebitLimitIncreaseRequest,
   type SelectDebitLimitIncreaseRequest,
+  type PendingExternalTransfer,
+  type InsertPendingExternalTransfer,
+  pendingExternalTransfers,
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import type { IStorage } from "./storage";
@@ -403,6 +406,49 @@ export class PostgreSQLStorage implements IStorage {
     const result = await db.update(debitLimitIncreaseRequests)
       .set({ status })
       .where(eq(debitLimitIncreaseRequests.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Pending external transfers
+  async createPendingExternalTransfer(transfer: InsertPendingExternalTransfer): Promise<PendingExternalTransfer> {
+    const result = await db.insert(pendingExternalTransfers).values(transfer).returning();
+    return result[0];
+  }
+
+  async getPendingExternalTransfer(id: string): Promise<PendingExternalTransfer | undefined> {
+    const result = await db.select().from(pendingExternalTransfers).where(eq(pendingExternalTransfers.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getPendingExternalTransfersByUserId(userId: string): Promise<PendingExternalTransfer[]> {
+    return await db.select().from(pendingExternalTransfers)
+      .where(eq(pendingExternalTransfers.userId, userId))
+      .orderBy(desc(pendingExternalTransfers.submittedAt));
+  }
+
+  async getAllPendingExternalTransfers(): Promise<PendingExternalTransfer[]> {
+    return await db.select().from(pendingExternalTransfers)
+      .orderBy(desc(pendingExternalTransfers.submittedAt));
+  }
+
+  async updatePendingExternalTransferStatus(id: string, status: string, processedBy?: string, rejectionReason?: string): Promise<PendingExternalTransfer | undefined> {
+    const updateData: any = { 
+      status,
+      processedAt: new Date()
+    };
+    
+    if (processedBy) {
+      updateData.processedBy = processedBy;
+    }
+    
+    if (rejectionReason) {
+      updateData.rejectionReason = rejectionReason;
+    }
+
+    const result = await db.update(pendingExternalTransfers)
+      .set(updateData)
+      .where(eq(pendingExternalTransfers.id, id))
       .returning();
     return result[0];
   }

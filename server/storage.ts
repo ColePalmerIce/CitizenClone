@@ -23,6 +23,8 @@ import {
   type SelectCreditLimitIncreaseRequest,
   type InsertDebitLimitIncreaseRequest,
   type SelectDebitLimitIncreaseRequest,
+  type PendingExternalTransfer,
+  type InsertPendingExternalTransfer,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
@@ -97,6 +99,13 @@ export interface IStorage {
   getDebitLimitIncreaseRequestsByUserId(userId: string): Promise<SelectDebitLimitIncreaseRequest[]>;
   updateDebitLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectDebitLimitIncreaseRequest | undefined>;
 
+  // Pending external transfers
+  createPendingExternalTransfer(transfer: InsertPendingExternalTransfer): Promise<PendingExternalTransfer>;
+  getPendingExternalTransfer(id: string): Promise<PendingExternalTransfer | undefined>;
+  getPendingExternalTransfersByUserId(userId: string): Promise<PendingExternalTransfer[]>;
+  getAllPendingExternalTransfers(): Promise<PendingExternalTransfer[]>;
+  updatePendingExternalTransferStatus(id: string, status: string, processedBy?: string, rejectionReason?: string): Promise<PendingExternalTransfer | undefined>;
+
   // Admin dashboard utilities
   getTotalCustomers(): Promise<number>;
   getTotalAccountBalance(): Promise<string>;
@@ -111,6 +120,7 @@ export class MemStorage implements IStorage {
   private contactInquiries: Map<string, ContactInquiry>;
   private creditLimitIncreaseRequests: Map<string, SelectCreditLimitIncreaseRequest>;
   private debitLimitIncreaseRequests: Map<string, SelectDebitLimitIncreaseRequest>;
+  private pendingExternalTransfers: Map<string, PendingExternalTransfer>;
 
   constructor() {
     this.users = new Map();
@@ -120,6 +130,7 @@ export class MemStorage implements IStorage {
     this.contactInquiries = new Map();
     this.creditLimitIncreaseRequests = new Map();
     this.debitLimitIncreaseRequests = new Map();
+    this.pendingExternalTransfers = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -260,6 +271,7 @@ export class MemStorage implements IStorage {
       ...request,
       id,
       status: "pending",
+      reason: request.reason || null,
       createdAt: new Date(),
     };
     this.creditLimitIncreaseRequests.set(id, limitRequest);
@@ -286,6 +298,7 @@ export class MemStorage implements IStorage {
       ...request,
       id,
       status: "pending",
+      reason: request.reason || null,
       createdAt: new Date(),
     };
     this.debitLimitIncreaseRequests.set(id, limitRequest);
@@ -310,6 +323,75 @@ export class MemStorage implements IStorage {
     // In production, PostgreSQL storage handles transactions
     return undefined;
   }
+
+  // Pending external transfers (placeholder implementations)
+  async createPendingExternalTransfer(transfer: InsertPendingExternalTransfer): Promise<PendingExternalTransfer> {
+    const id = randomUUID();
+    const pendingTransfer: PendingExternalTransfer = {
+      ...transfer,
+      id,
+      status: "pending",
+      purpose: transfer.purpose || null,
+      processedBy: null,
+      processedAt: null,
+      rejectionReason: null,
+      submittedAt: new Date(),
+      createdAt: new Date(),
+    };
+    this.pendingExternalTransfers.set(id, pendingTransfer);
+    return pendingTransfer;
+  }
+
+  async getPendingExternalTransfer(id: string): Promise<PendingExternalTransfer | undefined> {
+    return this.pendingExternalTransfers.get(id);
+  }
+
+  async getPendingExternalTransfersByUserId(userId: string): Promise<PendingExternalTransfer[]> {
+    return Array.from(this.pendingExternalTransfers.values()).filter(transfer => transfer.userId === userId);
+  }
+
+  async getAllPendingExternalTransfers(): Promise<PendingExternalTransfer[]> {
+    return Array.from(this.pendingExternalTransfers.values());
+  }
+
+  async updatePendingExternalTransferStatus(id: string, status: string, processedBy?: string, rejectionReason?: string): Promise<PendingExternalTransfer | undefined> {
+    const transfer = this.pendingExternalTransfers.get(id);
+    if (transfer) {
+      transfer.status = status;
+      transfer.processedAt = new Date();
+      if (processedBy) transfer.processedBy = processedBy;
+      if (rejectionReason) transfer.rejectionReason = rejectionReason;
+      this.pendingExternalTransfers.set(id, transfer);
+    }
+    return transfer;
+  }
+
+  // Placeholder implementations for missing banking methods (we use PostgreSQL in production)
+  async getAdminByEmail(email: string): Promise<AdminUser | undefined> { return undefined; }
+  async createAdmin(admin: InsertAdminUser): Promise<AdminUser> { throw new Error("Not implemented in MemStorage"); }
+  async updateAdminLastLogin(id: string): Promise<AdminUser | undefined> { return undefined; }
+  async getAdminBalance(adminId: string): Promise<AdminBalance | undefined> { return undefined; }
+  async createAdminBalance(balance: InsertAdminBalance): Promise<AdminBalance> { throw new Error("Not implemented in MemStorage"); }
+  async updateAdminBalance(adminId: string, newBalance: string): Promise<AdminBalance | undefined> { return undefined; }
+  async createBankAccount(account: InsertBankAccount): Promise<BankAccount> { throw new Error("Not implemented in MemStorage"); }
+  async getBankAccount(id: string): Promise<BankAccount | undefined> { return undefined; }
+  async getBankAccountByNumber(accountNumber: string): Promise<BankAccount | undefined> { return undefined; }
+  async getBankAccountsByUserId(userId: string): Promise<BankAccount[]> { return []; }
+  async getAllBankAccounts(): Promise<BankAccount[]> { return []; }
+  async updateBankAccountBalance(id: string, newBalance: string): Promise<BankAccount | undefined> { return undefined; }
+  async updateBankAccountStatus(id: string, status: string): Promise<BankAccount | undefined> { return undefined; }
+  async deleteBankAccount(id: string): Promise<boolean> { return false; }
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> { throw new Error("Not implemented in MemStorage"); }
+  async getTransaction(id: string): Promise<Transaction | undefined> { return undefined; }
+  async getTransactionsByAccountId(accountId: string, limit?: number): Promise<Transaction[]> { return []; }
+  async seedAccountWithProfessionalTransactions(accountId: string): Promise<Transaction[]> { return []; }
+  async getAllTransactions(limit?: number): Promise<Transaction[]> { return []; }
+  async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> { throw new Error("Not implemented in MemStorage"); }
+  async getCustomerProfile(userId: string): Promise<CustomerProfile | undefined> { return undefined; }
+  async updateCustomerProfile(userId: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined> { return undefined; }
+  async getTotalCustomers(): Promise<number> { return 0; }
+  async getTotalAccountBalance(): Promise<string> { return "0.00"; }
+  async getRecentTransactions(limit?: number): Promise<Transaction[]> { return []; }
 }
 
 // Import PostgreSQL storage from db.ts
