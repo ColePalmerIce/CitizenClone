@@ -125,6 +125,8 @@ export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['/api/admin/dashboard/stats'],
     enabled: !!admin,
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time stats
+    refetchOnWindowFocus: true,
   });
   const safeStats = stats || { totalCustomers: 0, totalBalance: '0.00', totalAccounts: 0, recentTransactions: [], accounts: [] };
 
@@ -132,6 +134,8 @@ export default function AdminDashboard() {
   const { data: customers, isLoading: customersLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/customers'],
     enabled: !!admin,
+    refetchInterval: 15000, // Refetch every 15 seconds for customer updates
+    refetchOnWindowFocus: true,
   });
   const safeCustomers = customers || [];
 
@@ -139,6 +143,8 @@ export default function AdminDashboard() {
   const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/transactions'],
     enabled: !!admin,
+    refetchInterval: 10000, // Refetch every 10 seconds for transaction updates
+    refetchOnWindowFocus: true,
   });
   const safeTransactions = transactions || [];
 
@@ -1350,6 +1356,8 @@ function PendingTransfersTab() {
   // Pending transfers query
   const { data: pendingTransfers, isLoading: pendingTransfersLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/pending-transfers'],
+    refetchInterval: 5000, // Refetch every 5 seconds for immediate pending transfer updates
+    refetchOnWindowFocus: true,
   });
   const safePendingTransfers = pendingTransfers || [];
 

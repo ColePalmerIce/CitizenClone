@@ -514,12 +514,16 @@ export default function UserDashboard() {
   const { data: bankAccount, isLoading: accountLoading } = useQuery({
     queryKey: ['/api/user/account'],
     enabled: !!user,
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time balance updates
+    refetchOnWindowFocus: true,
   });
 
   // Get all user's accounts
   const { data: allAccounts, isLoading: allAccountsLoading } = useQuery({
     queryKey: ['/api/user/accounts'],
     enabled: !!user,
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time account updates
+    refetchOnWindowFocus: true,
   });
 
   // Calculate total balance from all accounts
@@ -531,6 +535,8 @@ export default function UserDashboard() {
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/user/transactions'],
     enabled: !!user,
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time transaction updates
+    refetchOnWindowFocus: true,
   });
 
   // Get specific account transactions
@@ -1745,7 +1751,7 @@ export default function UserDashboard() {
                 </div>
                 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 
@@ -2061,7 +2067,7 @@ export default function UserDashboard() {
                             </Badge>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-xs text-gray-500 mb-1">Routing Number</p>
                             <p className="font-mono">{account.routingNumber}</p>
@@ -2108,7 +2114,7 @@ export default function UserDashboard() {
                           <Badge variant="default">Active</Badge>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Credit Limit</p>
                           <p className="font-semibold">$5,000</p>
@@ -2156,24 +2162,26 @@ export default function UserDashboard() {
                 ) : transactions && (transactions as Transaction[]).length > 0 ? (
                   <div className="space-y-3">
                     {(transactions as Transaction[]).slice(0, 5).map((transaction) => (
-                      <div key={transaction.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                        }`}>
-                          {transaction.type === 'credit' ? 
-                            <ArrowUpRight className="w-5 h-5" /> : 
-                            <ArrowDownRight className="w-5 h-5" />
-                          }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{transaction.description}</p>
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
-                            <span>{new Date(transaction.transactionDate).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span className="font-mono">FCB{new Date(transaction.transactionDate).toISOString().slice(0, 10).replace(/-/g, '')}-{transaction.id.slice(-6).toUpperCase()}</span>
+                      <div key={transaction.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                          }`}>
+                            {transaction.type === 'credit' ? 
+                              <ArrowUpRight className="w-5 h-5" /> : 
+                              <ArrowDownRight className="w-5 h-5" />
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{transaction.description}</p>
+                            <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500">
+                              <span>{new Date(transaction.transactionDate).toLocaleDateString()}</span>
+                              <span>•</span>
+                              <span className="font-mono truncate">FCB{new Date(transaction.transactionDate).toISOString().slice(0, 10).replace(/-/g, '')}-{transaction.id.slice(-6).toUpperCase()}</span>
+                            </div>
                           </div>
                         </div>
-                        <div className={`font-bold text-right ${
+                        <div className={`font-bold text-left sm:text-right ${
                           transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           <div>{transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}</div>
@@ -2760,7 +2768,7 @@ export default function UserDashboard() {
 
       {/* Statements Dialog */}
       <Dialog open={isStatementsDialogOpen} onOpenChange={setIsStatementsDialogOpen}>
-        <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <FileText className="w-5 h-5 mr-2 text-blue-600" />
@@ -2809,7 +2817,7 @@ export default function UserDashboard() {
                           </CardHeader>
                           
                           <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                               <div className="text-center p-3 bg-gray-50 rounded-lg">
                                 <div className="text-sm text-gray-600">Opening Balance</div>
                                 <div className="text-lg font-bold text-gray-800">
