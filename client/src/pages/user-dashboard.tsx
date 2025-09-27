@@ -155,6 +155,29 @@ export default function UserDashboard() {
   });
   const { toast } = useToast();
 
+  // Generate random avatar for user
+  const generateUserAvatar = (firstName: string, lastName: string, userId: string) => {
+    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    
+    // Generate consistent color based on user ID
+    const colors = [
+      'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500',
+      'bg-indigo-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500', 'bg-cyan-500'
+    ];
+    
+    // Use user ID to get consistent color
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const colorIndex = Math.abs(hash) % colors.length;
+    
+    return {
+      initials,
+      colorClass: colors[colorIndex]
+    };
+  };
+
   const handleDebitCardFreeze = () => {
     setIsDebitCardFrozen(!isDebitCardFrozen);
     if (!isDebitCardFrozen) {
@@ -541,9 +564,14 @@ export default function UserDashboard() {
             {/* User Info */}
             <div className="px-6 py-6 border-b border-blue-500">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
-                </div>
+                {user && (() => {
+                  const avatar = generateUserAvatar(user.firstName, user.lastName, user.id);
+                  return (
+                    <div className={`w-12 h-12 ${avatar.colorClass} rounded-full flex items-center justify-center shadow-lg`}>
+                      <span className="text-white font-bold text-lg">{avatar.initials}</span>
+                    </div>
+                  );
+                })()}
                 <div>
                   <h2 className="text-white font-medium">
                     {user.firstName} {user.lastName}
