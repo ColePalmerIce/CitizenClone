@@ -9,7 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
   insertCreditLimitIncreaseRequestSchema, 
-  insertDebitLimitIncreaseRequestSchema 
+  insertDebitLimitIncreaseRequestSchema,
+  insertPendingExternalTransferSchema
 } from "@shared/schema";
 import { 
   Card, 
@@ -455,6 +456,30 @@ export default function UserDashboard() {
     description: ''
   });
 
+  // External transfer validation schema as requested by architect
+  const externalTransferValidationSchema = insertPendingExternalTransferSchema.extend({
+    amount: z.coerce.number().min(0.01, "Amount must be at least $0.01"),
+    recipientAccountNumber: z.string().min(8, "Account number must be at least 8 digits"),
+    recipientRoutingNumber: z.string().min(9, "Routing number must be 9 digits").max(9, "Routing number must be 9 digits"),
+  }).omit({ userId: true });
+
+  // External transfer form state with proper validation
+  const [externalTransferForm, setExternalTransferForm] = useState({
+    fromAccountId: '',
+    recipientName: '',
+    recipientAccountNumber: '',
+    recipientRoutingNumber: '',
+    recipientBankName: '',
+    amount: '',
+    transferType: 'ACH',
+    purpose: ''
+  });
+
+  // Dialog and confirmation states
+  const [isExternalTransferDialogOpen, setIsExternalTransferDialogOpen] = useState(false);
+  const [showTransferConfirmation, setShowTransferConfirmation] = useState(false);
+  const [confirmationData, setConfirmationData] = useState<any>(null);
+
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -639,6 +664,55 @@ export default function UserDashboard() {
         variant: "destructive",
       });
     }
+  });
+
+
+  // External transfer mutation with proper payload types
+  const externalTransferMutation = useMutation({
+    mutationFn: async (transferData: any) => {
+      const response = await apiRequest('POST', '/api/user/external-transfer', transferData);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'External transfer failed');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/pending-external-transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
+      toast({
+        title: "Transfer Request Submitted",
+        description: data.message || "Your external transfer request is pending administrative approval.",
+      });
+      setIsExternalTransferDialogOpen(false);
+      setShowTransferConfirmation(false);
+      setConfirmationData(null);
+      // Reset form state properly for useState
+      setExternalTransferForm({
+        fromAccountId: '',
+        recipientName: '',
+        recipientAccountNumber: '',
+        recipientRoutingNumber: '',
+        recipientBankName: '',
+        amount: '',
+        transferType: 'ACH',
+        purpose: ''
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Transfer Request Failed",
+        description: error.message || "Please try again or contact support.",
+        variant: "destructive",
+      });
+      setShowTransferConfirmation(false);
+    }
+  });
+
+  // Query for pending external transfers
+  const { data: pendingExternalTransfers = [] } = useQuery<any[]>({
+    queryKey: ['/api/user/pending-external-transfers'],
+    refetchInterval: 30000, // Refetch every 30 seconds to check for status updates
   });
 
   const handleLogout = async () => {
@@ -2522,9 +2596,10 @@ export default function UserDashboard() {
                 </h3>
                 
                 <Tabs defaultValue="domestic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="domestic">Domestic Transfer</TabsTrigger>
                     <TabsTrigger value="international">International Transfer</TabsTrigger>
+                    <TabsTrigger value="external">External Transfer</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="domestic" className="space-y-4 mt-4">
@@ -2649,8 +2724,285 @@ export default function UserDashboard() {
                       Send Wire Transfer
                     </Button>
                   </TabsContent>
+                  
+                  <TabsContent value="external" className="space-y-4 mt-4">
+                    <div className="p-3 bg-yellow-50 rounded-lg text-sm border border-yellow-200">
+                      <p className="text-yellow-800 font-medium">⚠️ Administrative Approval Required</p>
+                      <p className="text-yellow-700 mt-1">External transfers require admin approval and may take 1-3 business days to process.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="fromAccountExternal">From Account</Label>
+                        <Select value={externalTransferForm.fromAccountId} onValueChange={(value) => 
+                          setExternalTransferForm({...externalTransferForm, fromAccountId: value})
+                        }>
+                          <SelectTrigger data-testid="select-from-account-external">
+                            <SelectValue placeholder="Select source account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(allAccounts as BankAccount[])?.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.accountType} - ****{account.accountNumber.slice(-4)} 
+                                (${parseFloat(account.balance || '0').toLocaleString()})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="externalAmount">Amount</Label>
+                        <Input
+                          id="externalAmount"
+                          type="number"
+                          value={externalTransferForm.amount}
+                          onChange={(e) => setExternalTransferForm({...externalTransferForm, amount: e.target.value})}
+                          placeholder="0.00"
+                          data-testid="input-external-amount"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="recipientNameExternal">Recipient Name</Label>
+                        <Input
+                          id="recipientNameExternal"
+                          value={externalTransferForm.recipientName}
+                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientName: e.target.value})}
+                          placeholder="Full name as shown on account"
+                          data-testid="input-external-recipient-name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="recipientBankName">Bank Name</Label>
+                        <Input
+                          id="recipientBankName"
+                          value={externalTransferForm.recipientBankName}
+                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientBankName: e.target.value})}
+                          placeholder="e.g., Chase Bank, Wells Fargo"
+                          data-testid="input-external-bank-name"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="recipientAccountNumber">Account Number</Label>
+                        <Input
+                          id="recipientAccountNumber"
+                          value={externalTransferForm.recipientAccountNumber}
+                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientAccountNumber: e.target.value})}
+                          placeholder="Recipient's account number"
+                          data-testid="input-external-account-number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="recipientRoutingNumber">Routing Number</Label>
+                        <Input
+                          id="recipientRoutingNumber"
+                          value={externalTransferForm.recipientRoutingNumber}
+                          onChange={(e) => setExternalTransferForm({...externalTransferForm, recipientRoutingNumber: e.target.value})}
+                          placeholder="9-digit routing number"
+                          data-testid="input-external-routing-number"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="transferTypeExternal">Transfer Type</Label>
+                        <Select value={externalTransferForm.transferType} onValueChange={(value) => 
+                          setExternalTransferForm({...externalTransferForm, transferType: value})
+                        }>
+                          <SelectTrigger data-testid="select-transfer-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ACH">ACH (1-3 business days)</SelectItem>
+                            <SelectItem value="Wire">Wire Transfer (Same day - $25 fee)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="transferPurpose">Purpose (Optional)</Label>
+                        <Input
+                          id="transferPurpose"
+                          value={externalTransferForm.purpose}
+                          onChange={(e) => setExternalTransferForm({...externalTransferForm, purpose: e.target.value})}
+                          placeholder="e.g., Gift, Bill payment"
+                          data-testid="input-transfer-purpose"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      className="w-full" 
+                      disabled={!externalTransferForm.fromAccountId || !externalTransferForm.amount || 
+                               !externalTransferForm.recipientName || !externalTransferForm.recipientAccountNumber || 
+                               !externalTransferForm.recipientRoutingNumber || !externalTransferForm.recipientBankName ||
+                               externalTransferMutation.isPending}
+                      onClick={() => {
+                        // Proper validation using Zod schema as requested by architect
+                        try {
+                          const validatedData = externalTransferValidationSchema.parse({
+                            ...externalTransferForm,
+                            amount: parseFloat(externalTransferForm.amount) || 0 // Number coercion for API contract
+                          });
+                          // Show confirmation dialog with validated data
+                          setConfirmationData(validatedData);
+                          setShowTransferConfirmation(true);
+                        } catch (error: any) {
+                          // Proper error handling for validation failures
+                          const errorMessage = error.errors?.[0]?.message || "Please check your form data";
+                          toast({
+                            title: "Validation Error",
+                            description: errorMessage,
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      data-testid="button-submit-external-transfer"
+                    >
+                      {externalTransferMutation.isPending ? 'Submitting...' : 'Review Transfer Request'}
+                    </Button>
+                  </TabsContent>
                 </Tabs>
               </div>
+
+              {/* External Transfer Confirmation Dialog */}
+              {showTransferConfirmation && confirmationData && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Confirm External Transfer
+                    </h3>
+                    
+                    {/* Compliance Warning */}
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                      <h4 className="font-medium text-yellow-800 flex items-center">
+                        ⚠️ Important Banking Disclosure
+                      </h4>
+                      <ul className="mt-2 text-sm text-yellow-700 space-y-1">
+                        <li>• External transfers require administrative approval</li>
+                        <li>• {confirmationData.transferType === 'ACH' ? 'ACH transfers take 1-3 business days' : 'Wire transfers are processed same day with $25 fee'}</li>
+                        <li>• This transfer may be irreversible once approved</li>
+                        <li>• Ensure recipient details are accurate</li>
+                      </ul>
+                    </div>
+
+                    {/* Transfer Details Review */}
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">From Account:</span>
+                        <span className="font-medium">
+                          {(allAccounts as BankAccount[])?.find(acc => acc.id === confirmationData.fromAccountId)?.accountType} 
+                          ****{(allAccounts as BankAccount[])?.find(acc => acc.id === confirmationData.fromAccountId)?.accountNumber?.slice(-4)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Amount:</span>
+                        <span className="font-medium text-lg">${confirmationData.amount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Recipient:</span>
+                        <span className="font-medium">{confirmationData.recipientName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Bank:</span>
+                        <span className="font-medium">{confirmationData.recipientBankName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Account:</span>
+                        <span className="font-medium">****{confirmationData.recipientAccountNumber?.slice(-4)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Transfer Type:</span>
+                        <span className="font-medium">{confirmationData.transferType}</span>
+                      </div>
+                      {confirmationData.purpose && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Purpose:</span>
+                          <span className="font-medium">{confirmationData.purpose}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex space-x-3">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setShowTransferConfirmation(false);
+                          setConfirmationData(null);
+                        }}
+                        data-testid="button-cancel-transfer"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        disabled={externalTransferMutation.isPending}
+                        onClick={() => {
+                          externalTransferMutation.mutate({
+                            ...confirmationData,
+                            userId: user?.id
+                          });
+                        }}
+                        data-testid="button-confirm-transfer"
+                      >
+                        {externalTransferMutation.isPending ? 'Submitting...' : 'Confirm Transfer'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pending External Transfers */}
+              {pendingExternalTransfers.length > 0 && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center">
+                    <Clock className="w-5 h-5 mr-2 text-orange-600" />
+                    Pending External Transfers
+                  </h3>
+                  <div className="space-y-3">
+                    {pendingExternalTransfers.map((transfer: any) => (
+                      <div key={transfer.id} className="p-3 border rounded-lg bg-orange-50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              ${parseFloat(transfer.amount).toLocaleString()} to {transfer.recipientName}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {transfer.recipientBankName} • {transfer.transferType}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Submitted: {new Date(transfer.submittedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge 
+                              variant={transfer.status === 'pending' ? 'outline' : 
+                                     transfer.status === 'approved' ? 'default' : 'destructive'}
+                              className={transfer.status === 'pending' ? 'border-orange-500 text-orange-700' : ''}
+                            >
+                              {transfer.status === 'pending' && '⏳ Pending Approval'}
+                              {transfer.status === 'approved' && '✅ Approved'}
+                              {transfer.status === 'disapproved' && '❌ Disapproved'}
+                            </Badge>
+                            {transfer.rejectionReason && (
+                              <p className="text-xs text-red-600 mt-1 max-w-40 text-right">
+                                {transfer.rejectionReason}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Transaction History */}
               <div className="border rounded-lg p-4">
