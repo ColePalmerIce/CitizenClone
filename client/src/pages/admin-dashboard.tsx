@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -1469,8 +1470,10 @@ function CustomersTab({
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedCustomer(account);
-                                    setIsCustomerFundDialogOpen(true);
+                                    flushSync(() => {
+                                      setSelectedCustomer(account);
+                                      setIsCustomerFundDialogOpen(true);
+                                    });
                                   }}
                                   data-testid={`button-add-funds-${account.id}`}
                                 >
@@ -1482,8 +1485,10 @@ function CustomersTab({
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedCustomer(account);
-                                    setIsCustomerWithdrawDialogOpen(true);
+                                    flushSync(() => {
+                                      setSelectedCustomer(account);
+                                      setIsCustomerWithdrawDialogOpen(true);
+                                    });
                                   }}
                                   data-testid={`button-withdraw-funds-${account.id}`}
                                 >
