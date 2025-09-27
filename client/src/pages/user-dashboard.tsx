@@ -153,6 +153,7 @@ export default function UserDashboard() {
     description: '',
     transferType: 'domestic' // domestic or international
   });
+  const [expandedStatements, setExpandedStatements] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Generate professional avatar for user
@@ -182,6 +183,16 @@ export default function UserDashboard() {
       initials,
       gradientClass: gradients[gradientIndex]
     };
+  };
+
+  const toggleStatementExpansion = (statementId: string) => {
+    const newExpanded = new Set(expandedStatements);
+    if (newExpanded.has(statementId)) {
+      newExpanded.delete(statementId);
+    } else {
+      newExpanded.add(statementId);
+    }
+    setExpandedStatements(newExpanded);
   };
 
   const handleDebitCardFreeze = () => {
@@ -2399,8 +2410,11 @@ export default function UserDashboard() {
                             {statement.transactions && statement.transactions.length > 0 && (
                               <div className="mt-4">
                                 <h4 className="font-semibold text-gray-700 mb-2">Transaction Summary</h4>
-                                <div className="max-h-32 overflow-y-auto space-y-1">
-                                  {statement.transactions.slice(0, 5).map((transaction: any) => (
+                                <div className={`${expandedStatements.has(statement.id) ? 'max-h-96' : 'max-h-32'} overflow-y-auto space-y-1`}>
+                                  {(expandedStatements.has(statement.id) 
+                                    ? statement.transactions 
+                                    : statement.transactions.slice(0, 5)
+                                  ).map((transaction: any) => (
                                     <div key={transaction.id} className="flex justify-between items-center py-1 text-sm">
                                       <div className="flex items-center">
                                         {transaction.type === 'credit' ? (
@@ -2418,9 +2432,16 @@ export default function UserDashboard() {
                                     </div>
                                   ))}
                                   {statement.transactions.length > 5 && (
-                                    <div className="text-xs text-gray-500 text-center py-1">
-                                      + {statement.transactions.length - 5} more transactions
-                                    </div>
+                                    <button 
+                                      onClick={() => toggleStatementExpansion(statement.id)}
+                                      className="w-full text-xs text-blue-600 hover:text-blue-800 text-center py-2 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                                      data-testid={`toggle-transactions-${statement.id}`}
+                                    >
+                                      {expandedStatements.has(statement.id) 
+                                        ? "Show less transactions" 
+                                        : `+ ${statement.transactions.length - 5} more transactions`
+                                      }
+                                    </button>
                                   )}
                                 </div>
                               </div>
