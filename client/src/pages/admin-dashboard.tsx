@@ -1436,18 +1436,46 @@ function CustomersTab({
                                   Opened: {account.openDate ? new Date(account.openDate).toLocaleDateString() : 'N/A'}
                                 </p>
                               </div>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteCustomerMutation.mutate(account.id);
-                                }}
-                                disabled={deleteCustomerMutation.isPending}
-                                data-testid={`button-delete-${account.id}`}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedCustomer(account);
+                                    setIsCustomerFundDialogOpen(true);
+                                  }}
+                                  data-testid={`button-add-funds-${account.id}`}
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Add
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedCustomer(account);
+                                    setIsCustomerWithdrawDialogOpen(true);
+                                  }}
+                                  data-testid={`button-withdraw-funds-${account.id}`}
+                                >
+                                  <Minus className="w-4 h-4 mr-1" />
+                                  Withdraw
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteCustomerMutation.mutate(account.id);
+                                  }}
+                                  disabled={deleteCustomerMutation.isPending}
+                                  data-testid={`button-delete-${account.id}`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}
