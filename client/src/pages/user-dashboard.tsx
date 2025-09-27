@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -139,6 +140,9 @@ interface Transaction {
 export default function UserDashboard() {
   const [, setLocation] = useLocation();
   const [user, setUser] = useState<UserData | null>(null);
+  
+  // WebSocket connection for real-time notifications
+  const { isConnected } = useWebSocket(user?.id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isBillPayDialogOpen, setIsBillPayDialogOpen] = useState(false);

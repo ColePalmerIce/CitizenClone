@@ -94,6 +94,7 @@ export default function AdminDashboard() {
   const [customerFundDescription, setCustomerFundDescription] = useState("");
   const [customerWithdrawAmount, setCustomerWithdrawAmount] = useState("");
   const [customerWithdrawDescription, setCustomerWithdrawDescription] = useState("");
+  const [pendingTransactions, setPendingTransactions] = useState<any[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -214,6 +215,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/balance'] });
       toast({
         title: "Funds Added",
         description: "Customer account has been credited successfully.",
@@ -241,6 +243,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/balance'] });
       toast({
         title: "Funds Withdrawn",
         description: "Amount has been withdrawn from customer account.",

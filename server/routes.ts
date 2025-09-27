@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { WebSocketServer, WebSocket } from 'ws';
 import { 
   insertSearchQuerySchema,
   insertCreditCardApplicationSchema,
@@ -496,6 +497,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid amount" });
       }
 
+      // Get admin balance
+      const adminBalance = await storage.getAdminBalance(adminId!);
+      if (!adminBalance || parseFloat(adminBalance.balance || '0') < creditAmount) {
+        return res.status(400).json({ message: "Insufficient admin balance" });
+      }
+
       // Get the account
       const account = await storage.getBankAccount(accountId);
       if (!account) {
@@ -504,6 +511,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const currentBalance = parseFloat(account.balance || '0');
       const newBalance = currentBalance + creditAmount;
+      const newAdminBalance = parseFloat(adminBalance.balance || '0') - creditAmount;
+
+      // Update admin balance first
+      await storage.updateAdminBalance(adminId!, newAdminBalance.toFixed(2));
 
       // Create transaction
       const transaction = await storage.createTransaction({
@@ -513,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: `Admin Credit: ${description}`,
         balanceAfter: newBalance.toFixed(2),
         status: 'completed',
-        processedBy: adminId,
+        processedBy: adminId!,
         merchantName: 'First Citizens Bank Admin',
         merchantLocation: 'Administrative Office',
         merchantCategory: 'banking'
@@ -522,10 +533,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update account balance
       await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
 
+      // Send real-time notification to user
+      if ((global as any).sendNotificationToUser) {
+        (global as any).sendNotificationToUser(account.userId, {
+          type: 'balance_update',
+          title: 'Account Credited',
+          message: `$${amount} has been credited to your ${account.accountType} account by Administrative`,
+          amount: creditAmount,
+          newBalance: newBalance.toFixed(2),
+          timestamp: new Date().toISOString()
+        });
+      }
+
       res.json({ 
         success: true, 
         transaction,
         newBalance: newBalance.toFixed(2),
+        adminBalance: newAdminBalance.toFixed(2),
         message: `Successfully added $${amount} to account` 
       });
     } catch (error) {
@@ -555,7 +579,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const currentBalance = parseFloat(account.balance || '0');
+      if (currentBalance < debitAmount) {
+        return res.status(400).json({ message: "Insufficient account balance" });
+      }
+
       const newBalance = currentBalance - debitAmount;
+
+      // Get admin balance and add withdrawn amount
+      const adminBalance = await storage.getAdminBalance(adminId!);
+      const newAdminBalance = parseFloat(adminBalance?.balance || '0') + debitAmount;
+
+      // Update admin balance first (add withdrawn funds)
+      await storage.updateAdminBalance(adminId!, newAdminBalance.toFixed(2));
 
       // Create transaction
       const transaction = await storage.createTransaction({
@@ -565,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: `Admin Withdrawal: ${description}`,
         balanceAfter: newBalance.toFixed(2),
         status: 'completed',
-        processedBy: adminId,
+        processedBy: adminId!,
         merchantName: 'First Citizens Bank Admin',
         merchantLocation: 'Administrative Office',
         merchantCategory: 'banking'
@@ -574,10 +609,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update account balance
       await storage.updateBankAccountBalance(accountId, newBalance.toFixed(2));
 
+      // Send real-time notification to user
+      if ((global as any).sendNotificationToUser) {
+        (global as any).sendNotificationToUser(account.userId, {
+          type: 'balance_update',
+          title: 'Account Debited',
+          message: `$${amount} has been withdrawn from your ${account.accountType} account by Administrative`,
+          amount: -debitAmount,
+          newBalance: newBalance.toFixed(2),
+          timestamp: new Date().toISOString()
+        });
+      }
+
       res.json({ 
         success: true, 
         transaction,
         newBalance: newBalance.toFixed(2),
+        adminBalance: newAdminBalance.toFixed(2),
         message: `Successfully withdrew $${amount} from account` 
       });
     } catch (error) {
@@ -1395,5 +1443,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server for real-time notifications
+  const wss = new WebSocketServer({ server: httpServer });
+  const connectedClients = new Map<string, WebSocket>();
+
+  wss.on('connection', (ws, req) => {
+    let userId: string | null = null;
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        if (data.type === 'authenticate' && data.userId) {
+          userId = data.userId;
+          connectedClients.set(userId, ws);
+          console.log(`User ${userId} connected to WebSocket`);
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (userId) {
+        connectedClients.delete(userId);
+        console.log(`User ${userId} disconnected from WebSocket`);
+      }
+    });
+  });
+
+  // Notification utility function
+  (global as any).sendNotificationToUser = (userId: string, notification: any) => {
+    const userWs = connectedClients.get(userId);
+    if (userWs && userWs.readyState === WebSocket.OPEN) {
+      userWs.send(JSON.stringify(notification));
+    }
+  };
+
   return httpServer;
 }
