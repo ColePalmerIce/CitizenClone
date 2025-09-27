@@ -1291,14 +1291,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "No accounts found" });
       }
 
-      // Find source and destination accounts by account type or number
+      // Find source and destination accounts by account type or number (case-insensitive)
       const sourceAccount = accounts.find(acc => 
-        acc.accountType === fromAccount || 
+        acc.accountType.toLowerCase() === fromAccount.toLowerCase() || 
         acc.accountNumber.endsWith(fromAccount.slice(-4))
       );
       
       const destinationAccount = accounts.find(acc => 
-        acc.accountType === toAccount || 
+        acc.accountType.toLowerCase() === toAccount.toLowerCase() || 
         acc.accountNumber.endsWith(toAccount.slice(-4))
       );
 

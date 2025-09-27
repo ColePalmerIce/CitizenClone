@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Users,
   DollarSign,
@@ -38,7 +39,8 @@ import {
   ArrowDownRight,
   Eye,
   Building,
-  Shield
+  Shield,
+  ChevronDown
 } from "lucide-react";
 
 interface DashboardStats {
@@ -1348,56 +1350,112 @@ function CustomersTab({
             </div>
           ) : customers?.length > 0 ? (
             <div className="space-y-3">
-              {customers.map((account: any) => (
-                <div 
-                  key={account.id} 
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 space-y-2 sm:space-y-0 cursor-pointer hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-700 transition-all"
-                  onClick={() => {
-                    setSelectedCustomer(account);
-                    setIsCustomerDetailsDialogOpen(true);
-                  }}
-                  data-testid={`customer-${account.id}`}
-                >
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-                      <div>
-                        <p className="font-medium text-lg">{account.firstName} {account.lastName}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Account #{account.accountNumber} • {account.accountType} • Routing: {account.routingNumber}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Email: {account.email}
-                        </p>
-                      </div>
-                      <div className="mt-2 sm:mt-0">
-                        <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
-                          {account.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between sm:justify-end space-x-4">
-                    <div className="text-right">
-                      <p className="font-bold text-lg">${account.balance}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">
-                        Opened: {new Date(account.openDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering the row click
-                        deleteCustomerMutation.mutate(account.id);
-                      }}
-                      disabled={deleteCustomerMutation.isPending}
-                      data-testid={`button-delete-${account.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+              {(() => {
+                // Group accounts by user
+                const groupedByUser = customers.reduce((acc, account) => {
+                  const userId = account.userId;
+                  if (!acc[userId]) {
+                    acc[userId] = {
+                      user: {
+                        id: userId,
+                        firstName: account.firstName,
+                        lastName: account.lastName,
+                        email: account.email,
+                        username: account.username
+                      },
+                      accounts: []
+                    };
+                  }
+                  acc[userId].accounts.push(account);
+                  return acc;
+                }, {} as Record<string, any>);
+
+                return Object.values(groupedByUser).map((userGroup: any) => {
+                  const totalBalance = userGroup.accounts.reduce((sum: number, acc: any) => sum + parseFloat(acc.balance || '0'), 0);
+                  
+                  return (
+                    <Collapsible key={userGroup.user.id} className="w-full">
+                      <CollapsibleTrigger asChild>
+                        <div 
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 space-y-2 sm:space-y-0 cursor-pointer hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-700 transition-all"
+                          data-testid={`customer-group-${userGroup.user.id}`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                              <div>
+                                <p className="font-medium text-lg">{userGroup.user.firstName} {userGroup.user.lastName}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                  {userGroup.accounts.length} account{userGroup.accounts.length > 1 ? 's' : ''} • Total Balance: ${totalBalance.toLocaleString()}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Email: {userGroup.user.email}
+                                </p>
+                              </div>
+                              <div className="mt-2 sm:mt-0">
+                                <Badge variant="default">
+                                  {userGroup.accounts.length} accounts
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <ChevronDown className="w-5 h-5 text-gray-500" />
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2">
+                        {userGroup.accounts.map((account: any) => (
+                          <div 
+                            key={account.id}
+                            className="ml-6 flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 space-y-2 sm:space-y-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-all"
+                            onClick={() => {
+                              setSelectedCustomer(account);
+                              setIsCustomerDetailsDialogOpen(true);
+                            }}
+                            data-testid={`account-${account.id}`}
+                          >
+                            <div className="flex-1">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                                <div>
+                                  <p className="font-medium">{account.accountType}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                                    Account #{account.accountNumber} • Routing: {account.routingNumber}
+                                  </p>
+                                </div>
+                                <div className="mt-2 sm:mt-0">
+                                  <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
+                                    {account.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between sm:justify-end space-x-4">
+                              <div className="text-right">
+                                <p className="font-bold text-lg">${account.balance}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-300">
+                                  Opened: {account.openDate ? new Date(account.openDate).toLocaleDateString() : 'N/A'}
+                                </p>
+                              </div>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteCustomerMutation.mutate(account.id);
+                                }}
+                                disabled={deleteCustomerMutation.isPending}
+                                data-testid={`button-delete-${account.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                });
+              })()}
             </div>
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-center py-8">No customer accounts found</p>
