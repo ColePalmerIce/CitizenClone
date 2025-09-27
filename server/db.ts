@@ -272,7 +272,7 @@ export class PostgreSQLStorage implements IStorage {
       throw new Error("Account not found");
     }
     
-    let runningBalance = parseFloat(account.balance) || 50000; // Starting balance
+    let runningBalance = parseFloat(account.balance || '50000') || 50000; // Starting balance
     
     // Process transactions in chronological order (oldest first)
     const sortedTransactions = professionalTransactions.sort((a, b) => 

@@ -364,7 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Calculate new balance
-      const currentAmount = parseFloat(currentBalance.balance);
+      const currentAmount = parseFloat(currentBalance.balance || '0');
       const newAmount = currentAmount + numAmount;
       
       // Update admin balance
@@ -524,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update admin balance automatically (opposite of user transaction)
       const adminBalance = await storage.getAdminBalance(adminId);
       if (adminBalance) {
-        const currentAdminBalance = parseFloat(adminBalance.balance);
+        const currentAdminBalance = parseFloat(adminBalance.balance || '0');
         let newAdminBalance: number;
         
         if (type === 'credit') {
@@ -863,7 +863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get transactions for this month
           const allTransactions = await storage.getTransactionsByAccountId(account.id, 100);
           const monthTransactions = allTransactions.filter(transaction => {
-            const transactionDate = new Date(transaction.transactionDate);
+            const transactionDate = new Date(transaction.transactionDate || new Date());
             return transactionDate >= monthDate && transactionDate < nextMonthDate;
           });
           
@@ -873,7 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Sort transactions by date for proper calculation
           const sortedTransactions = monthTransactions.sort((a, b) => 
-            new Date(a.transactionDate).getTime() - new Date(b.transactionDate).getTime()
+            new Date(a.transactionDate || new Date()).getTime() - new Date(b.transactionDate || new Date()).getTime()
           );
           
           // Calculate totals for this month
@@ -887,7 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           // Use current balance as closing, calculate opening from transactions
-          const closingBalance = parseFloat(account.balance);
+          const closingBalance = parseFloat(account.balance || '0');
           const openingBalance = closingBalance - totalCredits + totalDebits;
           
           statements.push({
