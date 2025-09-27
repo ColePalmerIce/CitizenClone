@@ -473,6 +473,10 @@ export default function AdminDashboard() {
                 setCustomerFundAmount={setCustomerFundAmount}
                 customerFundDescription={customerFundDescription}
                 setCustomerFundDescription={setCustomerFundDescription}
+                customerWithdrawAmount={customerWithdrawAmount}
+                setCustomerWithdrawAmount={setCustomerWithdrawAmount}
+                customerWithdrawDescription={customerWithdrawDescription}
+                setCustomerWithdrawDescription={setCustomerWithdrawDescription}
                 customerAddFundsMutation={customerAddFundsMutation}
                 customerWithdrawFundsMutation={customerWithdrawFundsMutation}
               />
@@ -495,6 +499,10 @@ export default function AdminDashboard() {
                 setCustomerFundAmount={setCustomerFundAmount}
                 customerFundDescription={customerFundDescription}
                 setCustomerFundDescription={setCustomerFundDescription}
+                customerWithdrawAmount={customerWithdrawAmount}
+                setCustomerWithdrawAmount={setCustomerWithdrawAmount}
+                customerWithdrawDescription={customerWithdrawDescription}
+                setCustomerWithdrawDescription={setCustomerWithdrawDescription}
                 customerAddFundsMutation={customerAddFundsMutation}
                 customerWithdrawFundsMutation={customerWithdrawFundsMutation}
               />
@@ -540,6 +548,10 @@ function OverviewTab({
   setCustomerFundAmount,
   customerFundDescription,
   setCustomerFundDescription,
+  customerWithdrawAmount,
+  setCustomerWithdrawAmount,
+  customerWithdrawDescription,
+  setCustomerWithdrawDescription,
   customerAddFundsMutation,
   customerWithdrawFundsMutation
 }: { 
@@ -564,6 +576,10 @@ function OverviewTab({
   setCustomerFundAmount: (amount: string) => void;
   customerFundDescription: string;
   setCustomerFundDescription: (desc: string) => void;
+  customerWithdrawAmount: string;
+  setCustomerWithdrawAmount: (amount: string) => void;
+  customerWithdrawDescription: string;
+  setCustomerWithdrawDescription: (desc: string) => void;
   customerAddFundsMutation: any;
   customerWithdrawFundsMutation: any;
 }) {
@@ -1176,6 +1192,10 @@ function CustomersTab({
   setCustomerFundAmount,
   customerFundDescription,
   setCustomerFundDescription,
+  customerWithdrawAmount,
+  setCustomerWithdrawAmount,
+  customerWithdrawDescription,
+  setCustomerWithdrawDescription,
   customerAddFundsMutation,
   customerWithdrawFundsMutation
 }: {
@@ -1195,6 +1215,10 @@ function CustomersTab({
   setCustomerFundAmount: (amount: string) => void;
   customerFundDescription: string;
   setCustomerFundDescription: (desc: string) => void;
+  customerWithdrawAmount: string;
+  setCustomerWithdrawAmount: (amount: string) => void;
+  customerWithdrawDescription: string;
+  setCustomerWithdrawDescription: (desc: string) => void;
   customerAddFundsMutation: any;
   customerWithdrawFundsMutation: any;
 }) {
