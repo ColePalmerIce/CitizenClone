@@ -430,13 +430,34 @@ export default function UserDashboard() {
     }
   };
 
-  // Transfer form state
-  const [transferForm, setTransferForm] = useState({
-    recipient: '',
-    recipientAccount: '',
-    amount: '',
-    description: '',
-    transferType: 'external'
+  // Enhanced transfer validation schema
+  const enhancedTransferSchema = z.object({
+    recipient: z.string().min(1, "Recipient name is required"),
+    recipientAccount: z.string().min(8, "Account number must be at least 8 digits"),
+    bankName: z.string().min(1, "Bank name is required"),
+    routingNumber: z.string().min(9, "Routing number must be 9 digits").max(9, "Routing number must be 9 digits"),
+    accountType: z.enum(["checking", "savings"], { required_error: "Account type is required" }),
+    recipientPhone: z.string().min(10, "Phone number is required (minimum 10 digits)"),
+    recipientAddress: z.string().min(5, "Complete address is required"),
+    amount: z.coerce.number().min(0.01, "Amount must be at least $0.01"),
+    description: z.string().min(1, "Description/purpose is required"),
+  });
+
+  type EnhancedTransferFormData = z.infer<typeof enhancedTransferSchema>;
+
+  const enhancedTransferForm = useForm<EnhancedTransferFormData>({
+    resolver: zodResolver(enhancedTransferSchema),
+    defaultValues: {
+      recipient: '',
+      recipientAccount: '',
+      bankName: '',
+      routingNumber: '',
+      accountType: 'checking',
+      recipientPhone: '',
+      recipientAddress: '',
+      amount: 0,
+      description: '',
+    }
   });
 
   // Bill pay form state
@@ -615,7 +636,17 @@ export default function UserDashboard() {
         description: "Your money transfer has been completed.",
       });
       setIsTransferDialogOpen(false);
-      setTransferForm({ recipient: '', recipientAccount: '', amount: '', description: '', transferType: 'external' });
+      enhancedTransferForm.reset({
+        recipient: '',
+        recipientAccount: '',
+        bankName: '',
+        routingNumber: '',
+        accountType: 'checking',
+        recipientPhone: '',
+        recipientAddress: '',
+        amount: 0,
+        description: '',
+      });
     },
     onError: () => {
       toast({
@@ -1862,66 +1893,217 @@ export default function UserDashboard() {
                         <span className="text-xs text-blue-700">Transfer</span>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Transfer Money</DialogTitle>
                         <DialogDescription>
-                          Send money to another account
+                          Send money to another bank account
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="recipient">Recipient Name</Label>
-                          <Input
-                            id="recipient"
-                            value={transferForm.recipient}
-                            onChange={(e) => setTransferForm({...transferForm, recipient: e.target.value})}
-                            placeholder="Enter recipient name"
-                            data-testid="input-recipient"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="recipientAccount">Recipient Account</Label>
-                          <Input
-                            id="recipientAccount"
-                            value={transferForm.recipientAccount}
-                            onChange={(e) => setTransferForm({...transferForm, recipientAccount: e.target.value})}
-                            placeholder="Enter account number"
-                            data-testid="input-recipient-account"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="amount">Amount ($)</Label>
-                          <Input
-                            id="amount"
-                            type="number"
-                            value={transferForm.amount}
-                            onChange={(e) => setTransferForm({...transferForm, amount: e.target.value})}
-                            placeholder="0.00"
-                            data-testid="input-transfer-amount"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="description">Description</Label>
-                          <Input
-                            id="description"
-                            value={transferForm.description}
-                            onChange={(e) => setTransferForm({...transferForm, description: e.target.value})}
-                            placeholder="Optional note"
-                            data-testid="input-transfer-description"
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button 
-                          onClick={() => transferMutation.mutate(transferForm)}
-                          disabled={!transferForm.recipient || !transferForm.amount || transferMutation.isPending}
-                          className="w-full"
-                          data-testid="button-confirm-transfer"
-                        >
-                          {transferMutation.isPending ? 'Processing...' : `Transfer $${transferForm.amount || '0'}`}
-                        </Button>
-                      </DialogFooter>
+                      <Form {...enhancedTransferForm}>
+                        <form onSubmit={enhancedTransferForm.handleSubmit((data) => {
+                          transferMutation.mutate({
+                            ...data,
+                            transferType: 'external'
+                          });
+                        })} className="space-y-6">
+                          
+                          {/* Banking Information Section */}
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Banking Information</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="bankName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Bank Name</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="e.g., Chase Bank, Bank of America"
+                                        data-testid="input-bank-name"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="routingNumber"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Routing Number</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="9-digit routing number"
+                                        maxLength={9}
+                                        data-testid="input-routing-number"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="recipientAccount"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Account Number</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Recipient's account number"
+                                        data-testid="input-recipient-account"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="accountType"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Account Type</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger data-testid="select-account-type">
+                                          <SelectValue placeholder="Select account type" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="checking">Checking</SelectItem>
+                                        <SelectItem value="savings">Savings</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Recipient Information Section */}
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recipient Information</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="recipient"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Full Name</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Recipient's full legal name"
+                                        data-testid="input-recipient"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="recipientPhone"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Phone Number</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="(555) 123-4567"
+                                        data-testid="input-recipient-phone"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <FormField
+                              control={enhancedTransferForm.control}
+                              name="recipientAddress"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Complete Address</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      placeholder="Street address, City, State, ZIP"
+                                      data-testid="input-recipient-address"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          {/* Transfer Details Section */}
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Transfer Details</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="amount"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Amount ($)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="number"
+                                        step="0.01"
+                                        min="0.01"
+                                        placeholder="0.00"
+                                        data-testid="input-transfer-amount"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={enhancedTransferForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Purpose</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="e.g., Rent payment, Gift, Loan repayment"
+                                        data-testid="input-transfer-description"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+
+                          <DialogFooter>
+                            <Button 
+                              type="submit"
+                              disabled={!enhancedTransferForm.formState.isValid || transferMutation.isPending}
+                              className="w-full"
+                              data-testid="button-confirm-transfer"
+                            >
+                              {transferMutation.isPending ? 'Processing...' : `Transfer $${enhancedTransferForm.watch('amount') || '0'}`}
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
                     </DialogContent>
                   </Dialog>
 
