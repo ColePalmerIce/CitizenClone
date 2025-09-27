@@ -855,28 +855,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const months = ['September 2025', 'August 2025', 'July 2025'];
       
       for (const account of accounts) {
+        // Get all transactions for this account
+        const allTransactions = await storage.getTransactionsByAccountId(account.id, 1000);
+        
+        // Sort all transactions by date for proper balance calculation
+        const sortedAllTransactions = allTransactions.sort((a, b) => 
+          new Date(b.transactionDate || new Date()).getTime() - new Date(a.transactionDate || new Date()).getTime()
+        );
+        
+        // Start with current balance and work backwards
+        let runningBalance = parseFloat(account.balance || '0');
+        
         for (let i = 0; i < 3; i++) {
-          const monthYear = months[i];
           const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
           const nextMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i + 1, 1);
+          const monthYear = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
           
-          // Get transactions for this month
-          const allTransactions = await storage.getTransactionsByAccountId(account.id, 100);
-          const monthTransactions = allTransactions.filter(transaction => {
+          // Get transactions for this specific month
+          const monthTransactions = sortedAllTransactions.filter(transaction => {
             const transactionDate = new Date(transaction.transactionDate || new Date());
             return transactionDate >= monthDate && transactionDate < nextMonthDate;
           });
           
-          // Calculate statement details
-          let totalDebits = 0;
-          let totalCredits = 0;
-          
-          // Sort transactions by date for proper calculation
+          // Sort month transactions chronologically (oldest first)
           const sortedTransactions = monthTransactions.sort((a, b) => 
             new Date(a.transactionDate || new Date()).getTime() - new Date(b.transactionDate || new Date()).getTime()
           );
           
           // Calculate totals for this month
+          let totalDebits = 0;
+          let totalCredits = 0;
+          
           sortedTransactions.forEach(transaction => {
             const amount = parseFloat(transaction.amount);
             if (transaction.type === 'debit') {
@@ -886,9 +895,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
           
-          // Use current balance as closing, calculate opening from transactions
-          const closingBalance = parseFloat(account.balance || '0');
-          const openingBalance = closingBalance - totalCredits + totalDebits;
+          // Calculate proper balances for this month
+          let closingBalance, openingBalance;
+          
+          if (i === 0) {
+            // Current month - use actual account balance as closing
+            closingBalance = runningBalance;
+            openingBalance = closingBalance - totalCredits + totalDebits;
+          } else {
+            // Historical months - calculate from transaction history
+            closingBalance = runningBalance;
+            openingBalance = closingBalance - totalCredits + totalDebits;
+          }
+          
+          // Update running balance for next iteration (going backwards in time)
+          runningBalance = openingBalance;
           
           statements.push({
             id: `${account.id}-${i}`,

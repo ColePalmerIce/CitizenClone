@@ -95,6 +95,7 @@ import {
   UserCircle,
   Calendar,
   ChevronRight,
+  Clock,
   ShoppingBag,
   Copy,
   Check,
@@ -2867,14 +2868,45 @@ export default function UserDashboard() {
                                               </div>
                                             )}
                                             <div className="text-xs text-gray-500 mt-1">
-                                              {new Date(transaction.transactionDate).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric'
-                                              })}
-                                              {transaction.reference && (
-                                                <span className="ml-2">• Ref: {transaction.reference}</span>
-                                              )}
+                                              <div className="flex flex-col space-y-1">
+                                                <div className="flex items-center space-x-3">
+                                                  <span className="flex items-center">
+                                                    <Calendar className="w-3 h-3 mr-1" />
+                                                    {new Date(transaction.transactionDate).toLocaleDateString('en-US', {
+                                                      weekday: 'short',
+                                                      month: 'short', 
+                                                      day: 'numeric',
+                                                      year: 'numeric'
+                                                    })}
+                                                  </span>
+                                                  <span className="flex items-center">
+                                                    <Clock className="w-3 h-3 mr-1" />
+                                                    {new Date(transaction.transactionDate).toLocaleTimeString('en-US', {
+                                                      hour: '2-digit',
+                                                      minute: '2-digit',
+                                                      hour12: true
+                                                    })}
+                                                  </span>
+                                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                    transaction.type === 'credit' 
+                                                      ? 'bg-green-100 text-green-800' 
+                                                      : 'bg-red-100 text-red-800'
+                                                  }`}>
+                                                    {transaction.type === 'credit' ? 'Money In' : 'Money Out'}
+                                                  </span>
+                                                </div>
+                                                <div className="flex items-center space-x-3 text-gray-400">
+                                                  {transaction.reference && (
+                                                    <span>Ref: {transaction.reference}</span>
+                                                  )}
+                                                  {transaction.status && (
+                                                    <span className="capitalize">Status: {transaction.status}</span>
+                                                  )}
+                                                  {transaction.processedBy && (
+                                                    <span>Processed by FCB</span>
+                                                  )}
+                                                </div>
+                                              </div>
                                             </div>
                                           </div>
                                         </div>
