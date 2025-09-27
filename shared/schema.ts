@@ -246,6 +246,36 @@ export const insertDebitLimitIncreaseRequestSchema = createInsertSchema(debitLim
 export type InsertDebitLimitIncreaseRequest = z.infer<typeof insertDebitLimitIncreaseRequestSchema>;
 export type SelectDebitLimitIncreaseRequest = typeof debitLimitIncreaseRequests.$inferSelect;
 
+// Pending external transfers table
+export const pendingExternalTransfers = pgTable("pending_external_transfers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  fromAccountId: varchar("from_account_id").notNull(),
+  recipientName: text("recipient_name").notNull(),
+  recipientAccountNumber: text("recipient_account_number").notNull(),
+  recipientRoutingNumber: text("recipient_routing_number").notNull(),
+  recipientBankName: text("recipient_bank_name").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  transferType: text("transfer_type").notNull(), // ACH, Wire, etc.
+  purpose: text("purpose"), // reason for transfer
+  status: text("status").default("pending"), // pending, approved, disapproved
+  processedBy: varchar("processed_by"), // admin ID who processed
+  processedAt: timestamp("processed_at"),
+  rejectionReason: text("rejection_reason"), // if disapproved
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPendingExternalTransferSchema = createInsertSchema(pendingExternalTransfers).omit({
+  id: true,
+  createdAt: true,
+  submittedAt: true,
+  processedAt: true,
+});
+
+export type PendingExternalTransfer = typeof pendingExternalTransfers.$inferSelect;
+export type InsertPendingExternalTransfer = z.infer<typeof insertPendingExternalTransferSchema>;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   bankAccounts: many(bankAccounts),
@@ -283,4 +313,20 @@ export const customerProfilesRelations = relations(customerProfiles, ({ one }) =
 
 export const adminUsersRelations = relations(adminUsers, ({ many }) => ({
   processedTransactions: many(transactions),
+  processedExternalTransfers: many(pendingExternalTransfers),
+}));
+
+export const pendingExternalTransfersRelations = relations(pendingExternalTransfers, ({ one }) => ({
+  user: one(users, {
+    fields: [pendingExternalTransfers.userId],
+    references: [users.id],
+  }),
+  fromAccount: one(bankAccounts, {
+    fields: [pendingExternalTransfers.fromAccountId],
+    references: [bankAccounts.id],
+  }),
+  processedByAdmin: one(adminUsers, {
+    fields: [pendingExternalTransfers.processedBy],
+    references: [adminUsers.id],
+  }),
 }));
