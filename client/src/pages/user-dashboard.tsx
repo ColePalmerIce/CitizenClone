@@ -550,19 +550,26 @@ export default function UserDashboard() {
 
       <div className="flex">
         {/* Sidebar */}
-        <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-blue-600 transition-transform duration-300 ease-in-out lg:transition-none`}>
+        <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gradient-to-br from-blue-800 via-blue-700 to-blue-900 shadow-2xl transition-transform duration-300 ease-in-out lg:transition-none`} style={{
+          background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #2563eb 50%, #1d4ed8 75%, #1e3a8a 100%)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        }}>
           <div className="flex flex-col h-full">
             {/* Logo */}
-            <div className="hidden lg:flex items-center px-6 py-4 border-b border-blue-500">
-              <Building className="w-8 h-8 text-white mr-3" />
-              <div>
-                <h1 className="text-lg font-bold text-white">Customer Portal</h1>
-                <p className="text-xs text-blue-200">First Citizens Bank</p>
+            <div className="hidden lg:flex items-center px-6 py-4 border-b border-white/10 backdrop-blur-sm">
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg">
+                <Building className="w-6 h-6 text-white" />
+              </div>
+              <div className="ml-3">
+                <h1 className="text-lg font-bold text-white tracking-tight">Customer Portal</h1>
+                <p className="text-xs text-blue-200/90 font-medium">First Citizens Bank</p>
               </div>
             </div>
             
             {/* User Info */}
-            <div className="px-6 py-6 border-b border-blue-500">
+            <div className="px-6 py-6 border-b border-white/10 backdrop-blur-sm relative">
+              <div className="absolute inset-0 bg-white/5 backdrop-blur-sm"></div>
+              <div className="relative">
               <div className="flex items-center space-x-3 mb-4">
                 {user && (() => {
                   const avatar = generateUserAvatar(user.firstName, user.lastName, user.id);
@@ -582,6 +589,7 @@ export default function UserDashboard() {
               <p className="text-blue-100 text-sm">
                 {getTimeGreeting()}, {user.firstName}!
               </p>
+              </div>
             </div>
 
             {/* Navigation Menu */}

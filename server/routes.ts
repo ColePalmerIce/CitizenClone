@@ -769,21 +769,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           // Calculate statement details
-          const openingBalance = i === 2 ? 0 : parseFloat(account.balance); // For oldest month, start with 0
-          let closingBalance = openingBalance;
           let totalDebits = 0;
           let totalCredits = 0;
           
-          monthTransactions.forEach(transaction => {
+          // Sort transactions by date for proper calculation
+          const sortedTransactions = monthTransactions.sort((a, b) => 
+            new Date(a.transactionDate).getTime() - new Date(b.transactionDate).getTime()
+          );
+          
+          // Calculate totals for this month
+          sortedTransactions.forEach(transaction => {
             const amount = parseFloat(transaction.amount);
             if (transaction.type === 'debit') {
               totalDebits += amount;
-              closingBalance -= amount;
             } else {
               totalCredits += amount;
-              closingBalance += amount;
             }
           });
+          
+          // Use current balance as closing, calculate opening from transactions
+          const closingBalance = parseFloat(account.balance);
+          const openingBalance = closingBalance - totalCredits + totalDebits;
           
           statements.push({
             id: `${account.id}-${i}`,
