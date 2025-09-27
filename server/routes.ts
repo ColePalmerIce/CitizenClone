@@ -740,6 +740,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's account statements (3 months)
+  app.get("/api/user/statements", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      const statements = [];
+      
+      // Generate 3 months of statements
+      const currentDate = new Date();
+      const months = ['September 2025', 'August 2025', 'July 2025'];
+      
+      for (const account of accounts) {
+        for (let i = 0; i < 3; i++) {
+          const monthYear = months[i];
+          const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+          const nextMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i + 1, 1);
+          
+          // Get transactions for this month
+          const allTransactions = await storage.getTransactionsByAccountId(account.id, 100);
+          const monthTransactions = allTransactions.filter(transaction => {
+            const transactionDate = new Date(transaction.transactionDate);
+            return transactionDate >= monthDate && transactionDate < nextMonthDate;
+          });
+          
+          // Calculate statement details
+          const openingBalance = i === 2 ? 0 : parseFloat(account.balance); // For oldest month, start with 0
+          let closingBalance = openingBalance;
+          let totalDebits = 0;
+          let totalCredits = 0;
+          
+          monthTransactions.forEach(transaction => {
+            const amount = parseFloat(transaction.amount);
+            if (transaction.type === 'debit') {
+              totalDebits += amount;
+              closingBalance -= amount;
+            } else {
+              totalCredits += amount;
+              closingBalance += amount;
+            }
+          });
+          
+          statements.push({
+            id: `${account.id}-${i}`,
+            accountId: account.id,
+            accountType: account.accountType,
+            accountNumber: account.accountNumber,
+            month: monthYear,
+            openingBalance: openingBalance.toFixed(2),
+            closingBalance: closingBalance.toFixed(2),
+            totalCredits: totalCredits.toFixed(2),
+            totalDebits: totalDebits.toFixed(2),
+            transactionCount: monthTransactions.length,
+            transactions: monthTransactions,
+            statementDate: new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1).toISOString(),
+            routingNumber: account.routingNumber
+          });
+        }
+      }
+      
+      res.json(statements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch statements" });
+    }
+  });
+
   // User transfer endpoint
   app.post("/api/user/transfer", async (req, res) => {
     try {

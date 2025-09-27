@@ -83,7 +83,8 @@ import {
   ShoppingBag,
   Copy,
   Check,
-  Mail
+  Mail,
+  Download
 } from "lucide-react";
 import { SiVisa, SiMastercard } from 'react-icons/si';
 
@@ -129,6 +130,7 @@ export default function UserDashboard() {
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isBranchLocatorOpen, setIsBranchLocatorOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isStatementsDialogOpen, setIsStatementsDialogOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isTwoFactorOpen, setIsTwoFactorOpen] = useState(false);
   const [isSecurityQuestionsOpen, setIsSecurityQuestionsOpen] = useState(false);
@@ -379,6 +381,12 @@ export default function UserDashboard() {
       return response.json();
     },
     enabled: !!selectedAccount?.id && selectedAccount.id !== 'credit-card',
+  });
+
+  // Get user statements (3 months)
+  const { data: statements, isLoading: statementsLoading } = useQuery({
+    queryKey: ['/api/user/statements'],
+    enabled: !!user,
   });
 
   // Transfer money mutation
@@ -774,6 +782,7 @@ export default function UserDashboard() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-white hover:bg-blue-500 mb-1"
+                onClick={() => setIsStatementsDialogOpen(true)}
                 data-testid="button-statements"
               >
                 <FileText className="w-4 h-4 mr-3" />
@@ -2260,6 +2269,150 @@ export default function UserDashboard() {
               Close
             </Button>
             <Button onClick={() => setSelectedAccount(null)} className="bg-blue-600 hover:bg-blue-700">
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Statements Dialog */}
+      <Dialog open={isStatementsDialogOpen} onOpenChange={setIsStatementsDialogOpen}>
+        <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-blue-600" />
+              Account Statements (Last 3 Months)
+            </DialogTitle>
+            <DialogDescription>
+              View and download your monthly account statements
+            </DialogDescription>
+          </DialogHeader>
+          
+          {statementsLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : statements && statements.length > 0 ? (
+            <div className="space-y-6">
+              {/* Group statements by month */}
+              {['September 2025', 'August 2025', 'July 2025'].map((month) => {
+                const monthStatements = statements.filter((stmt: any) => stmt.month === month);
+                if (monthStatements.length === 0) return null;
+                
+                return (
+                  <div key={month} className="border rounded-lg p-6 bg-gray-50">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                      <Calendar className="w-5 h-5 mr-2 text-blue-600" />
+                      {month}
+                    </h3>
+                    
+                    <div className="grid gap-4">
+                      {monthStatements.map((statement: any) => (
+                        <Card key={statement.id} className="bg-white">
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <CardTitle className="text-lg text-blue-700">
+                                  {statement.accountType} Account
+                                </CardTitle>
+                                <CardDescription className="font-mono">
+                                  ****{statement.accountNumber.slice(-4)} • Routing: {statement.routingNumber}
+                                </CardDescription>
+                              </div>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                {statement.transactionCount} transactions
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                <div className="text-sm text-gray-600">Opening Balance</div>
+                                <div className="text-lg font-bold text-gray-800">
+                                  ${parseFloat(statement.openingBalance).toLocaleString()}
+                                </div>
+                              </div>
+                              <div className="text-center p-3 bg-green-50 rounded-lg">
+                                <div className="text-sm text-gray-600">Total Credits</div>
+                                <div className="text-lg font-bold text-green-600">
+                                  +${parseFloat(statement.totalCredits).toLocaleString()}
+                                </div>
+                              </div>
+                              <div className="text-center p-3 bg-red-50 rounded-lg">
+                                <div className="text-sm text-gray-600">Total Debits</div>
+                                <div className="text-lg font-bold text-red-600">
+                                  -${parseFloat(statement.totalDebits).toLocaleString()}
+                                </div>
+                              </div>
+                              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                <div className="text-sm text-gray-600">Closing Balance</div>
+                                <div className="text-lg font-bold text-blue-600">
+                                  ${parseFloat(statement.closingBalance).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Recent Transactions Preview */}
+                            {statement.transactions && statement.transactions.length > 0 && (
+                              <div className="mt-4">
+                                <h4 className="font-semibold text-gray-700 mb-2">Transaction Summary</h4>
+                                <div className="max-h-32 overflow-y-auto space-y-1">
+                                  {statement.transactions.slice(0, 5).map((transaction: any) => (
+                                    <div key={transaction.id} className="flex justify-between items-center py-1 text-sm">
+                                      <div className="flex items-center">
+                                        {transaction.type === 'credit' ? (
+                                          <ArrowDownRight className="w-3 h-3 mr-2 text-green-600" />
+                                        ) : (
+                                          <ArrowUpRight className="w-3 h-3 mr-2 text-red-600" />
+                                        )}
+                                        <span className="truncate max-w-48">{transaction.description}</span>
+                                      </div>
+                                      <div className={`font-medium ${
+                                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                                      }`}>
+                                        {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {statement.transactions.length > 5 && (
+                                    <div className="text-xs text-gray-500 text-center py-1">
+                                      + {statement.transactions.length - 5} more transactions
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                              <div className="text-xs text-gray-500">
+                                Statement Date: {new Date(statement.statementDate).toLocaleDateString()}
+                              </div>
+                              <Button variant="outline" size="sm" className="flex items-center">
+                                <Download className="w-3 h-3 mr-1" />
+                                Download PDF
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">No statements available</p>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStatementsDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => setIsStatementsDialogOpen(false)} className="bg-blue-600 hover:bg-blue-700">
               Done
             </Button>
           </DialogFooter>
