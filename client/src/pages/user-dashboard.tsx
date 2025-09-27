@@ -155,26 +155,32 @@ export default function UserDashboard() {
   });
   const { toast } = useToast();
 
-  // Generate random avatar for user
+  // Generate professional avatar for user
   const generateUserAvatar = (firstName: string, lastName: string, userId: string) => {
     const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     
-    // Generate consistent color based on user ID
-    const colors = [
-      'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500',
-      'bg-indigo-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500', 'bg-cyan-500'
+    // Generate sophisticated gradient combinations based on user ID
+    const gradients = [
+      'bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 shadow-lg shadow-blue-500/20',
+      'bg-gradient-to-br from-emerald-600 via-green-700 to-teal-800 shadow-lg shadow-emerald-500/20',
+      'bg-gradient-to-br from-purple-600 via-violet-700 to-indigo-800 shadow-lg shadow-purple-500/20',
+      'bg-gradient-to-br from-rose-600 via-red-700 to-pink-800 shadow-lg shadow-rose-500/20',
+      'bg-gradient-to-br from-amber-600 via-orange-700 to-red-800 shadow-lg shadow-amber-500/20',
+      'bg-gradient-to-br from-cyan-600 via-blue-700 to-indigo-800 shadow-lg shadow-cyan-500/20',
+      'bg-gradient-to-br from-violet-600 via-purple-700 to-fuchsia-800 shadow-lg shadow-violet-500/20',
+      'bg-gradient-to-br from-slate-600 via-gray-700 to-zinc-800 shadow-lg shadow-slate-500/20'
     ];
     
-    // Use user ID to get consistent color
+    // Create sophisticated hash for consistency
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
       hash = userId.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const colorIndex = Math.abs(hash) % colors.length;
+    const gradientIndex = Math.abs(hash) % gradients.length;
     
     return {
       initials,
-      colorClass: colors[colorIndex]
+      gradientClass: gradients[gradientIndex]
     };
   };
 
@@ -574,8 +580,8 @@ export default function UserDashboard() {
                 {user && (() => {
                   const avatar = generateUserAvatar(user.firstName, user.lastName, user.id);
                   return (
-                    <div className={`w-12 h-12 ${avatar.colorClass} rounded-full flex items-center justify-center shadow-lg`}>
-                      <span className="text-white font-bold text-lg">{avatar.initials}</span>
+                    <div className={`w-14 h-14 ${avatar.gradientClass} rounded-full flex items-center justify-center border-2 border-white/20`}>
+                      <span className="text-white font-bold text-xl tracking-wide">{avatar.initials}</span>
                     </div>
                   );
                 })()}
