@@ -11,6 +11,8 @@ import {
   insertTransactionSchema,
   insertCustomerProfileSchema,
   insertUserSchema,
+  insertCreditLimitIncreaseRequestSchema,
+  insertDebitLimitIncreaseRequestSchema,
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 import session from "express-session";
@@ -615,6 +617,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: "Logged out successfully" });
     });
+  });
+
+  // Credit limit increase request
+  app.post("/api/user/credit-limit-increase", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const validatedData = insertCreditLimitIncreaseRequestSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const request = await storage.createCreditLimitIncreaseRequest(validatedData);
+      res.json(request);
+    } catch (error) {
+      console.error('Credit limit increase request error:', error);
+      res.status(400).json({ message: "Invalid request data" });
+    }
+  });
+
+  // Debit limit increase request
+  app.post("/api/user/debit-limit-increase", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const validatedData = insertDebitLimitIncreaseRequestSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const request = await storage.createDebitLimitIncreaseRequest(validatedData);
+      res.json(request);
+    } catch (error) {
+      console.error('Debit limit increase request error:', error);
+      res.status(400).json({ message: "Invalid request data" });
+    }
+  });
+
+  // Get user limit increase requests
+  app.get("/api/user/limit-increase-requests", async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const [creditRequests, debitRequests] = await Promise.all([
+        storage.getCreditLimitIncreaseRequestsByUserId(userId),
+        storage.getDebitLimitIncreaseRequestsByUserId(userId)
+      ]);
+
+      res.json({
+        creditRequests,
+        debitRequests
+      });
+    } catch (error) {
+      console.error('Get limit increase requests error:', error);
+      res.status(500).json({ message: "Failed to fetch requests" });
+    }
   });
 
   app.post("/api/user/change-password", async (req, res) => {

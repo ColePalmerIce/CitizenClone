@@ -19,6 +19,10 @@ import {
   type InsertTransaction,
   type CustomerProfile,
   type InsertCustomerProfile,
+  type InsertCreditLimitIncreaseRequest,
+  type SelectCreditLimitIncreaseRequest,
+  type InsertDebitLimitIncreaseRequest,
+  type SelectDebitLimitIncreaseRequest,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
@@ -82,6 +86,16 @@ export interface IStorage {
   getCustomerProfile(userId: string): Promise<CustomerProfile | undefined>;
   updateCustomerProfile(userId: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined>;
 
+  // Credit limit increase requests
+  createCreditLimitIncreaseRequest(request: InsertCreditLimitIncreaseRequest): Promise<SelectCreditLimitIncreaseRequest>;
+  getCreditLimitIncreaseRequestsByUserId(userId: string): Promise<SelectCreditLimitIncreaseRequest[]>;
+  updateCreditLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectCreditLimitIncreaseRequest | undefined>;
+
+  // Debit limit increase requests
+  createDebitLimitIncreaseRequest(request: InsertDebitLimitIncreaseRequest): Promise<SelectDebitLimitIncreaseRequest>;
+  getDebitLimitIncreaseRequestsByUserId(userId: string): Promise<SelectDebitLimitIncreaseRequest[]>;
+  updateDebitLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectDebitLimitIncreaseRequest | undefined>;
+
   // Admin dashboard utilities
   getTotalCustomers(): Promise<number>;
   getTotalAccountBalance(): Promise<string>;
@@ -94,6 +108,8 @@ export class MemStorage implements IStorage {
   private creditCardApplications: Map<string, CreditCardApplication>;
   private accountApplications: Map<string, AccountApplication>;
   private contactInquiries: Map<string, ContactInquiry>;
+  private creditLimitIncreaseRequests: Map<string, SelectCreditLimitIncreaseRequest>;
+  private debitLimitIncreaseRequests: Map<string, SelectDebitLimitIncreaseRequest>;
 
   constructor() {
     this.users = new Map();
@@ -101,6 +117,8 @@ export class MemStorage implements IStorage {
     this.creditCardApplications = new Map();
     this.accountApplications = new Map();
     this.contactInquiries = new Map();
+    this.creditLimitIncreaseRequests = new Map();
+    this.debitLimitIncreaseRequests = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -232,6 +250,58 @@ export class MemStorage implements IStorage {
       this.contactInquiries.set(id, inquiry);
     }
     return inquiry;
+  }
+
+  // Credit limit increase requests
+  async createCreditLimitIncreaseRequest(request: InsertCreditLimitIncreaseRequest): Promise<SelectCreditLimitIncreaseRequest> {
+    const id = randomUUID();
+    const limitRequest: SelectCreditLimitIncreaseRequest = {
+      ...request,
+      id,
+      status: "pending",
+      createdAt: new Date(),
+    };
+    this.creditLimitIncreaseRequests.set(id, limitRequest);
+    return limitRequest;
+  }
+
+  async getCreditLimitIncreaseRequestsByUserId(userId: string): Promise<SelectCreditLimitIncreaseRequest[]> {
+    return Array.from(this.creditLimitIncreaseRequests.values()).filter(req => req.userId === userId);
+  }
+
+  async updateCreditLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectCreditLimitIncreaseRequest | undefined> {
+    const request = this.creditLimitIncreaseRequests.get(id);
+    if (request) {
+      request.status = status;
+      this.creditLimitIncreaseRequests.set(id, request);
+    }
+    return request;
+  }
+
+  // Debit limit increase requests
+  async createDebitLimitIncreaseRequest(request: InsertDebitLimitIncreaseRequest): Promise<SelectDebitLimitIncreaseRequest> {
+    const id = randomUUID();
+    const limitRequest: SelectDebitLimitIncreaseRequest = {
+      ...request,
+      id,
+      status: "pending",
+      createdAt: new Date(),
+    };
+    this.debitLimitIncreaseRequests.set(id, limitRequest);
+    return limitRequest;
+  }
+
+  async getDebitLimitIncreaseRequestsByUserId(userId: string): Promise<SelectDebitLimitIncreaseRequest[]> {
+    return Array.from(this.debitLimitIncreaseRequests.values()).filter(req => req.userId === userId);
+  }
+
+  async updateDebitLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectDebitLimitIncreaseRequest | undefined> {
+    const request = this.debitLimitIncreaseRequests.get(id);
+    if (request) {
+      request.status = status;
+      this.debitLimitIncreaseRequests.set(id, request);
+    }
+    return request;
   }
 }
 

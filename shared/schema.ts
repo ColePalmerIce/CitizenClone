@@ -206,6 +206,46 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type CustomerProfile = typeof customerProfiles.$inferSelect;
 export type InsertCustomerProfile = z.infer<typeof insertCustomerProfileSchema>;
 
+// Credit card limit increase requests
+export const creditLimitIncreaseRequests = pgTable("credit_limit_increase_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  currentLimit: integer("current_limit").notNull(),
+  requestedLimit: integer("requested_limit").notNull(),
+  annualIncome: varchar("annual_income").notNull(),
+  employmentStatus: varchar("employment_status").notNull(),
+  reason: text("reason"),
+  status: varchar("status").notNull().default("pending"), // pending, approved, denied
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCreditLimitIncreaseRequestSchema = createInsertSchema(creditLimitIncreaseRequests).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertCreditLimitIncreaseRequest = z.infer<typeof insertCreditLimitIncreaseRequestSchema>;
+export type SelectCreditLimitIncreaseRequest = typeof creditLimitIncreaseRequests.$inferSelect;
+
+// Debit card limit increase requests  
+export const debitLimitIncreaseRequests = pgTable("debit_limit_increase_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  currentATMLimit: integer("current_atm_limit").notNull(),
+  requestedATMLimit: integer("requested_atm_limit").notNull(),
+  currentPurchaseLimit: integer("current_purchase_limit").notNull(),
+  requestedPurchaseLimit: integer("requested_purchase_limit").notNull(),
+  reason: text("reason"),
+  status: varchar("status").notNull().default("pending"), // pending, approved, denied
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDebitLimitIncreaseRequestSchema = createInsertSchema(debitLimitIncreaseRequests).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDebitLimitIncreaseRequest = z.infer<typeof insertDebitLimitIncreaseRequestSchema>;
+export type SelectDebitLimitIncreaseRequest = typeof debitLimitIncreaseRequests.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   bankAccounts: many(bankAccounts),

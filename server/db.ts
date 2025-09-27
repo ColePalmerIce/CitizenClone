@@ -11,6 +11,8 @@ import {
   bankAccounts,
   transactions,
   customerProfiles,
+  creditLimitIncreaseRequests,
+  debitLimitIncreaseRequests,
   type User,
   type InsertUser,
   type SearchQuery,
@@ -31,6 +33,10 @@ import {
   type InsertTransaction,
   type CustomerProfile,
   type InsertCustomerProfile,
+  type InsertCreditLimitIncreaseRequest,
+  type SelectCreditLimitIncreaseRequest,
+  type InsertDebitLimitIncreaseRequest,
+  type SelectDebitLimitIncreaseRequest,
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import type { IStorage } from "./storage";
@@ -351,6 +357,46 @@ export class PostgreSQLStorage implements IStorage {
     return await db.select().from(transactions)
       .orderBy(desc(transactions.transactionDate))
       .limit(limit);
+  }
+
+  // Credit limit increase requests
+  async createCreditLimitIncreaseRequest(request: InsertCreditLimitIncreaseRequest): Promise<SelectCreditLimitIncreaseRequest> {
+    const result = await db.insert(creditLimitIncreaseRequests).values(request).returning();
+    return result[0];
+  }
+
+  async getCreditLimitIncreaseRequestsByUserId(userId: string): Promise<SelectCreditLimitIncreaseRequest[]> {
+    return await db.select().from(creditLimitIncreaseRequests)
+      .where(eq(creditLimitIncreaseRequests.userId, userId))
+      .orderBy(desc(creditLimitIncreaseRequests.createdAt));
+  }
+
+  async updateCreditLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectCreditLimitIncreaseRequest | undefined> {
+    const result = await db.update(creditLimitIncreaseRequests)
+      .set({ status })
+      .where(eq(creditLimitIncreaseRequests.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Debit limit increase requests
+  async createDebitLimitIncreaseRequest(request: InsertDebitLimitIncreaseRequest): Promise<SelectDebitLimitIncreaseRequest> {
+    const result = await db.insert(debitLimitIncreaseRequests).values(request).returning();
+    return result[0];
+  }
+
+  async getDebitLimitIncreaseRequestsByUserId(userId: string): Promise<SelectDebitLimitIncreaseRequest[]> {
+    return await db.select().from(debitLimitIncreaseRequests)
+      .where(eq(debitLimitIncreaseRequests.userId, userId))
+      .orderBy(desc(debitLimitIncreaseRequests.createdAt));
+  }
+
+  async updateDebitLimitIncreaseRequestStatus(id: string, status: string): Promise<SelectDebitLimitIncreaseRequest | undefined> {
+    const result = await db.update(debitLimitIncreaseRequests)
+      .set({ status })
+      .where(eq(debitLimitIncreaseRequests.id, id))
+      .returning();
+    return result[0];
   }
 }
 

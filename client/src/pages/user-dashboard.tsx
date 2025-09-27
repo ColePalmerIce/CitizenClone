@@ -3,6 +3,13 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { 
+  insertCreditLimitIncreaseRequestSchema, 
+  insertDebitLimitIncreaseRequestSchema 
+} from "@shared/schema";
 import { 
   Card, 
   CardContent, 
@@ -24,6 +31,14 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -161,19 +176,45 @@ export default function UserDashboard() {
   const [expandedStatements, setExpandedStatements] = useState<Set<string>>(new Set());
   const [isCreditLimitIncreaseOpen, setIsCreditLimitIncreaseOpen] = useState(false);
   const [isDebitLimitIncreaseOpen, setIsDebitLimitIncreaseOpen] = useState(false);
-  const [creditLimitForm, setCreditLimitForm] = useState({
-    currentLimit: 5000,
-    requestedLimit: 10000,
-    annualIncome: '',
-    employmentStatus: '',
-    reason: ''
+
+  // Create extended schemas with validation and coercion
+  const creditLimitFormSchema = insertCreditLimitIncreaseRequestSchema.extend({
+    currentLimit: z.coerce.number(),
+    requestedLimit: z.coerce.number(),
+    annualIncome: z.string().min(1, "Annual income is required"),
+    employmentStatus: z.string().min(1, "Employment status is required"),
   });
-  const [debitLimitForm, setDebitLimitForm] = useState({
-    dailyATMLimit: 500,
-    requestedATMLimit: 1000,
-    dailyPurchaseLimit: 2500,
-    requestedPurchaseLimit: 5000,
-    reason: ''
+
+  const debitLimitFormSchema = insertDebitLimitIncreaseRequestSchema.extend({
+    currentATMLimit: z.coerce.number(),
+    requestedATMLimit: z.coerce.number(),
+    currentPurchaseLimit: z.coerce.number(),
+    requestedPurchaseLimit: z.coerce.number(),
+    reason: z.string().optional(),
+  });
+
+  // Credit limit form
+  const creditLimitForm = useForm<z.infer<typeof creditLimitFormSchema>>({
+    resolver: zodResolver(creditLimitFormSchema),
+    defaultValues: {
+      currentLimit: 5000,
+      requestedLimit: 10000,
+      annualIncome: '',
+      employmentStatus: '',
+      reason: ''
+    }
+  });
+
+  // Debit limit form
+  const debitLimitForm = useForm<z.infer<typeof debitLimitFormSchema>>({
+    resolver: zodResolver(debitLimitFormSchema),
+    defaultValues: {
+      currentATMLimit: 500,
+      requestedATMLimit: 1000,
+      currentPurchaseLimit: 2500,
+      requestedPurchaseLimit: 5000,
+      reason: ''
+    }
   });
   const { toast } = useToast();
 
@@ -216,40 +257,68 @@ export default function UserDashboard() {
     setExpandedStatements(newExpanded);
   };
 
-  const handleCreditLimitIncrease = async () => {
-    try {
-      // Here you could make an API call to submit the credit limit increase request
+  // Credit limit increase mutation
+  const creditLimitMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof creditLimitFormSchema>) => {
+      return apiRequest('/api/user/credit-limit-increase', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (data) => {
       toast({
         title: "Credit Limit Increase Requested",
-        description: `Your request to increase limit to $${creditLimitForm.requestedLimit.toLocaleString()} has been submitted for review. You'll receive an update within 2-3 business days.`,
+        description: `Your request to increase limit to $${data.requestedLimit.toLocaleString()} has been submitted for review. You'll receive an update within 2-3 business days.`,
         duration: 5000,
       });
       setIsCreditLimitIncreaseOpen(false);
-    } catch (error) {
+      creditLimitForm.reset();
+      // Invalidate limit increase requests to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/user/limit-increase-requests'] });
+    },
+    onError: () => {
       toast({
         title: "Request Failed",
         description: "Unable to submit your credit limit increase request. Please try again.",
         variant: "destructive",
       });
     }
-  };
+  });
 
-  const handleDebitLimitIncrease = async () => {
-    try {
-      // Here you could make an API call to submit the debit limit increase request
+  // Debit limit increase mutation
+  const debitLimitMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof debitLimitFormSchema>) => {
+      return apiRequest('/api/user/debit-limit-increase', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (data) => {
       toast({
         title: "Debit Limit Increase Requested",
         description: `Your ATM and purchase limit increase request has been submitted. New limits will be active within 24 hours.`,
         duration: 5000,
       });
       setIsDebitLimitIncreaseOpen(false);
-    } catch (error) {
+      debitLimitForm.reset();
+      // Invalidate limit increase requests to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/user/limit-increase-requests'] });
+    },
+    onError: () => {
       toast({
         title: "Request Failed",
         description: "Unable to submit your debit limit increase request. Please try again.",
         variant: "destructive",
       });
     }
+  });
+
+  const handleCreditLimitIncrease = (data: z.infer<typeof creditLimitFormSchema>) => {
+    creditLimitMutation.mutate(data);
+  };
+
+  const handleDebitLimitIncrease = (data: z.infer<typeof debitLimitFormSchema>) => {
+    debitLimitMutation.mutate(data);
   };
 
   const handleDebitCardFreeze = () => {
@@ -906,6 +975,291 @@ export default function UserDashboard() {
                       Add New Card
                     </Button>
                   </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Credit Card Limit Increase Dialog */}
+              <Dialog open={isCreditLimitIncreaseOpen} onOpenChange={setIsCreditLimitIncreaseOpen}>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Credit Limit Increase Request</DialogTitle>
+                    <DialogDescription>
+                      Request an increase to your credit limit. Current limit: $5,000
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...creditLimitForm}>
+                    <form onSubmit={creditLimitForm.handleSubmit(handleCreditLimitIncrease)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormItem>
+                          <FormLabel>Current Limit</FormLabel>
+                          <FormControl>
+                            <Input 
+                              value="$5,000" 
+                              disabled 
+                              className="bg-gray-100 text-gray-600"
+                              data-testid="input-current-credit-limit"
+                            />
+                          </FormControl>
+                        </FormItem>
+                        <FormField
+                          control={creditLimitForm.control}
+                          name="requestedLimit"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Requested Limit</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(parseInt(value))} 
+                                value={field.value?.toString()}
+                              >
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-requested-credit-limit">
+                                    <SelectValue placeholder="Select limit" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="7500">$7,500</SelectItem>
+                                  <SelectItem value="10000">$10,000</SelectItem>
+                                  <SelectItem value="15000">$15,000</SelectItem>
+                                  <SelectItem value="20000">$20,000</SelectItem>
+                                  <SelectItem value="25000">$25,000</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={creditLimitForm.control}
+                        name="annualIncome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Annual Income</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="e.g., $75,000"
+                                {...field}
+                                data-testid="input-annual-income"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={creditLimitForm.control}
+                        name="employmentStatus"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Employment Status</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-employment-status">
+                                  <SelectValue placeholder="Select employment status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="full-time">Full-time employed</SelectItem>
+                                <SelectItem value="part-time">Part-time employed</SelectItem>
+                                <SelectItem value="self-employed">Self-employed</SelectItem>
+                                <SelectItem value="retired">Retired</SelectItem>
+                                <SelectItem value="student">Student</SelectItem>
+                                <SelectItem value="unemployed">Unemployed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={creditLimitForm.control}
+                        name="reason"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Reason for Increase</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Optional: Explain why you need a credit limit increase"
+                                className="h-20 resize-none"
+                                {...field}
+                                data-testid="textarea-credit-reason"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <strong>Processing time:</strong> 2-3 business days<br/>
+                          <strong>Review criteria:</strong> Income, credit history, account standing
+                        </p>
+                      </div>
+                      
+                      <DialogFooter className="space-x-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsCreditLimitIncreaseOpen(false)}
+                          data-testid="button-cancel-credit-increase"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          disabled={creditLimitMutation.isPending}
+                          data-testid="button-submit-credit-increase"
+                        >
+                          {creditLimitMutation.isPending ? "Submitting..." : "Submit Request"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+
+              {/* Debit Card Limit Increase Dialog */}
+              <Dialog open={isDebitLimitIncreaseOpen} onOpenChange={setIsDebitLimitIncreaseOpen}>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Debit Card Limit Increase</DialogTitle>
+                    <DialogDescription>
+                      Increase your daily ATM withdrawal and purchase limits
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...debitLimitForm}>
+                    <form onSubmit={debitLimitForm.handleSubmit(handleDebitLimitIncrease)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormItem>
+                          <FormLabel>Current ATM Daily Limit</FormLabel>
+                          <FormControl>
+                            <Input 
+                              value="$500" 
+                              disabled 
+                              className="bg-gray-100 text-gray-600"
+                              data-testid="input-current-atm-limit"
+                            />
+                          </FormControl>
+                        </FormItem>
+                        <FormField
+                          control={debitLimitForm.control}
+                          name="requestedATMLimit"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>New ATM Daily Limit</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(parseInt(value))} 
+                                value={field.value?.toString()}
+                              >
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-requested-atm-limit">
+                                    <SelectValue placeholder="Select ATM limit" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="750">$750</SelectItem>
+                                  <SelectItem value="1000">$1,000</SelectItem>
+                                  <SelectItem value="1500">$1,500</SelectItem>
+                                  <SelectItem value="2000">$2,000</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormItem>
+                          <FormLabel>Current Purchase Daily Limit</FormLabel>
+                          <FormControl>
+                            <Input 
+                              value="$2,500" 
+                              disabled 
+                              className="bg-gray-100 text-gray-600"
+                              data-testid="input-current-purchase-limit"
+                            />
+                          </FormControl>
+                        </FormItem>
+                        <FormField
+                          control={debitLimitForm.control}
+                          name="requestedPurchaseLimit"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>New Purchase Daily Limit</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(parseInt(value))} 
+                                value={field.value?.toString()}
+                              >
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-requested-purchase-limit">
+                                    <SelectValue placeholder="Select purchase limit" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="3000">$3,000</SelectItem>
+                                  <SelectItem value="5000">$5,000</SelectItem>
+                                  <SelectItem value="7500">$7,500</SelectItem>
+                                  <SelectItem value="10000">$10,000</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={debitLimitForm.control}
+                        name="reason"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Reason for Increase</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Optional: Explain why you need higher limits"
+                                className="h-20 resize-none"
+                                {...field}
+                                data-testid="textarea-debit-reason"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          <strong>Processing time:</strong> Immediate (up to 24 hours)<br/>
+                          <strong>Security:</strong> New limits activated after verification
+                        </p>
+                      </div>
+                      
+                      <DialogFooter className="space-x-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsDebitLimitIncreaseOpen(false)}
+                          data-testid="button-cancel-debit-increase"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit"
+                          className="bg-green-600 hover:bg-green-700"
+                          disabled={debitLimitMutation.isPending}
+                          data-testid="button-submit-debit-increase"
+                        >
+                          {debitLimitMutation.isPending ? "Submitting..." : "Update Limits"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
 
