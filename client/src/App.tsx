@@ -10,10 +10,14 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import UserDashboard from "@/pages/user-dashboard";
 
 function Router() {
+  // Check if we're on admin domain and redirect appropriately
+  const isAdminDomain = window.location.hostname.includes('admin') || window.location.pathname.startsWith('/admin');
+  
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={isAdminDomain ? () => <AdminLogin /> : Home} />
       <Route path="/dashboard" component={UserDashboard} />
+      <Route path="/user-dashboard" component={UserDashboard} />
       <Route path="/admin" component={() => <AdminLogin />} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />

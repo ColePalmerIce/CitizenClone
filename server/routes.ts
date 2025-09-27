@@ -802,7 +802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalCredits: totalCredits.toFixed(2),
             totalDebits: totalDebits.toFixed(2),
             transactionCount: monthTransactions.length,
-            transactions: monthTransactions,
+            transactions: sortedTransactions,
             statementDate: new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1).toISOString(),
             routingNumber: account.routingNumber
           });
