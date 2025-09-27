@@ -1285,47 +1285,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid transfer amount" });
       }
 
-      // Get user's primary account (simulate multiple accounts)
+      // Get user's accounts
       const accounts = await storage.getBankAccountsByUserId(userId);
       if (accounts.length === 0) {
-        return res.status(404).json({ message: "No account found" });
+        return res.status(404).json({ message: "No accounts found" });
       }
 
-      const account = accounts[0];
-      const currentBalance = parseFloat(account.balance || '0');
+      // Find source and destination accounts by account type or number
+      const sourceAccount = accounts.find(acc => 
+        acc.accountType === fromAccount || 
+        acc.accountNumber.endsWith(fromAccount.slice(-4))
+      );
+      
+      const destinationAccount = accounts.find(acc => 
+        acc.accountType === toAccount || 
+        acc.accountNumber.endsWith(toAccount.slice(-4))
+      );
 
-      if (currentBalance < transferAmount) {
+      if (!sourceAccount) {
+        return res.status(404).json({ message: `Source account '${fromAccount}' not found` });
+      }
+
+      if (!destinationAccount) {
+        return res.status(404).json({ message: `Destination account '${toAccount}' not found` });
+      }
+
+      // Prevent self-transfers that could inflate balances
+      if (sourceAccount.id === destinationAccount.id) {
+        return res.status(400).json({ message: "Cannot transfer between the same account" });
+      }
+
+      const sourceBalance = parseFloat(sourceAccount.balance || '0');
+      const destinationBalance = parseFloat(destinationAccount.balance || '0');
+
+      if (sourceBalance < transferAmount) {
         return res.status(400).json({ message: "Insufficient funds in source account" });
       }
 
-      const newBalance = currentBalance - transferAmount;
+      const newSourceBalance = sourceBalance - transferAmount;
+      const newDestinationBalance = destinationBalance + transferAmount;
 
       // Create debit transaction for source account
       const debitTransaction = await storage.createTransaction({
-        accountId: account.id,
+        accountId: sourceAccount.id,
         type: 'debit',
         amount: amount.toString(),
-        description: `Internal Transfer from ${fromAccount} to ${toAccount} - ${description || 'Account transfer'}`,
-        balanceAfter: newBalance.toFixed(2)
+        description: `Transfer to ${destinationAccount.accountType} account - ${description || 'Internal transfer'}`,
+        merchantName: 'First Citizens Bank',
+        merchantCategory: 'Banking',
+        reference: `TRF${Date.now().toString().slice(-8)}`,
+        balanceAfter: newSourceBalance.toFixed(2),
+        status: 'completed'
       });
 
-      // Create credit transaction for destination (simulated)
+      // Create credit transaction for destination account
       const creditTransaction = await storage.createTransaction({
-        accountId: account.id, // Same account for demo, real system would have separate accounts
+        accountId: destinationAccount.id,
         type: 'credit',
         amount: amount.toString(),
-        description: `Internal Transfer from ${fromAccount} to ${toAccount} - ${description || 'Account transfer'}`,
-        balanceAfter: currentBalance.toFixed(2) // Keep balance same for demo
+        description: `Transfer from ${sourceAccount.accountType} account - ${description || 'Internal transfer'}`,
+        merchantName: 'First Citizens Bank',
+        merchantCategory: 'Banking',
+        reference: `TRF${Date.now().toString().slice(-8)}`,
+        balanceAfter: newDestinationBalance.toFixed(2),
+        status: 'completed'
       });
 
-      // Update account balance (only debit for demo)
-      await storage.updateBankAccountBalance(account.id, newBalance.toFixed(2));
+      // Update both account balances
+      await storage.updateBankAccountBalance(sourceAccount.id, newSourceBalance.toFixed(2));
+      await storage.updateBankAccountBalance(destinationAccount.id, newDestinationBalance.toFixed(2));
 
       res.json({ 
         success: true, 
         debitTransaction,
         creditTransaction,
-        message: `Transfer of $${amount} from ${fromAccount} to ${toAccount} completed successfully` 
+        sourceAccount: sourceAccount.accountType,
+        destinationAccount: destinationAccount.accountType,
+        message: `Transfer of $${transferAmount.toLocaleString()} from ${sourceAccount.accountType} to ${destinationAccount.accountType} completed successfully` 
       });
     } catch (error) {
       console.error('Internal transfer error:', error);

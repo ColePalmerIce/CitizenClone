@@ -460,6 +460,16 @@ export default function AdminDashboard() {
                 setSelectedCustomer={setSelectedCustomer}
                 isCustomerDetailsDialogOpen={isCustomerDetailsDialogOpen}
                 setIsCustomerDetailsDialogOpen={setIsCustomerDetailsDialogOpen}
+                isCustomerFundDialogOpen={isCustomerFundDialogOpen}
+                setIsCustomerFundDialogOpen={setIsCustomerFundDialogOpen}
+                isCustomerWithdrawDialogOpen={isCustomerWithdrawDialogOpen}
+                setIsCustomerWithdrawDialogOpen={setIsCustomerWithdrawDialogOpen}
+                customerFundAmount={customerFundAmount}
+                setCustomerFundAmount={setCustomerFundAmount}
+                customerFundDescription={customerFundDescription}
+                setCustomerFundDescription={setCustomerFundDescription}
+                customerAddFundsMutation={customerAddFundsMutation}
+                customerWithdrawFundsMutation={customerWithdrawFundsMutation}
               />
             )}
             {selectedTab === "customers" && (
@@ -472,6 +482,16 @@ export default function AdminDashboard() {
                 setSelectedCustomer={setSelectedCustomer}
                 isCustomerDetailsDialogOpen={isCustomerDetailsDialogOpen}
                 setIsCustomerDetailsDialogOpen={setIsCustomerDetailsDialogOpen}
+                isCustomerFundDialogOpen={isCustomerFundDialogOpen}
+                setIsCustomerFundDialogOpen={setIsCustomerFundDialogOpen}
+                isCustomerWithdrawDialogOpen={isCustomerWithdrawDialogOpen}
+                setIsCustomerWithdrawDialogOpen={setIsCustomerWithdrawDialogOpen}
+                customerFundAmount={customerFundAmount}
+                setCustomerFundAmount={setCustomerFundAmount}
+                customerFundDescription={customerFundDescription}
+                setCustomerFundDescription={setCustomerFundDescription}
+                customerAddFundsMutation={customerAddFundsMutation}
+                customerWithdrawFundsMutation={customerWithdrawFundsMutation}
               />
             )}
             {selectedTab === "transactions" && (
@@ -506,7 +526,17 @@ function OverviewTab({
   selectedCustomer,
   setSelectedCustomer,
   isCustomerDetailsDialogOpen,
-  setIsCustomerDetailsDialogOpen
+  setIsCustomerDetailsDialogOpen,
+  isCustomerFundDialogOpen,
+  setIsCustomerFundDialogOpen,
+  isCustomerWithdrawDialogOpen,
+  setIsCustomerWithdrawDialogOpen,
+  customerFundAmount,
+  setCustomerFundAmount,
+  customerFundDescription,
+  setCustomerFundDescription,
+  customerAddFundsMutation,
+  customerWithdrawFundsMutation
 }: { 
   stats: DashboardStats; 
   statsLoading: boolean; 
@@ -521,6 +551,16 @@ function OverviewTab({
   setSelectedCustomer: (customer: any) => void;
   isCustomerDetailsDialogOpen: boolean;
   setIsCustomerDetailsDialogOpen: (open: boolean) => void;
+  isCustomerFundDialogOpen: boolean;
+  setIsCustomerFundDialogOpen: (open: boolean) => void;
+  isCustomerWithdrawDialogOpen: boolean;
+  setIsCustomerWithdrawDialogOpen: (open: boolean) => void;
+  customerFundAmount: string;
+  setCustomerFundAmount: (amount: string) => void;
+  customerFundDescription: string;
+  setCustomerFundDescription: (desc: string) => void;
+  customerAddFundsMutation: any;
+  customerWithdrawFundsMutation: any;
 }) {
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDetail | null>(null);
   const [showCreditModal, setShowCreditModal] = useState(false);
@@ -1122,7 +1162,17 @@ function CustomersTab({
   selectedCustomer,
   setSelectedCustomer,
   isCustomerDetailsDialogOpen,
-  setIsCustomerDetailsDialogOpen
+  setIsCustomerDetailsDialogOpen,
+  isCustomerFundDialogOpen,
+  setIsCustomerFundDialogOpen,
+  isCustomerWithdrawDialogOpen,
+  setIsCustomerWithdrawDialogOpen,
+  customerFundAmount,
+  setCustomerFundAmount,
+  customerFundDescription,
+  setCustomerFundDescription,
+  customerAddFundsMutation,
+  customerWithdrawFundsMutation
 }: {
   customers: any[];
   customersLoading: boolean;
@@ -1132,6 +1182,16 @@ function CustomersTab({
   setSelectedCustomer: (customer: any) => void;
   isCustomerDetailsDialogOpen: boolean;
   setIsCustomerDetailsDialogOpen: (open: boolean) => void;
+  isCustomerFundDialogOpen: boolean;
+  setIsCustomerFundDialogOpen: (open: boolean) => void;
+  isCustomerWithdrawDialogOpen: boolean;
+  setIsCustomerWithdrawDialogOpen: (open: boolean) => void;
+  customerFundAmount: string;
+  setCustomerFundAmount: (amount: string) => void;
+  customerFundDescription: string;
+  setCustomerFundDescription: (desc: string) => void;
+  customerAddFundsMutation: any;
+  customerWithdrawFundsMutation: any;
 }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
