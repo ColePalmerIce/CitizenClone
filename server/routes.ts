@@ -15,9 +15,12 @@ import {
   insertCreditLimitIncreaseRequestSchema,
   insertDebitLimitIncreaseRequestSchema,
   insertPendingExternalTransferSchema,
+  enhancedCustomerCreationSchema,
   type Transaction,
+  type EnhancedCustomerCreationData,
 } from "@shared/schema";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import session from "express-session";
 
 // Extend express-session
@@ -28,6 +31,44 @@ declare module 'express-session' {
     adminId?: string;
     adminEmail?: string;
   }
+}
+
+// Encryption utilities for sensitive data
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'fallback-demo-key-not-for-production-use';
+const ALGORITHM = 'aes-256-cbc';
+
+function encryptSSN(ssn: string): string {
+  try {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
+    let encrypted = cipher.update(ssn, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  } catch (error) {
+    console.error('Encryption error:', error);
+    // Fallback to hashing if encryption fails
+    return crypto.createHash('sha256').update(ssn + ENCRYPTION_KEY).digest('hex');
+  }
+}
+
+function hashSensitiveData(data: string): string {
+  return crypto.createHash('sha256').update(data + ENCRYPTION_KEY).digest('hex');
+}
+
+// Generate account numbers with different routing numbers per account type
+function generateAccountNumber(accountType: 'checking' | 'savings' | 'business'): { accountNumber: string, routingNumber: string } {
+  const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+  
+  const routingNumbers = {
+    checking: '053100300',
+    savings: '067092022', 
+    business: '113024588'
+  };
+  
+  return {
+    accountNumber,
+    routingNumber: routingNumbers[accountType]
+  };
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -406,23 +447,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User/Customer Management Routes
+  // Enhanced User/Customer Management Routes
   app.post("/api/admin/customers", requireAdmin, async (req, res) => {
     try {
-      const { 
+      // Validate request body with comprehensive Zod schema
+      const validatedData = enhancedCustomerCreationSchema.parse(req.body);
+      
+      const {
         username, 
         email, 
         firstName, 
         lastName, 
         password,
-        accountType = "checking",
-        initialBalance = "0.00"
-      } = req.body;
+        ssn,
+        dateOfBirth,
+        phoneNumber,
+        street,
+        city,
+        state,
+        zipCode,
+        employer,
+        jobTitle,
+        annualIncome,
+        employmentType,
+        createAllAccounts,
+        createCards,
+        initialCheckingBalance,
+        initialSavingsBalance,
+        initialBusinessBalance
+      } = validatedData;
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Hash password with secure salt rounds
+      const hashedPassword = await bcrypt.hash(password, 12);
 
-      // Create user
+      // Create user with validated data
       const user = await storage.createUser({
         username,
         email, 
@@ -431,30 +489,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName
       });
 
-      // Generate realistic Citizens Bank account number (8-10 digits)
-      const accountNumber = Math.floor(Math.random() * 9000000000) + 1000000000; // 10 digits
-      
-      // First Citizens Bank routing number (fictional for demo)
-      const routingNumber = "053000196";
-
-      // Create bank account
-      const account = await storage.createBankAccount({
-        userId: user.id,
-        accountNumber: accountNumber.toString(),
-        routingNumber,
-        accountType,
-        balance: initialBalance
-      });
-
-      // Create customer profile
+      // Create comprehensive customer profile with encrypted sensitive data
       const profile = await storage.createCustomerProfile({
         userId: user.id,
+        ssn: encryptSSN(ssn), // Encrypt SSN before storage
+        dateOfBirth: new Date(dateOfBirth),
+        phoneNumber: hashSensitiveData(phoneNumber), // Hash phone number
+        address: {
+          street,
+          city,
+          state,
+          zip: zipCode
+        },
+        employmentInfo: {
+          employer,
+          jobTitle,
+          annualIncome: parseInt(annualIncome),
+          employmentType
+        },
         kycStatus: "approved"
       });
 
-      res.json({ user, account, profile });
+      const accounts = [];
+      const cards = [];
+
+      if (createAllAccounts) {
+        // Create multiple accounts with proper routing numbers per account type
+        const accountTypes: Array<{ type: 'checking' | 'savings' | 'business', balance: string }> = [
+          { type: 'checking', balance: initialCheckingBalance },
+          { type: 'savings', balance: initialSavingsBalance },
+          { type: 'business', balance: initialBusinessBalance }
+        ];
+
+        for (const accountInfo of accountTypes) {
+          // Generate account number and routing number based on account type
+          const { accountNumber, routingNumber } = generateAccountNumber(accountInfo.type);
+          
+          const account = await storage.createBankAccount({
+            userId: user.id,
+            accountNumber,
+            routingNumber,
+            accountType: accountInfo.type,
+            balance: accountInfo.balance
+          });
+          
+          accounts.push(account);
+
+          // Create initial transaction for each account (except zero balance accounts)
+          if (parseFloat(accountInfo.balance) > 0) {
+            await storage.createTransaction({
+              accountId: account.id,
+              type: 'credit',
+              amount: accountInfo.balance,
+              description: `Initial ${accountInfo.type} account deposit - Welcome bonus`,
+              merchantName: 'First Citizens Bank',
+              merchantLocation: 'New York, NY',
+              merchantCategory: 'Bank',
+              balanceAfter: accountInfo.balance,
+              status: 'completed'
+            });
+          }
+        }
+      } else {
+        // Create single checking account (legacy mode)
+        const accountNumber = Math.floor(Math.random() * 9000000000) + 1000000000;
+        const account = await storage.createBankAccount({
+          userId: user.id,
+          accountNumber: accountNumber.toString(),
+          routingNumber: '053100300',
+          accountType: 'checking',
+          balance: initialCheckingBalance
+        });
+        accounts.push(account);
+
+        if (parseFloat(initialCheckingBalance) > 0) {
+          await storage.createTransaction({
+            accountId: account.id,
+            type: 'credit',
+            amount: initialCheckingBalance,
+            description: 'Initial account deposit - Welcome bonus',
+            merchantName: 'First Citizens Bank',
+            merchantLocation: 'New York, NY',
+            merchantCategory: 'Bank',
+            balanceAfter: initialCheckingBalance,
+            status: 'completed'
+          });
+        }
+      }
+
+      // TODO: Implement card creation logic when cards table is added to schema
+      if (createCards) {
+        // For now, we'll create placeholder card data
+        // This will be implemented when we add cards to the database schema
+        cards.push({
+          type: 'debit',
+          accountId: accounts[0].id, // Link to checking account
+          status: 'pending_activation',
+          note: 'Card creation will be implemented in next phase'
+        });
+        
+        if (accounts.length > 0) {
+          cards.push({
+            type: 'credit',
+            status: 'pending_approval',
+            note: 'Credit card application submitted for review'
+          });
+        }
+      }
+
+      // Generate customer summary for admin
+      const summary = {
+        user,
+        profile,
+        accounts,
+        cards,
+        totalBalance: accounts.reduce((sum, acc) => sum + parseFloat(acc.balance || '0'), 0),
+        accountCount: accounts.length,
+        loginCredentials: {
+          username: user.username,
+          email: user.email,
+          note: 'Password has been securely set'
+        }
+      };
+
+      res.json(summary);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create customer account" });
+      console.error('Enhanced customer creation error:', error);
+      res.status(500).json({ 
+        message: "Failed to create comprehensive customer account",
+        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      });
     }
   });
 

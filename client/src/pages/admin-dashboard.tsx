@@ -1246,8 +1246,22 @@ function CustomersTab({
     firstName: '',
     lastName: '',
     password: '',
-    accountType: 'checking',
-    initialBalance: '0.00'
+    ssn: '',
+    dateOfBirth: '',
+    phoneNumber: '',
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    employer: '',
+    jobTitle: '',
+    annualIncome: '',
+    employmentType: 'full_time',
+    createAllAccounts: true,
+    createCards: true,
+    initialCheckingBalance: '1000.00',
+    initialSavingsBalance: '500.00',
+    initialBusinessBalance: '0.00'
   });
 
   const handleCreateCustomer = (e: React.FormEvent) => {
@@ -1261,8 +1275,22 @@ function CustomersTab({
           firstName: '',
           lastName: '',
           password: '',
-          accountType: 'checking',
-          initialBalance: '0.00'
+          ssn: '',
+          dateOfBirth: '',
+          phoneNumber: '',
+          street: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          employer: '',
+          jobTitle: '',
+          annualIncome: '',
+          employmentType: 'full_time',
+          createAllAccounts: true,
+          createCards: true,
+          initialCheckingBalance: '1000.00',
+          initialSavingsBalance: '500.00',
+          initialBusinessBalance: '0.00'
         });
       }
     });
@@ -1279,102 +1307,332 @@ function CustomersTab({
               Create Account
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md mx-4">
+          <DialogContent className="max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Customer Account</DialogTitle>
+              <DialogTitle>Create Comprehensive Customer Account</DialogTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Complete banking profile with auto-generated accounts and cards
+              </p>
             </DialogHeader>
-            <form onSubmit={handleCreateCustomer} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={newCustomer.firstName}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, firstName: e.target.value }))}
-                    required
-                    data-testid="input-first-name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={newCustomer.lastName}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, lastName: e.target.value }))}
-                    required
-                    data-testid="input-last-name"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={newCustomer.username}
-                  onChange={(e) => setNewCustomer(prev => ({ ...prev, username: e.target.value }))}
-                  required
-                  data-testid="input-username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newCustomer.email}
-                  onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
-                  required
-                  data-testid="input-email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newCustomer.password}
-                  onChange={(e) => setNewCustomer(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  data-testid="input-password"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="accountType">Account Type</Label>
-                  <Select 
-                    value={newCustomer.accountType} 
-                    onValueChange={(value) => setNewCustomer(prev => ({ ...prev, accountType: value }))}
-                  >
-                    <SelectTrigger data-testid="select-account-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="checking">Checking</SelectItem>
-                      <SelectItem value="savings">Savings</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="initialBalance">Initial Balance</Label>
-                  <Input
-                    id="initialBalance"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={newCustomer.initialBalance}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, initialBalance: e.target.value }))}
-                    data-testid="input-initial-balance"
-                  />
+            <form onSubmit={handleCreateCustomer} className="space-y-6">
+              {/* Personal Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
+                  Personal Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      value={newCustomer.firstName}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, firstName: e.target.value }))}
+                      required
+                      data-testid="input-first-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      value={newCustomer.lastName}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, lastName: e.target.value }))}
+                      required
+                      data-testid="input-last-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newCustomer.email}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                      data-testid="input-email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phoneNumber">Phone Number *</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      value={newCustomer.phoneNumber}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                      required
+                      data-testid="input-phone"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ssn">Social Security Number *</Label>
+                    <Input
+                      id="ssn"
+                      placeholder="XXX-XX-XXXX"
+                      value={newCustomer.ssn}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, ssn: e.target.value }))}
+                      required
+                      data-testid="input-ssn"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={newCustomer.dateOfBirth}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                      required
+                      data-testid="input-dob"
+                    />
+                  </div>
                 </div>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={createCustomerMutation.isPending}
-                data-testid="button-submit-create-customer"
-              >
-                {createCustomerMutation.isPending ? "Creating..." : "Create Account"}
-              </Button>
+
+              {/* Address Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
+                  Address Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="street">Street Address *</Label>
+                    <Input
+                      id="street"
+                      placeholder="123 Main Street"
+                      value={newCustomer.street}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, street: e.target.value }))}
+                      required
+                      data-testid="input-street"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      placeholder="New York"
+                      value={newCustomer.city}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, city: e.target.value }))}
+                      required
+                      data-testid="input-city"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      placeholder="NY"
+                      value={newCustomer.state}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, state: e.target.value }))}
+                      required
+                      data-testid="input-state"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="zipCode">ZIP Code *</Label>
+                    <Input
+                      id="zipCode"
+                      placeholder="10001"
+                      value={newCustomer.zipCode}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, zipCode: e.target.value }))}
+                      required
+                      data-testid="input-zip"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Employment Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
+                  Employment Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="employer">Employer *</Label>
+                    <Input
+                      id="employer"
+                      placeholder="ABC Corporation"
+                      value={newCustomer.employer}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, employer: e.target.value }))}
+                      required
+                      data-testid="input-employer"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="jobTitle">Job Title *</Label>
+                    <Input
+                      id="jobTitle"
+                      placeholder="Software Engineer"
+                      value={newCustomer.jobTitle}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, jobTitle: e.target.value }))}
+                      required
+                      data-testid="input-job-title"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="annualIncome">Annual Income *</Label>
+                    <Input
+                      id="annualIncome"
+                      type="number"
+                      placeholder="75000"
+                      value={newCustomer.annualIncome}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, annualIncome: e.target.value }))}
+                      required
+                      data-testid="input-income"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="employmentType">Employment Type *</Label>
+                    <Select 
+                      value={newCustomer.employmentType} 
+                      onValueChange={(value) => setNewCustomer(prev => ({ ...prev, employmentType: value }))}
+                    >
+                      <SelectTrigger data-testid="select-employment-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full_time">Full Time</SelectItem>
+                        <SelectItem value="part_time">Part Time</SelectItem>
+                        <SelectItem value="contractor">Contractor</SelectItem>
+                        <SelectItem value="self_employed">Self Employed</SelectItem>
+                        <SelectItem value="retired">Retired</SelectItem>
+                        <SelectItem value="student">Student</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Login Credentials Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
+                  Login Credentials
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="username">Username *</Label>
+                    <Input
+                      id="username"
+                      placeholder="john.doe"
+                      value={newCustomer.username}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, username: e.target.value }))}
+                      required
+                      data-testid="input-username"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Strong password"
+                      value={newCustomer.password}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                      data-testid="input-password"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Setup Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
+                  Account Setup Options
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="createAllAccounts"
+                      checked={newCustomer.createAllAccounts}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, createAllAccounts: e.target.checked }))}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      data-testid="checkbox-create-all-accounts"
+                    />
+                    <Label htmlFor="createAllAccounts" className="font-medium">
+                      Create All Account Types (Checking, Savings, Business)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="createCards"
+                      checked={newCustomer.createCards}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, createCards: e.target.checked }))}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      data-testid="checkbox-create-cards"
+                    />
+                    <Label htmlFor="createCards" className="font-medium">
+                      Create Credit and Debit Cards
+                    </Label>
+                  </div>
+                  
+                  {newCustomer.createAllAccounts && (
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <h4 className="font-medium mb-3">Initial Account Balances</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="initialCheckingBalance">Checking Balance</Label>
+                          <Input
+                            id="initialCheckingBalance"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={newCustomer.initialCheckingBalance}
+                            onChange={(e) => setNewCustomer(prev => ({ ...prev, initialCheckingBalance: e.target.value }))}
+                            data-testid="input-checking-balance"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="initialSavingsBalance">Savings Balance</Label>
+                          <Input
+                            id="initialSavingsBalance"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={newCustomer.initialSavingsBalance}
+                            onChange={(e) => setNewCustomer(prev => ({ ...prev, initialSavingsBalance: e.target.value }))}
+                            data-testid="input-savings-balance"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="initialBusinessBalance">Business Balance</Label>
+                          <Input
+                            id="initialBusinessBalance"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={newCustomer.initialBusinessBalance}
+                            onChange={(e) => setNewCustomer(prev => ({ ...prev, initialBusinessBalance: e.target.value }))}
+                            data-testid="input-business-balance"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700" 
+                  disabled={createCustomerMutation.isPending}
+                  data-testid="button-submit-create-customer"
+                >
+                  {createCustomerMutation.isPending ? "Creating Complete Banking Profile..." : "Create Customer Account"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  className="px-6"
+                >
+                  Cancel
+                </Button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>

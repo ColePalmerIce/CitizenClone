@@ -206,6 +206,50 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type CustomerProfile = typeof customerProfiles.$inferSelect;
 export type InsertCustomerProfile = z.infer<typeof insertCustomerProfileSchema>;
 
+// Enhanced customer creation schema with comprehensive validation
+export const enhancedCustomerCreationSchema = z.object({
+  // Basic user info
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  email: z.string().email("Invalid email address"),
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  
+  // Personal details
+  ssn: z.string().regex(/^\d{3}-\d{2}-\d{4}$/, "SSN must be in format XXX-XX-XXXX"),
+  dateOfBirth: z.string().refine((date) => {
+    const dob = new Date(date);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    return age >= 18 && age <= 120;
+  }, "Must be 18 years or older"),
+  phoneNumber: z.string().regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Phone must be in format (XXX) XXX-XXXX"),
+  
+  // Address
+  street: z.string().min(5, "Street address is required").max(100),
+  city: z.string().min(2, "City is required").max(50),
+  state: z.string().length(2, "State must be 2 characters"),
+  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
+  
+  // Employment
+  employer: z.string().min(2, "Employer is required").max(100),
+  jobTitle: z.string().min(2, "Job title is required").max(100),
+  annualIncome: z.string().refine((val) => {
+    const income = parseInt(val);
+    return income >= 0 && income <= 10000000;
+  }, "Invalid annual income"),
+  employmentType: z.enum(['full_time', 'part_time', 'contractor', 'self_employed', 'retired', 'student']),
+  
+  // Account creation options
+  createAllAccounts: z.boolean().default(true),
+  createCards: z.boolean().default(true),
+  initialCheckingBalance: z.string().refine((val) => parseFloat(val) >= 0, "Invalid balance"),
+  initialSavingsBalance: z.string().refine((val) => parseFloat(val) >= 0, "Invalid balance"),
+  initialBusinessBalance: z.string().refine((val) => parseFloat(val) >= 0, "Invalid balance"),
+});
+
+export type EnhancedCustomerCreationData = z.infer<typeof enhancedCustomerCreationSchema>;
+
 // Credit card limit increase requests
 export const creditLimitIncreaseRequests = pgTable("credit_limit_increase_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
