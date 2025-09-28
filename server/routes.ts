@@ -1447,6 +1447,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
+      // Check if user account is blocked
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      if (user.status === 'blocked') {
+        return res.status(403).json({ 
+          message: "Account suspended", 
+          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance." 
+        });
+      }
+
       const { recipient, recipientAccount, amount, description } = req.body;
       
       if (!recipient || !recipientAccount || !amount) {
@@ -1668,6 +1680,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
+      // Check if user account is blocked
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      if (user.status === 'blocked') {
+        return res.status(403).json({ 
+          message: "Account suspended", 
+          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance." 
+        });
+      }
+
       const { fromAccount, toAccount, amount, description } = req.body;
       
       if (!fromAccount || !toAccount || !amount) {
@@ -1773,6 +1797,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.userId;
       if (!userId || req.session.userType !== 'customer') {
         return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Check if user account is blocked
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      if (user.status === 'blocked') {
+        return res.status(403).json({ 
+          message: "Account suspended", 
+          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance." 
+        });
       }
 
       const validatedData = insertPendingExternalTransferSchema.parse({
