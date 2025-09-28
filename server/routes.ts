@@ -110,6 +110,15 @@ function generateAccountNumber(accountType: 'checking' | 'savings' | 'business')
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin middleware - must be defined before use
+  const requireAdmin = (req: any, res: any, next: any) => {
+    const adminId = req.session?.adminId;
+    if (!adminId) {
+      return res.status(401).json({ message: "Admin authentication required" });
+    }
+    next();
+  };
+
   // Search queries
   app.post("/api/search", async (req, res) => {
     try {
@@ -524,13 +533,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin Dashboard Routes
-  const requireAdmin = (req: any, res: any, next: any) => {
-    const adminId = req.session?.adminId;
-    if (!adminId) {
-      return res.status(401).json({ message: "Admin authentication required" });
-    }
-    next();
-  };
 
   // Get admin balance
   app.get("/api/admin/balance", requireAdmin, async (req, res) => {
