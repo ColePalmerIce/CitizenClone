@@ -32,10 +32,44 @@ export const creditCardApplications = pgTable("credit_card_applications", {
 
 export const accountApplications = pgTable("account_applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  applicantEmail: text("applicant_email").notNull(),
-  accountType: text("account_type").notNull(),
-  personalInfo: jsonb("personal_info"),
-  status: text("status").default("pending"),
+  // User credentials
+  username: text("username").notNull(),
+  password: text("password").notNull(), // Will be hashed
+  email: text("email").notNull(),
+  
+  // Personal information
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  ssn: text("ssn"), // encrypted
+  dateOfBirth: text("date_of_birth"),
+  phoneNumber: text("phone_number"),
+  
+  // Address
+  street: text("street"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  
+  // Employment
+  employer: text("employer"),
+  jobTitle: text("job_title"),
+  annualIncome: text("annual_income"),
+  employmentType: text("employment_type"),
+  
+  // Account details
+  accountType: text("account_type").notNull(), // checking, savings, loan
+  initialDeposit: decimal("initial_deposit", { precision: 12, scale: 2 }).default("0.00"),
+  
+  // Generated account info (filled when approved)
+  accountNumber: text("account_number"), 
+  routingNumber: text("routing_number"),
+  
+  // Application status
+  status: text("status").default("pending"), // pending, approved, rejected
+  adminNotes: text("admin_notes"), // Admin can add notes
+  approvedBy: varchar("approved_by"), // Admin ID who approved
+  approvedAt: timestamp("approved_at"),
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -138,7 +172,56 @@ export const insertAccountApplicationSchema = createInsertSchema(accountApplicat
   id: true,
   createdAt: true,
   status: true,
+  accountNumber: true,
+  routingNumber: true,
+  approvedBy: true,
+  approvedAt: true,
 });
+
+// Account opening form schema with validation
+export const accountOpeningSchema = z.object({
+  // User credentials
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+  email: z.string().email("Invalid email address"),
+  
+  // Personal information
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
+  ssn: z.string().regex(/^\d{3}-\d{2}-\d{4}$/, "SSN must be in format XXX-XX-XXXX"),
+  dateOfBirth: z.string().refine((date) => {
+    const dob = new Date(date);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    return age >= 18 && age <= 120;
+  }, "Must be 18 years or older"),
+  phoneNumber: z.string().regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Phone must be in format (XXX) XXX-XXXX"),
+  
+  // Address
+  street: z.string().min(5, "Street address is required").max(100),
+  city: z.string().min(2, "City is required").max(50),
+  state: z.string().length(2, "State must be 2 characters"),
+  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
+  
+  // Employment
+  employer: z.string().min(2, "Employer is required").max(100),
+  jobTitle: z.string().min(2, "Job title is required").max(100),
+  annualIncome: z.string().refine((val) => {
+    const income = parseInt(val);
+    return income >= 0 && income <= 10000000;
+  }, "Invalid annual income"),
+  employmentType: z.enum(['full_time', 'part_time', 'contractor', 'self_employed', 'retired', 'student']),
+  
+  // Account details
+  accountType: z.enum(['checking', 'savings', 'loan']),
+  initialDeposit: z.string().refine((val) => parseFloat(val) >= 0, "Invalid initial deposit"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export type AccountOpeningData = z.infer<typeof accountOpeningSchema>;
 
 export const insertContactInquirySchema = createInsertSchema(contactInquiries).omit({
   id: true,

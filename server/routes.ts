@@ -163,14 +163,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Account applications
-  app.post("/api/account-application", async (req, res) => {
+  // Enhanced Account applications with comprehensive data collection
+  app.post("/api/account-applications", async (req, res) => {
     try {
       const validatedData = insertAccountApplicationSchema.parse(req.body);
-      const application = await storage.saveAccountApplication(validatedData);
+      
+      // Hash password before storing
+      const hashedPassword = await bcrypt.hash(validatedData.password, 12);
+      
+      // Encrypt sensitive data
+      const encryptedSSN = validatedData.ssn ? encryptSSN(validatedData.ssn) : null;
+      
+      // Generate account number and routing number for display purposes
+      const accountTypeForGeneration = validatedData.accountType === 'loan' ? 'business' : validatedData.accountType as 'checking' | 'savings';
+      const { accountNumber, routingNumber } = generateAccountNumber(accountTypeForGeneration);
+      
+      const applicationData = {
+        ...validatedData,
+        password: hashedPassword,
+        ssn: encryptedSSN,
+        accountNumber,
+        routingNumber,
+        status: 'pending'
+      };
+      
+      const application = await storage.saveAccountApplication(applicationData);
+      
+      // Return application with account details for success page
+      res.json({
+        ...application,
+        accountNumber,
+        routingNumber
+      });
+    } catch (error) {
+      console.error('Account application error:', error);
+      res.status(400).json({ message: "Invalid account application data" });
+    }
+  });
+
+  // Get account application by ID
+  app.get("/api/account-applications/:id", async (req, res) => {
+    try {
+      const application = await storage.getAccountApplication(req.params.id);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
       res.json(application);
     } catch (error) {
-      res.status(400).json({ message: "Invalid account application data" });
+      console.error('Get application error:', error);
+      res.status(500).json({ message: "Failed to get application" });
     }
   });
 

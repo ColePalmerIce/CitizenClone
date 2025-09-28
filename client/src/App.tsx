@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import UserDashboard from "@/pages/user-dashboard";
+import AccountSuccess from "@/pages/account-success";
 
 function Router() {
   // Check if we're on admin domain and redirect appropriately
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={isAdminDomain ? () => <AdminLogin /> : Home} />
       <Route path="/dashboard" component={UserDashboard} />
       <Route path="/user-dashboard" component={UserDashboard} />
+      <Route path="/account-success/:applicationId" component={AccountSuccess} />
       <Route path="/admin" component={() => <AdminLogin />} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />

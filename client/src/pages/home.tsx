@@ -10,7 +10,7 @@ import EnhancedFooter from "@/components/enhanced-footer";
 import LoginModal from "@/components/modals/login-modal";
 import SearchModal from "@/components/modals/search-modal";
 import CreditCardTool from "@/components/modals/credit-card-tool";
-import AccountOpener from "@/components/modals/account-opener";
+import EnhancedAccountOpener from "@/components/modals/enhanced-account-opener";
 
 export default function Home() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -64,7 +64,7 @@ export default function Home() {
         open={isCreditCardToolOpen} 
         onOpenChange={setIsCreditCardToolOpen} 
       />
-      <AccountOpener 
+      <EnhancedAccountOpener 
         open={isAccountOpenerOpen} 
         onOpenChange={setIsAccountOpenerOpen} 
       />
