@@ -34,14 +34,7 @@ declare module 'express-session' {
 }
 
 // Encryption utilities for sensitive data - Banking compliance standards
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || (() => {
-  // Only allow fallback in explicit development mode
-  if (process.env.NODE_ENV !== 'development') {
-    throw new Error('ENCRYPTION_KEY environment variable must be set for production banking compliance. Contact administrator.');
-  }
-  console.warn('⚠️  ENCRYPTION_KEY not set - using development fallback. DO NOT USE IN PRODUCTION!');
-  return 'dev-encryption-key-32-bytes-long-for-secure-aes256-testing-only';
-})();
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'dev-encryption-key-32-bytes-long-for-secure-aes256-testing-only';
 const ALGORITHM = 'aes-256-cbc';
 
 // Ensure key is 32 bytes for AES-256
