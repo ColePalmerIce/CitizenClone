@@ -119,6 +119,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
+  // Middleware to check if customer account is active (not blocked)
+  const requireActiveCustomer = async (req: any, res: any, next: any) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId || req.session.userType !== 'customer') {
+        return res.status(401).json({ message: "Customer authentication required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      if (user.status === 'blocked') {
+        // Immediately destroy the session for blocked users
+        req.session.destroy((err: any) => {
+          if (err) {
+            console.error('Error destroying session for blocked user:', err);
+          }
+        });
+        
+        return res.status(403).json({ 
+          message: "Account suspended", 
+          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance.",
+          blocked: true
+        });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('Account status check error:', error);
+      return res.status(500).json({ message: "Account verification failed" });
+    }
+  };
+
   // Search queries
   app.post("/api/search", async (req, res) => {
     try {
@@ -1118,13 +1153,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Credit limit increase request
-  app.post("/api/user/credit-limit-increase", async (req, res) => {
+  app.post("/api/user/credit-limit-increase", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
       const validatedData = insertCreditLimitIncreaseRequestSchema.parse({
         ...req.body,
         userId
@@ -1139,13 +1170,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Debit limit increase request
-  app.post("/api/user/debit-limit-increase", async (req, res) => {
+  app.post("/api/user/debit-limit-increase", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
       const validatedData = insertDebitLimitIncreaseRequestSchema.parse({
         ...req.body,
         userId
@@ -1160,13 +1187,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user limit increase requests
-  app.get("/api/user/limit-increase-requests", async (req, res) => {
+  app.get("/api/user/limit-increase-requests", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
       const [creditRequests, debitRequests] = await Promise.all([
         storage.getCreditLimitIncreaseRequestsByUserId(userId),
         storage.getDebitLimitIncreaseRequestsByUserId(userId)
@@ -1182,13 +1205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user/change-password", async (req, res) => {
+  app.post("/api/user/change-password", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
       const { currentPassword, newPassword } = req.body;
       
       if (!currentPassword || !newPassword) {
@@ -1440,25 +1459,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User transfer endpoint
-  app.post("/api/user/transfer", async (req, res) => {
+  app.post("/api/user/transfer", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      // Check if user account is blocked
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-      if (user.status === 'blocked') {
-        return res.status(403).json({ 
-          message: "Account suspended", 
-          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance." 
-        });
-      }
-
       const { recipient, recipientAccount, amount, description } = req.body;
       
       if (!recipient || !recipientAccount || !amount) {
@@ -1616,13 +1619,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User bill pay endpoint
-  app.post("/api/user/billpay", async (req, res) => {
+  app.post("/api/user/billpay", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
       const { payee, accountNumber, amount, description } = req.body;
       
       if (!payee || !amount) {
@@ -1673,25 +1672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User internal transfer endpoint
-  app.post("/api/user/internal-transfer", async (req, res) => {
+  app.post("/api/user/internal-transfer", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      // Check if user account is blocked
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-      if (user.status === 'blocked') {
-        return res.status(403).json({ 
-          message: "Account suspended", 
-          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance." 
-        });
-      }
-
       const { fromAccount, toAccount, amount, description } = req.body;
       
       if (!fromAccount || !toAccount || !amount) {
@@ -1792,25 +1775,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // External transfer submission (user side)
-  app.post("/api/user/external-transfer", async (req, res) => {
+  app.post("/api/user/external-transfer", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      // Check if user account is blocked
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-      if (user.status === 'blocked') {
-        return res.status(403).json({ 
-          message: "Account suspended", 
-          reason: user.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance." 
-        });
-      }
-
       const validatedData = insertPendingExternalTransferSchema.parse({
         ...req.body,
         userId
