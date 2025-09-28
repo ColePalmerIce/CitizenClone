@@ -33,26 +33,71 @@ declare module 'express-session' {
   }
 }
 
-// Encryption utilities for sensitive data
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'fallback-demo-key-not-for-production-use';
+// Encryption utilities for sensitive data - Banking compliance standards
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || (() => {
+  // Only allow fallback in explicit development mode
+  if (process.env.NODE_ENV !== 'development') {
+    throw new Error('ENCRYPTION_KEY environment variable must be set for production banking compliance. Contact administrator.');
+  }
+  console.warn('⚠️  ENCRYPTION_KEY not set - using development fallback. DO NOT USE IN PRODUCTION!');
+  return 'dev-encryption-key-32-bytes-long-for-secure-aes256-testing-only';
+})();
 const ALGORITHM = 'aes-256-cbc';
+
+// Ensure key is 32 bytes for AES-256
+const key = crypto.scryptSync(ENCRYPTION_KEY, 'banking-salt', 32);
 
 function encryptSSN(ssn: string): string {
   try {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
     let encrypted = cipher.update(ssn, 'utf8', 'hex');
     encrypted += cipher.final('hex');
+    // Store IV:ciphertext for decryption capability
     return iv.toString('hex') + ':' + encrypted;
   } catch (error) {
-    console.error('Encryption error:', error);
-    // Fallback to hashing if encryption fails
-    return crypto.createHash('sha256').update(ssn + ENCRYPTION_KEY).digest('hex');
+    console.error('SSN encryption error:', error);
+    throw new Error('Failed to encrypt sensitive data - banking security breach prevented');
+  }
+}
+
+function decryptSSN(encryptedSSN: string): string {
+  try {
+    const [ivHex, encryptedHex] = encryptedSSN.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    console.error('SSN decryption error:', error);
+    throw new Error('Failed to decrypt sensitive data');
   }
 }
 
 function hashSensitiveData(data: string): string {
-  return crypto.createHash('sha256').update(data + ENCRYPTION_KEY).digest('hex');
+  try {
+    // Generate cryptographically random salt per record for banking compliance
+    const salt = crypto.randomBytes(32);
+    const hash = crypto.pbkdf2Sync(data, salt, 100000, 64, 'sha512');
+    // Store salt:hash for verification capability
+    return salt.toString('hex') + ':' + hash.toString('hex');
+  } catch (error) {
+    console.error('Sensitive data hashing error:', error);
+    throw new Error('Failed to hash sensitive data - banking security breach prevented');
+  }
+}
+
+function verifySensitiveData(data: string, storedHash: string): boolean {
+  try {
+    const [saltHex, hashHex] = storedHash.split(':');
+    const salt = Buffer.from(saltHex, 'hex');
+    const hash = crypto.pbkdf2Sync(data, salt, 100000, 64, 'sha512');
+    return hash.toString('hex') === hashHex;
+  } catch (error) {
+    console.error('Sensitive data verification error:', error);
+    return false;
+  }
 }
 
 // Generate account numbers with different routing numbers per account type
