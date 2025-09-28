@@ -798,7 +798,7 @@ function OverviewTab({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2 sm:mt-0">
+        <p className="text-white font-bold text-lg drop-shadow-lg mt-2 sm:mt-0">
           {(() => {
             const hour = new Date().getHours();
             const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
