@@ -11,30 +11,13 @@ import LoginModal from "@/components/modals/login-modal";
 import SearchModal from "@/components/modals/search-modal";
 import CreditCardTool from "@/components/modals/credit-card-tool";
 import AccountOpener from "@/components/modals/account-opener";
-import SecurityNoticeBanner from "@/components/security-notice-banner";
-import CookieConsentBanner from "@/components/cookie-consent-banner";
-import WelcomeNoticeModal from "@/components/modals/welcome-notice-modal";
 
 export default function Home() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCreditCardToolOpen, setIsCreditCardToolOpen] = useState(false);
   const [isAccountOpenerOpen, setIsAccountOpenerOpen] = useState(false);
-  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
 
-  useEffect(() => {
-    // Show welcome modal for first-time visitors
-    const hasVisited = localStorage.getItem('first-citizens-visited');
-    if (!hasVisited) {
-      // Delay modal to allow page to load
-      const timer = setTimeout(() => {
-        setIsWelcomeModalOpen(true);
-        localStorage.setItem('first-citizens-visited', 'true');
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   return (
     <>
@@ -46,8 +29,6 @@ export default function Home() {
         Skip to main content
       </a>
 
-      {/* Professional Banking Security Banner */}
-      <SecurityNoticeBanner />
 
       <Header 
         onLoginClick={() => setIsLoginOpen(true)}
@@ -87,15 +68,6 @@ export default function Home() {
         open={isAccountOpenerOpen} 
         onOpenChange={setIsAccountOpenerOpen} 
       />
-      
-      {/* Professional Banking Notice Modal */}
-      <WelcomeNoticeModal 
-        open={isWelcomeModalOpen} 
-        onOpenChange={setIsWelcomeModalOpen} 
-      />
-
-      {/* Cookie Consent Banner */}
-      <CookieConsentBanner />
     </>
   );
 }
