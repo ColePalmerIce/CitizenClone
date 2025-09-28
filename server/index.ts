@@ -7,9 +7,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration for admin authentication
+// Session configuration for admin authentication - Secret rotated for security
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'banking-admin-secret-key-development',
+  secret: process.env.SESSION_SECRET || 'new-secure-banking-secret-' + Date.now(),
   resave: false,
   saveUninitialized: false,
   cookie: {

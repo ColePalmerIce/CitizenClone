@@ -103,22 +103,21 @@ export default function AdminDashboard() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Check sessionStorage first for immediate login experience
-        const storedAdmin = sessionStorage.getItem('admin');
-        if (storedAdmin) {
-          setAdmin(JSON.parse(storedAdmin));
-          return;
-        }
-        
-        // Fallback to server session check
+        // Always verify with server session first for security
         const response = await apiRequest('GET', '/api/admin/session');
         if (response.ok) {
           const adminData = await response.json();
           setAdmin(adminData);
+          // Sync with sessionStorage for quick access
+          sessionStorage.setItem('admin', JSON.stringify(adminData));
         } else {
+          // Clear invalid sessionStorage
+          sessionStorage.removeItem('admin');
           setLocation('/admin/login');
         }
       } catch (error) {
+        // Clear invalid sessionStorage and redirect
+        sessionStorage.removeItem('admin');
         setLocation('/admin/login');
       }
     };
@@ -164,6 +163,8 @@ export default function AdminDashboard() {
     mutationFn: () => apiRequest('POST', '/api/admin/logout'),
     onSuccess: () => {
       setAdmin(null);
+      // Clear sessionStorage to prevent stale admin data
+      sessionStorage.removeItem('admin');
       setLocation('/admin/login');
       toast({
         title: "Logged out",
