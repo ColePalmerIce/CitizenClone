@@ -610,7 +610,7 @@ export default function AdminDashboard() {
                   className="flex-1"
                   data-testid="button-confirm-add-funds"
                 >
-                  {customerAddFundsMutation.isPending ? 'Adding...' : `Add $${customerFundAmount || '0'}`}
+                  {customerAddFundsMutation.isPending ? 'Adding...' : `Add ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(customerFundAmount || '0'))}`}
                 </Button>
               </div>
             </div>
@@ -674,7 +674,7 @@ export default function AdminDashboard() {
                   className="flex-1"
                   data-testid="button-confirm-withdraw-funds"
                 >
-                  {customerWithdrawFundsMutation.isPending ? 'Withdrawing...' : `Withdraw $${customerWithdrawAmount || '0'}`}
+                  {customerWithdrawFundsMutation.isPending ? 'Withdrawing...' : `Withdraw ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(customerWithdrawAmount || '0'))}`}
                 </Button>
               </div>
             </div>
@@ -1096,6 +1096,12 @@ function OverviewTab({
                     <p><span className="font-medium">Full Name:</span> {selectedCustomer.firstName} {selectedCustomer.lastName}</p>
                     <p><span className="font-medium">Email:</span> {selectedCustomer.email}</p>
                     <p><span className="font-medium">Username:</span> {selectedCustomer.username}</p>
+                    {selectedCustomer.phoneNumber && (
+                      <p><span className="font-medium">Phone:</span> {selectedCustomer.phoneNumber}</p>
+                    )}
+                    {selectedCustomer.dateOfBirth && (
+                      <p><span className="font-medium">Date of Birth:</span> {new Date(selectedCustomer.dateOfBirth).toLocaleDateString()}</p>
+                    )}
                   </div>
                 </div>
                 
@@ -1113,6 +1119,43 @@ function OverviewTab({
                   </div>
                 </div>
               </div>
+              
+              {/* Employment Information */}
+              {(selectedCustomer.jobTitle || selectedCustomer.annualIncome || selectedCustomer.employer) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100">Employment Information</h3>
+                    <div className="space-y-2">
+                      {selectedCustomer.employer && (
+                        <p><span className="font-medium">Employer:</span> {selectedCustomer.employer}</p>
+                      )}
+                      {selectedCustomer.jobTitle && (
+                        <p><span className="font-medium">Job Title:</span> {selectedCustomer.jobTitle}</p>
+                      )}
+                      {selectedCustomer.employmentType && (
+                        <p><span className="font-medium">Employment Type:</span> 
+                          <Badge variant="outline" className="ml-2 capitalize">
+                            {selectedCustomer.employmentType.replace('_', ' ')}
+                          </Badge>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100">Financial Information</h3>
+                    <div className="space-y-2">
+                      {selectedCustomer.annualIncome && (
+                        <p><span className="font-medium">Annual Income:</span> 
+                          <span className="font-semibold text-green-600 ml-2">
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(selectedCustomer.annualIncome))}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Current Balance */}
               <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 rounded-lg border">
@@ -1490,15 +1533,19 @@ function CustomersTab({
                   </div>
                   <div>
                     <Label htmlFor="annualIncome">Annual Income *</Label>
-                    <Input
-                      id="annualIncome"
-                      type="number"
-                      placeholder="75000"
-                      value={newCustomer.annualIncome}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, annualIncome: e.target.value }))}
-                      required
-                      data-testid="input-income"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <Input
+                        id="annualIncome"
+                        type="number"
+                        placeholder="75,000"
+                        value={newCustomer.annualIncome}
+                        onChange={(e) => setNewCustomer(prev => ({ ...prev, annualIncome: e.target.value }))}
+                        required
+                        className="pl-8"
+                        data-testid="input-income"
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="employmentType">Employment Type *</Label>
@@ -2571,13 +2618,50 @@ function AccountApplicationsTab() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-700 dark:text-gray-300">Initial Deposit</p>
-                          <p>${parseFloat(application.initialDeposit || '0').toLocaleString()}</p>
+                          <p className="font-semibold text-green-600">
+                            ${parseFloat(application.initialDeposit || '0').toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
                         </div>
                         <div>
                           <p className="font-medium text-gray-700 dark:text-gray-300">Username</p>
                           <p className="font-mono">{application.username}</p>
                         </div>
                       </div>
+
+                      {/* Employment Information */}
+                      {(application.jobTitle || application.annualIncome || application.employer || application.employmentType) && (
+                        <div className="mt-4 border-t pt-4">
+                          <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">Employment Information</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            {application.employer && (
+                              <div>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">Employer</p>
+                                <p>{application.employer}</p>
+                              </div>
+                            )}
+                            {application.jobTitle && (
+                              <div>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">Job Title</p>
+                                <p>{application.jobTitle}</p>
+                              </div>
+                            )}
+                            {application.annualIncome && (
+                              <div>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">Annual Income</p>
+                                <p className="font-semibold text-green-600">
+                                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(application.annualIncome))}
+                                </p>
+                              </div>
+                            )}
+                            {application.employmentType && (
+                              <div>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">Employment Type</p>
+                                <p className="capitalize">{application.employmentType.replace('_', ' ')}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {application.phoneNumber && (
                         <div className="mt-2 text-sm">
