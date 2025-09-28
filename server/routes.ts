@@ -224,6 +224,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes for account applications
+  app.get("/api/admin/account-applications", requireAdmin, async (req, res) => {
+    try {
+      const applications = await storage.getAllAccountApplications();
+      res.json(applications);
+    } catch (error) {
+      console.error('Failed to fetch account applications:', error);
+      res.status(500).json({ message: "Failed to fetch account applications" });
+    }
+  });
+
+  app.post("/api/admin/approve-account-application/:applicationId", requireAdmin, async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      const adminId = req.session.adminId;
+      const { notes } = req.body;
+      
+      // Get the application
+      const application = await storage.getAccountApplication(applicationId);
+      if (!application || application.status !== 'pending') {
+        return res.status(404).json({ message: "Pending application not found" });
+      }
+
+      // Generate unique account numbers for the approved application
+      const accountTypeForGeneration = application.accountType === 'loan' ? 'business' : application.accountType as 'checking' | 'savings';
+      const { accountNumber, routingNumber } = generateAccountNumber(accountTypeForGeneration);
+
+      // Create user account from application data
+      const user = await storage.createUser({
+        username: application.username,
+        email: application.email,
+        password: application.password, // Already hashed
+        firstName: application.firstName,
+        lastName: application.lastName
+      });
+
+      // Create bank account with the generated details
+      const bankAccount = await storage.createBankAccount({
+        userId: user.id,
+        accountNumber,
+        routingNumber,
+        accountType: application.accountType,
+        balance: application.initialDeposit?.toString() || '0.00'
+      });
+
+      // Update application status with generated account details
+      await storage.updateAccountApplicationStatus(applicationId, 'approved', adminId, notes);
+      
+      // Also update the application with the generated account numbers for reference
+      await storage.updateAccountApplicationNumbers(applicationId, accountNumber, routingNumber);
+
+      res.json({ 
+        success: true, 
+        message: "Account application approved and user account created",
+        userId: user.id,
+        accountId: bankAccount.id
+      });
+    } catch (error) {
+      console.error('Approve application error:', error);
+      res.status(500).json({ message: "Failed to approve application" });
+    }
+  });
+
+  app.post("/api/admin/reject-account-application/:applicationId", requireAdmin, async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      const adminId = req.session.adminId;
+      const { notes } = req.body;
+      
+      // Get the application
+      const application = await storage.getAccountApplication(applicationId);
+      if (!application || application.status !== 'pending') {
+        return res.status(404).json({ message: "Pending application not found" });
+      }
+
+      // Update application status to rejected
+      await storage.updateAccountApplicationStatus(applicationId, 'rejected', adminId, notes);
+
+      res.json({ 
+        success: true, 
+        message: "Account application rejected"
+      });
+    } catch (error) {
+      console.error('Reject application error:', error);
+      res.status(500).json({ message: "Failed to reject application" });
+    }
+  });
+
   // Contact inquiries
   app.post("/api/contact", async (req, res) => {
     try {

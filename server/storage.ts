@@ -50,6 +50,9 @@ export interface IStorage {
   saveAccountApplication(application: InsertAccountApplication): Promise<AccountApplication>;
   getAccountApplication(id: string): Promise<AccountApplication | undefined>;
   getAccountApplicationsByEmail(email: string): Promise<AccountApplication[]>;
+  getAllAccountApplications(): Promise<AccountApplication[]>;
+  updateAccountApplicationStatus(id: string, status: string, adminId?: string, notes?: string): Promise<AccountApplication | undefined>;
+  updateAccountApplicationNumbers(id: string, accountNumber: string, routingNumber: string): Promise<AccountApplication | undefined>;
 
   // Contact inquiries
   saveContactInquiry(inquiry: InsertContactInquiry): Promise<ContactInquiry>;
@@ -218,8 +221,23 @@ export class MemStorage implements IStorage {
       ...insertApplication,
       id,
       status: "pending",
-      personalInfo: insertApplication.personalInfo || null,
       createdAt: new Date(),
+      accountNumber: null,
+      routingNumber: null,
+      approvedBy: null,
+      approvedAt: null,
+      ssn: insertApplication.ssn || null,
+      dateOfBirth: insertApplication.dateOfBirth || null,
+      phoneNumber: insertApplication.phoneNumber || null,
+      street: insertApplication.street || null,
+      city: insertApplication.city || null,
+      state: insertApplication.state || null,
+      zipCode: insertApplication.zipCode || null,
+      employer: insertApplication.employer || null,
+      jobTitle: insertApplication.jobTitle || null,
+      annualIncome: insertApplication.annualIncome || null,
+      employmentType: insertApplication.employmentType || null,
+      adminNotes: null,
     };
     this.accountApplications.set(id, application);
     return application;
@@ -231,8 +249,42 @@ export class MemStorage implements IStorage {
 
   async getAccountApplicationsByEmail(email: string): Promise<AccountApplication[]> {
     return Array.from(this.accountApplications.values()).filter(
-      (app) => app.applicantEmail === email,
+      (app) => app.email === email,
     );
+  }
+
+  async getAllAccountApplications(): Promise<AccountApplication[]> {
+    return Array.from(this.accountApplications.values());
+  }
+
+  async updateAccountApplicationStatus(id: string, status: string, adminId?: string, notes?: string): Promise<AccountApplication | undefined> {
+    const application = this.accountApplications.get(id);
+    if (application) {
+      const updatedApplication: AccountApplication = {
+        ...application,
+        status,
+        approvedBy: adminId || application.approvedBy,
+        adminNotes: notes || application.adminNotes,
+        approvedAt: status === 'approved' ? new Date() : application.approvedAt,
+      };
+      this.accountApplications.set(id, updatedApplication);
+      return updatedApplication;
+    }
+    return undefined;
+  }
+
+  async updateAccountApplicationNumbers(id: string, accountNumber: string, routingNumber: string): Promise<AccountApplication | undefined> {
+    const application = this.accountApplications.get(id);
+    if (application) {
+      const updatedApplication: AccountApplication = {
+        ...application,
+        accountNumber,
+        routingNumber,
+      };
+      this.accountApplications.set(id, updatedApplication);
+      return updatedApplication;
+    }
+    return undefined;
   }
 
   async saveContactInquiry(insertInquiry: InsertContactInquiry): Promise<ContactInquiry> {

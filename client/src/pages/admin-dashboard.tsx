@@ -427,6 +427,18 @@ export default function AdminDashboard() {
               <ArrowUpRight className="w-4 h-4 mr-2" />
               External Transfers
             </Button>
+            <Button
+              variant={selectedTab === "account-applications" ? "secondary" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => {
+                setSelectedTab("account-applications");
+                setIsSidebarOpen(false);
+              }}
+              data-testid="nav-account-applications"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Account Applications
+            </Button>
           </nav>
 
           <div className="absolute bottom-4 left-4 right-4 space-y-4">
@@ -533,6 +545,9 @@ export default function AdminDashboard() {
             )}
             {selectedTab === "external-transfers" && (
               <ExternalTransfersTab />
+            )}
+            {selectedTab === "account-applications" && (
+              <AccountApplicationsTab />
             )}
           </main>
         </div>
@@ -2447,6 +2462,200 @@ function TransactionsTab({
             </div>
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-center py-8">No transactions found</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Account Applications Tab Component
+function AccountApplicationsTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Account applications query
+  const { data: applications, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/account-applications'],
+    refetchInterval: 15000, // Refetch every 15 seconds
+    refetchOnWindowFocus: true,
+  });
+
+  const safeApplications = applications || [];
+
+  // Approve application mutation
+  const approveApplicationMutation = useMutation({
+    mutationFn: async ({ applicationId, notes }: { applicationId: string; notes?: string }) => {
+      return await apiRequest('POST', `/api/admin/approve-account-application/${applicationId}`, { notes });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/account-applications'] });
+      toast({
+        title: "Application Approved",
+        description: "Account application has been approved and user account created.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Approval Failed",
+        description: error.message || "Failed to approve application",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Reject application mutation
+  const rejectApplicationMutation = useMutation({
+    mutationFn: async ({ applicationId, notes }: { applicationId: string; notes?: string }) => {
+      return await apiRequest('POST', `/api/admin/reject-account-application/${applicationId}`, { notes });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/account-applications'] });
+      toast({
+        title: "Application Rejected",
+        description: "Account application has been rejected.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject application",
+        variant: "destructive",
+      });
+    }
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Account Applications</h1>
+          <p className="text-white/70 mt-2">Review and manage pending account applications</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Applications</CardTitle>
+          <CardDescription>Account applications awaiting review</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : safeApplications.filter(app => app.status === 'pending').length > 0 ? (
+            <div className="space-y-4">
+              {safeApplications.filter(app => app.status === 'pending').map((application: any) => (
+                <div key={application.id} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">{application.firstName} {application.lastName}</h3>
+                          <p className="text-gray-600 dark:text-gray-300">{application.email}</p>
+                          <p className="text-sm text-gray-500">Applied {new Date(application.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Account Type</p>
+                          <p className="capitalize">{application.accountType}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Initial Deposit</p>
+                          <p>${parseFloat(application.initialDeposit || '0').toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Username</p>
+                          <p className="font-mono">{application.username}</p>
+                        </div>
+                      </div>
+
+                      {application.phoneNumber && (
+                        <div className="mt-2 text-sm">
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Phone</p>
+                          <p>{application.phoneNumber}</p>
+                        </div>
+                      )}
+
+                      {(application.street || application.city) && (
+                        <div className="mt-2 text-sm">
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Address</p>
+                          <p>{application.street}, {application.city}, {application.state} {application.zipCode}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col space-y-2 lg:w-48">
+                      <Button
+                        onClick={() => approveApplicationMutation.mutate({ applicationId: application.id })}
+                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        data-testid={`button-approve-${application.id}`}
+                      >
+                        {approveApplicationMutation.isPending ? 'Approving...' : 'Approve'}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => rejectApplicationMutation.mutate({ applicationId: application.id })}
+                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending}
+                        className="w-full"
+                        data-testid={`button-reject-${application.id}`}
+                      >
+                        {rejectApplicationMutation.isPending ? 'Rejecting...' : 'Reject'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No pending applications</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Processed Applications */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Processed Applications</CardTitle>
+          <CardDescription>Recently approved or rejected applications</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {safeApplications.filter(app => app.status !== 'pending').length > 0 ? (
+            <div className="space-y-3">
+              {safeApplications
+                .filter(app => app.status !== 'pending')
+                .slice(0, 10)
+                .map((application: any) => (
+                <div key={application.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div>
+                    <p className="font-medium">{application.firstName} {application.lastName}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{application.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={application.status === 'approved' ? 'default' : 'destructive'}>
+                      {application.status}
+                    </Badge>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {application.approvedAt ? new Date(application.approvedAt).toLocaleDateString() : ''}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No processed applications</p>
           )}
         </CardContent>
       </Card>

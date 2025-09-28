@@ -119,7 +119,32 @@ export class PostgreSQLStorage implements IStorage {
   }
 
   async getAccountApplicationsByEmail(email: string): Promise<AccountApplication[]> {
-    return await db.select().from(accountApplications).where(eq(accountApplications.applicantEmail, email));
+    return await db.select().from(accountApplications).where(eq(accountApplications.email, email));
+  }
+
+  async getAllAccountApplications(): Promise<AccountApplication[]> {
+    return await db.select().from(accountApplications).orderBy(desc(accountApplications.createdAt));
+  }
+
+  async updateAccountApplicationStatus(id: string, status: string, adminId?: string, notes?: string): Promise<AccountApplication | undefined> {
+    const updateData: any = { status };
+    if (adminId) updateData.approvedBy = adminId;
+    if (notes) updateData.adminNotes = notes;
+    if (status === 'approved') updateData.approvedAt = new Date();
+    
+    const result = await db.update(accountApplications)
+      .set(updateData)
+      .where(eq(accountApplications.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateAccountApplicationNumbers(id: string, accountNumber: string, routingNumber: string): Promise<AccountApplication | undefined> {
+    const result = await db.update(accountApplications)
+      .set({ accountNumber, routingNumber })
+      .where(eq(accountApplications.id, id))
+      .returning();
+    return result[0];
   }
 
   // Contact inquiries
