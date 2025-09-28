@@ -82,6 +82,19 @@ export class PostgreSQLStorage implements IStorage {
     return result[0];
   }
 
+  async updateUserStatus(userId: string, status: string, reason?: string, updatedBy?: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ 
+        status, 
+        statusReason: reason || null, 
+        statusUpdatedBy: updatedBy || null, 
+        statusUpdatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
   // Search queries
   async saveSearchQuery(query: InsertSearchQuery): Promise<SearchQuery> {
     const result = await db.insert(searchQueries).values(query).returning();

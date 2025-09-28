@@ -2004,6 +2004,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Block customer account
+  app.post("/api/admin/block-customer/:userId", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { reason } = req.body;
+      const adminId = req.session.adminId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      // Update user status to blocked
+      const updatedUser = await storage.updateUserStatus(userId, 'blocked', reason, adminId);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "User account has been blocked successfully",
+        user: { id: updatedUser.id, status: updatedUser.status }
+      });
+    } catch (error) {
+      console.error('Block customer error:', error);
+      res.status(500).json({ message: "Failed to block customer account" });
+    }
+  });
+
+  // Unblock customer account
+  app.post("/api/admin/unblock-customer/:userId", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const adminId = req.session.adminId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      // Update user status to active
+      const updatedUser = await storage.updateUserStatus(userId, 'active', 'Account unblocked by administrator', adminId);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "User account has been unblocked successfully",
+        user: { id: updatedUser.id, status: updatedUser.status }
+      });
+    } catch (error) {
+      console.error('Unblock customer error:', error);
+      res.status(500).json({ message: "Failed to unblock customer account" });
+    }
+  });
+
   // Seed admin user on first run
   app.post("/api/admin/seed", async (req, res) => {
     try {

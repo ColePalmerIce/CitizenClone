@@ -41,7 +41,9 @@ import {
   Eye,
   Building,
   Shield,
-  ChevronDown
+  ChevronDown,
+  Lock,
+  Unlock
 } from "lucide-react";
 
 interface DashboardStats {
@@ -202,6 +204,54 @@ export default function AdminDashboard() {
       toast({
         title: "Account deleted",
         description: "Customer account deleted successfully.",
+      });
+    },
+  });
+
+  // Block customer mutation
+  const blockCustomerMutation = useMutation({
+    mutationFn: async (data: { userId: string; reason?: string }) => {
+      const response = await apiRequest('POST', `/api/admin/block-customer/${data.userId}`, { reason: data.reason });
+      if (!response.ok) throw new Error('Failed to block customer');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      toast({
+        title: "Account Blocked",
+        description: "Customer account has been blocked successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Block Failed",
+        description: error.message || "Failed to block customer account.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unblock customer mutation
+  const unblockCustomerMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest('POST', `/api/admin/unblock-customer/${userId}`);
+      if (!response.ok) throw new Error('Failed to unblock customer');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      toast({
+        title: "Account Unblocked",
+        description: "Customer account has been unblocked successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Unblock Failed",
+        description: error.message || "Failed to unblock customer account.",
+        variant: "destructive",
       });
     },
   });
@@ -513,6 +563,8 @@ export default function AdminDashboard() {
                 customersLoading={customersLoading}
                 createCustomerMutation={createCustomerMutation}
                 deleteCustomerMutation={deleteCustomerMutation}
+                blockCustomerMutation={blockCustomerMutation}
+                unblockCustomerMutation={unblockCustomerMutation}
                 selectedCustomer={selectedCustomer}
                 setSelectedCustomer={setSelectedCustomer}
                 isCustomerDetailsDialogOpen={isCustomerDetailsDialogOpen}
@@ -1258,6 +1310,8 @@ function CustomersTab({
   customersLoading, 
   createCustomerMutation, 
   deleteCustomerMutation,
+  blockCustomerMutation,
+  unblockCustomerMutation,
   selectedCustomer,
   setSelectedCustomer,
   isCustomerDetailsDialogOpen,
@@ -1281,6 +1335,8 @@ function CustomersTab({
   customersLoading: boolean;
   createCustomerMutation: any;
   deleteCustomerMutation: any;
+  blockCustomerMutation: any;
+  unblockCustomerMutation: any;
   selectedCustomer: any;
   setSelectedCustomer: (customer: any) => void;
   isCustomerDetailsDialogOpen: boolean;
@@ -1834,6 +1890,37 @@ function CustomersTab({
                                   <Minus className="w-4 h-4 mr-1" />
                                   Withdraw
                                 </Button>
+                                {account.status === 'blocked' ? (
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      unblockCustomerMutation.mutate(account.userId);
+                                    }}
+                                    disabled={unblockCustomerMutation.isPending}
+                                    data-testid={`button-unblock-${account.id}`}
+                                  >
+                                    <Unlock className="w-4 h-4 mr-1" />
+                                    Unblock
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const reason = prompt('Enter reason for blocking this account (optional):');
+                                      blockCustomerMutation.mutate({ userId: account.userId, reason });
+                                    }}
+                                    disabled={blockCustomerMutation.isPending}
+                                    data-testid={`button-block-${account.id}`}
+                                  >
+                                    <Lock className="w-4 h-4 mr-1" />
+                                    Block
+                                  </Button>
+                                )}
                                 <Button
                                   variant="destructive"
                                   size="sm"

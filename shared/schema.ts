@@ -11,6 +11,10 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   firstName: text("first_name"),
   lastName: text("last_name"),
+  status: text("status").default("active"), // active, blocked, suspended
+  statusReason: text("status_reason"), // reason for blocking/suspension
+  statusUpdatedBy: varchar("status_updated_by"), // admin ID who changed status
+  statusUpdatedAt: timestamp("status_updated_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
