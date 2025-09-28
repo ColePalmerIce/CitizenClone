@@ -115,7 +115,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
           </Button>
         </div>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="login-type">Login Type</Label>
             <Select defaultValue="digital-banking">
@@ -141,6 +141,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
                 data-testid="input-user-id"
+                required
               />
             </div>
             <div>
@@ -152,14 +153,15 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 data-testid="input-password"
+                required
               />
             </div>
           </div>
 
           <div className="space-y-4">
             <Button 
+              type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-secondary"
-              onClick={handleSubmit}
               disabled={isLoading}
               data-testid="button-login-submit"
             >
@@ -200,7 +202,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
               </Button>
             </div>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
