@@ -742,13 +742,15 @@ function OverviewTab({
     }).format(num);
   };
 
-  // Format transaction ID to proper banking format
+  // Format transaction ID to proper banking format with random reference
   const formatTransactionId = (rawId: string, transactionDate?: string) => {
-    const date = transactionDate 
-      ? new Date(transactionDate).toISOString().slice(0, 10).replace(/-/g, '')
-      : new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const shortId = rawId.slice(-6).toUpperCase();
-    return `FCB${date}-${shortId}`;
+    // Generate truly random reference number
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const randomRef = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const year = transactionDate 
+      ? new Date(transactionDate).getFullYear()
+      : new Date().getFullYear();
+    return `FCB${year}-${randomRef}`;
   };
 
   // Handle admin self-credit
@@ -2281,13 +2283,15 @@ function TransactionsTab({
     description: ''
   });
 
-  // Format transaction ID to proper banking format
+  // Format transaction ID to proper banking format with random reference
   const formatTransactionId = (rawId: string, transactionDate?: string) => {
-    const date = transactionDate 
-      ? new Date(transactionDate).toISOString().slice(0, 10).replace(/-/g, '')
-      : new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const shortId = rawId.slice(-6).toUpperCase();
-    return `FCB${date}-${shortId}`;
+    // Generate truly random reference number
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const randomRef = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const year = transactionDate 
+      ? new Date(transactionDate).getFullYear()
+      : new Date().getFullYear();
+    return `FCB${year}-${randomRef}`;
   };
 
   const handleCreateTransaction = (e: React.FormEvent) => {

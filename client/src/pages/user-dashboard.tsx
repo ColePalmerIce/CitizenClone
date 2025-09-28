@@ -2458,7 +2458,13 @@ export default function UserDashboard() {
                             <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500">
                               <span>{new Date(transaction.transactionDate).toLocaleDateString()}</span>
                               <span>•</span>
-                              <span className="font-mono truncate">FCB{new Date(transaction.transactionDate).toISOString().slice(0, 10).replace(/-/g, '')}-{transaction.id.slice(-6).toUpperCase()}</span>
+                              <span className="font-mono truncate">{(() => {
+                                // Generate truly random reference number
+                                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                                const randomRef = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+                                const year = new Date(transaction.transactionDate).getFullYear();
+                                return `FCB${year}-${randomRef}`;
+                              })()}</span>
                             </div>
                           </div>
                         </div>
