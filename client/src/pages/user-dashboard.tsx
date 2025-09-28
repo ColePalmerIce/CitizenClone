@@ -112,6 +112,8 @@ interface UserData {
   email: string;
   firstName: string;
   lastName: string;
+  status?: string;
+  statusReason?: string;
 }
 
 interface BankAccount {
@@ -548,14 +550,33 @@ export default function UserDashboard() {
     }
   };
 
-  // Check user session
+  // Check user session and account status
   useEffect(() => {
     const checkSession = async () => {
       try {
         // Check sessionStorage first for immediate login experience
         const storedUser = sessionStorage.getItem('user');
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const userData = JSON.parse(storedUser);
+          // Always verify status with server for security
+          const response = await apiRequest('GET', '/api/user/session');
+          if (response.ok) {
+            const serverUserData = await response.json();
+            if (serverUserData.status === 'blocked') {
+              sessionStorage.removeItem('user');
+              toast({
+                title: "Account Blocked",
+                description: serverUserData.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance.",
+                variant: "destructive",
+              });
+              setLocation('/');
+              return;
+            }
+            setUser(serverUserData);
+          } else {
+            sessionStorage.removeItem('user');
+            setLocation('/');
+          }
           return;
         }
         
@@ -563,6 +584,15 @@ export default function UserDashboard() {
         const response = await apiRequest('GET', '/api/user/session');
         if (response.ok) {
           const userData = await response.json();
+          if (userData.status === 'blocked') {
+            toast({
+              title: "Account Blocked",
+              description: userData.statusReason || "Your account has been temporarily suspended. Please contact customer support for assistance.",
+              variant: "destructive",
+            });
+            setLocation('/');
+            return;
+          }
           setUser(userData);
         } else {
           setLocation('/');
@@ -572,7 +602,7 @@ export default function UserDashboard() {
       }
     };
     checkSession();
-  }, [setLocation]);
+  }, [setLocation, toast]);
 
   // Get user's bank account (primary)
   const { data: bankAccount, isLoading: accountLoading } = useQuery({

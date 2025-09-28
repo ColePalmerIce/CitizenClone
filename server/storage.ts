@@ -160,6 +160,10 @@ export class MemStorage implements IStorage {
       id,
       firstName: insertUser.firstName || null,
       lastName: insertUser.lastName || null,
+      status: insertUser.status || 'active',
+      statusReason: insertUser.statusReason || null,
+      statusUpdatedBy: insertUser.statusUpdatedBy || null,
+      statusUpdatedAt: insertUser.statusUpdatedAt || null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -254,6 +258,7 @@ export class MemStorage implements IStorage {
       jobTitle: insertApplication.jobTitle || null,
       annualIncome: insertApplication.annualIncome || null,
       employmentType: insertApplication.employmentType || null,
+      initialDeposit: insertApplication.initialDeposit || null,
       adminNotes: null,
     };
     this.accountApplications.set(id, application);
