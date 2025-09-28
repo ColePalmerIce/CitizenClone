@@ -1248,12 +1248,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User account endpoints
-  app.get("/api/user/account", async (req, res) => {
+  app.get("/api/user/account", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       if (accounts.length === 0) {
@@ -1267,12 +1264,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/accounts", async (req, res) => {
+  app.get("/api/user/accounts", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       res.json(accounts);
@@ -1281,12 +1275,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/transactions", async (req, res) => {
+  app.get("/api/user/transactions", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       if (accounts.length === 0) {
@@ -1315,12 +1306,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/account-transactions/:accountId", async (req, res) => {
+  app.get("/api/user/account-transactions/:accountId", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
       
       const { accountId } = req.params;
       
@@ -1362,12 +1350,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's account statements (3 months)
-  app.get("/api/user/statements", async (req, res) => {
+  app.get("/api/user/statements", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       const statements = [];
@@ -1840,12 +1825,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's pending external transfers
-  app.get("/api/user/pending-external-transfers", async (req, res) => {
+  app.get("/api/user/pending-external-transfers", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
-      if (!userId || req.session.userType !== 'customer') {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
 
       const pendingTransfers = await storage.getPendingExternalTransfersByUserId(userId);
       res.json(pendingTransfers);
