@@ -2058,20 +2058,29 @@ export default function UserDashboard() {
                         <span className="text-xs text-blue-700">Transfer</span>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Transfer Money</DialogTitle>
                         <DialogDescription>
-                          Send money to another bank account
+                          Choose your transfer method and send money
                         </DialogDescription>
                       </DialogHeader>
-                      <Form {...enhancedTransferForm}>
-                        <form onSubmit={enhancedTransferForm.handleSubmit((data) => {
-                          transferMutation.mutate({
-                            ...data,
-                            transferType: 'external'
-                          });
-                        })} className="space-y-6">
+                      
+                      <Tabs defaultValue="external" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="external">External Transfer</TabsTrigger>
+                          <TabsTrigger value="domestic-wire">Domestic Wire</TabsTrigger>
+                          <TabsTrigger value="international-wire">International Wire</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="external" className="space-y-4 mt-4">
+                          <Form {...enhancedTransferForm}>
+                            <form onSubmit={enhancedTransferForm.handleSubmit((data) => {
+                              transferMutation.mutate({
+                                ...data,
+                                transferType: 'external'
+                              });
+                            })} className="space-y-6">
                           
                           {/* Banking Information Section */}
                           <div className="space-y-4">
@@ -2269,6 +2278,203 @@ export default function UserDashboard() {
                           </DialogFooter>
                         </form>
                       </Form>
+                    </TabsContent>
+                    
+                    <TabsContent value="domestic-wire" className="space-y-4 mt-4">
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                        <h4 className="font-semibold text-blue-800 mb-2">Domestic Wire Transfer</h4>
+                        <p className="text-blue-700 text-sm">Same-day processing within the United States. Fee: $25.00</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="wireAmount">Amount ($)</Label>
+                          <Input
+                            id="wireAmount"
+                            type="number"
+                            step="0.01"
+                            className="text-lg"
+                            placeholder="0.00"
+                            data-testid="input-wire-amount"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="recipientBank">Recipient Bank</Label>
+                          <Input
+                            id="recipientBank"
+                            placeholder="e.g., Wells Fargo Bank"
+                            data-testid="input-recipient-bank"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="routingNumber">Routing Number</Label>
+                          <Input
+                            id="routingNumber"
+                            placeholder="9-digit routing number"
+                            data-testid="input-routing-number"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="accountNumber">Account Number</Label>
+                          <Input
+                            id="accountNumber"
+                            placeholder="Recipient account number"
+                            data-testid="input-account-number"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="beneficiaryName">Beneficiary Name</Label>
+                          <Input
+                            id="beneficiaryName"
+                            placeholder="Recipient's full name"
+                            data-testid="input-beneficiary-name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="purpose">Purpose</Label>
+                          <Input
+                            id="purpose"
+                            placeholder="Wire transfer purpose"
+                            data-testid="input-purpose"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-amber-50 rounded-lg text-sm border border-amber-200">
+                        <div className="flex justify-between text-amber-800">
+                          <span>Transfer Amount:</span>
+                          <span className="font-medium">$0.00</span>
+                        </div>
+                        <div className="flex justify-between text-amber-800">
+                          <span>Wire Fee:</span>
+                          <span className="font-medium">$25.00</span>
+                        </div>
+                        <div className="flex justify-between text-amber-900 font-semibold pt-1 border-t border-amber-300 mt-1">
+                          <span>Total:</span>
+                          <span>$25.00</span>
+                        </div>
+                      </div>
+                      
+                      <Button className="w-full" data-testid="button-send-domestic-wire">
+                        Send Domestic Wire - $0.00
+                      </Button>
+                    </TabsContent>
+                    
+                    <TabsContent value="international-wire" className="space-y-4 mt-4">
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                        <h4 className="font-semibold text-amber-800 mb-2">International Wire Transfer</h4>
+                        <p className="text-amber-700 text-sm">Global transfers via SWIFT network. Processing: 1-5 business days. Fees: $45 sender + $25 intermediary</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="intlAmount">Amount ($)</Label>
+                          <Input
+                            id="intlAmount"
+                            type="number"
+                            step="0.01"
+                            className="text-lg"
+                            placeholder="0.00"
+                            data-testid="input-intl-amount"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="swiftCode">SWIFT Code</Label>
+                          <Input
+                            id="swiftCode"
+                            placeholder="e.g., CHASUS33"
+                            data-testid="input-swift-code"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="intlBankName">Bank Name</Label>
+                          <Input
+                            id="intlBankName"
+                            placeholder="International bank name"
+                            data-testid="input-intl-bank-name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="bankAddress">Bank Address</Label>
+                          <Input
+                            id="bankAddress"
+                            placeholder="Bank's address"
+                            data-testid="input-bank-address"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="intlAccountNumber">Account Number</Label>
+                          <Input
+                            id="intlAccountNumber"
+                            placeholder="IBAN or account number"
+                            data-testid="input-intl-account-number"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="intlBeneficiary">Beneficiary Name</Label>
+                          <Input
+                            id="intlBeneficiary"
+                            placeholder="Recipient's full name"
+                            data-testid="input-intl-beneficiary"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="beneficiaryAddress">Beneficiary Address</Label>
+                          <Input
+                            id="beneficiaryAddress"
+                            placeholder="Complete address"
+                            data-testid="input-beneficiary-address"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="intlPurpose">Purpose</Label>
+                          <Input
+                            id="intlPurpose"
+                            placeholder="Transfer purpose"
+                            data-testid="input-intl-purpose"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-red-50 rounded-lg text-sm border border-red-200">
+                        <div className="flex justify-between text-red-800">
+                          <span>Transfer Amount:</span>
+                          <span className="font-medium">$0.00</span>
+                        </div>
+                        <div className="flex justify-between text-red-800">
+                          <span>Sender Fee:</span>
+                          <span className="font-medium">$45.00</span>
+                        </div>
+                        <div className="flex justify-between text-red-800">
+                          <span>Intermediary Fee:</span>
+                          <span className="font-medium">$25.00</span>
+                        </div>
+                        <div className="flex justify-between text-red-900 font-semibold pt-1 border-t border-red-300 mt-1">
+                          <span>Total:</span>
+                          <span>$70.00</span>
+                        </div>
+                      </div>
+                      
+                      <Button className="w-full" data-testid="button-send-international-wire">
+                        Send International Wire - $0.00
+                      </Button>
+                    </TabsContent>
+                  </Tabs>
                     </DialogContent>
                   </Dialog>
 
