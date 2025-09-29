@@ -2286,16 +2286,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Validate access code during login
   app.post("/api/auth/validate-access-code", async (req, res) => {
     try {
-      const { code, userId } = req.body;
+      const { code, username, password } = req.body;
       
-      if (!code || !userId) {
-        return res.status(400).json({ message: "Code and user ID required" });
+      if (!code || !username || !password) {
+        return res.status(400).json({ message: "Code, username, and password required" });
       }
       
+      // First, re-validate user credentials
+      const user = await storage.getUserByUsername(username);
+      if (!user || user.accountStatus !== 'active') {
+        return res.status(401).json({ message: "Invalid credentials or account not active" });
+      }
+      
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Then validate the access code
       const accessCode = await storage.getAccessCode(code);
       
       if (!accessCode) {
         return res.status(401).json({ message: "Invalid access code" });
+      }
+      
+      // Check if code is bound to a specific user and verify ownership
+      if (accessCode.userId && accessCode.userId !== user.id) {
+        console.error(`Access code ownership mismatch: code for ${accessCode.userId}, attempted by ${user.id}`);
+        return res.status(401).json({ message: "Invalid access code for this user" });
       }
       
       if (accessCode.isUsed) {
@@ -2309,10 +2327,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Access code has expired" });
       }
       
-      // Mark code as used
-      await storage.markAccessCodeAsUsed(code, userId);
+      // Mark code as used with the validated user ID
+      await storage.markAccessCodeAsUsed(code, user.id);
       
-      res.json({ valid: true, message: "Access code validated successfully" });
+      // Create session for the user
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      
+      res.json({ 
+        valid: true, 
+        message: "Access code validated successfully",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          accountStatus: user.accountStatus
+        }
+      });
     } catch (error) {
       console.error('Validate access code error:', error);
       res.status(500).json({ message: "Failed to validate access code" });

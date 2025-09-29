@@ -2234,6 +2234,22 @@ function PendingTransfersTab() {
   });
   const safePendingTransfers = pendingTransfers || [];
 
+  // Pending domestic wire transfers query
+  const { data: domesticWires, isLoading: domesticWiresLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/domestic-wire-transfers'],
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
+  const safeDomesticWires = (domesticWires || []).filter((w: any) => w.status === 'pending');
+
+  // Pending international wire transfers query
+  const { data: internationalWires, isLoading: internationalWiresLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/international-wire-transfers'],
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
+  const safeInternationalWires = (internationalWires || []).filter((w: any) => w.status === 'pending');
+
   // Approve transfer mutation
   const approveTransferMutation = useMutation({
     mutationFn: async (transactionId: string) => {
@@ -2283,16 +2299,110 @@ function PendingTransfersTab() {
     },
   });
 
+  // Approve domestic wire transfer mutation
+  const approveDomesticWireMutation = useMutation({
+    mutationFn: async (transferId: string) => {
+      const response = await apiRequest('POST', `/api/admin/approve-domestic-wire/${transferId}`);
+      if (!response.ok) throw new Error('Failed to approve domestic wire');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/domestic-wire-transfers'] });
+      toast({
+        title: "Wire Transfer Approved",
+        description: "Domestic wire transfer has been approved and is processing.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to approve domestic wire transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Disapprove domestic wire transfer mutation
+  const disapproveDomesticWireMutation = useMutation({
+    mutationFn: async (transferId: string) => {
+      const response = await apiRequest('POST', `/api/admin/disapprove-domestic-wire/${transferId}`);
+      if (!response.ok) throw new Error('Failed to disapprove domestic wire');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/domestic-wire-transfers'] });
+      toast({
+        title: "Wire Transfer Rejected",
+        description: "Domestic wire transfer has been rejected.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reject domestic wire transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Approve international wire transfer mutation
+  const approveInternationalWireMutation = useMutation({
+    mutationFn: async (transferId: string) => {
+      const response = await apiRequest('POST', `/api/admin/approve-international-wire/${transferId}`);
+      if (!response.ok) throw new Error('Failed to approve international wire');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/international-wire-transfers'] });
+      toast({
+        title: "Wire Transfer Approved",
+        description: "International wire transfer has been approved and is processing.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to approve international wire transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Disapprove international wire transfer mutation
+  const disapproveInternationalWireMutation = useMutation({
+    mutationFn: async (transferId: string) => {
+      const response = await apiRequest('POST', `/api/admin/disapprove-international-wire/${transferId}`);
+      if (!response.ok) throw new Error('Failed to disapprove international wire');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/international-wire-transfers'] });
+      toast({
+        title: "Wire Transfer Rejected",
+        description: "International wire transfer has been rejected.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reject international wire transfer.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+
+  const totalPending = safePendingTransfers.length + safeDomesticWires.length + safeInternationalWires.length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Pending Transfers</h1>
         <Badge variant="outline" className="mt-2 sm:mt-0">
-          {safePendingTransfers.length} pending
+          {totalPending} pending
         </Badge>
       </div>
 
@@ -2361,6 +2471,145 @@ function PendingTransfersTab() {
               <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400">No pending transfers</p>
               <p className="text-sm text-gray-400 dark:text-gray-500">All customer transfers have been processed</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Domestic Wire Transfers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Domestic Wire Transfers</CardTitle>
+          <CardDescription>Review and approve domestic wire transfer requests ($25 fee)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {domesticWiresLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : safeDomesticWires.length > 0 ? (
+            <div className="space-y-4">
+              {safeDomesticWires.map((wire: any) => (
+                <div 
+                  key={wire.id} 
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800"
+                >
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center space-x-3">
+                      <ArrowUpRight className="w-5 h-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium text-lg">
+                          ${parseFloat(wire.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Domestic Wire - {wire.recipientName}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <p><span className="font-medium">From:</span> {wire.userName}</p>
+                      <p><span className="font-medium">Bank:</span> {wire.recipientBankName}</p>
+                      <p><span className="font-medium">Routing:</span> {wire.recipientRoutingNumber}</p>
+                      <p><span className="font-medium">Account:</span> {wire.recipientAccountNumber}</p>
+                      <p><span className="font-medium">Date:</span> {new Date(wire.createdAt).toLocaleString()}</p>
+                      <p><span className="font-medium">Reference:</span> {wire.referenceNumber}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2 mt-4 lg:mt-0">
+                    <Button
+                      onClick={() => approveDomesticWireMutation.mutate(wire.id)}
+                      disabled={approveDomesticWireMutation.isPending || disapproveDomesticWireMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid={`button-approve-domestic-wire-${wire.id}`}
+                    >
+                      {approveDomesticWireMutation.isPending ? 'Approving...' : 'Approve'}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => disapproveDomesticWireMutation.mutate(wire.id)}
+                      disabled={approveDomesticWireMutation.isPending || disapproveDomesticWireMutation.isPending}
+                      data-testid={`button-reject-domestic-wire-${wire.id}`}
+                    >
+                      {disapproveDomesticWireMutation.isPending ? 'Rejecting...' : 'Reject'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <ArrowUpRight className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No pending domestic wire transfers</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* International Wire Transfers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending International Wire Transfers</CardTitle>
+          <CardDescription>Review and approve international wire transfer requests ($45 + $25 fee)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {internationalWiresLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : safeInternationalWires.length > 0 ? (
+            <div className="space-y-4">
+              {safeInternationalWires.map((wire: any) => (
+                <div 
+                  key={wire.id} 
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                >
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center space-x-3">
+                      <ArrowUpRight className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="font-medium text-lg">
+                          ${parseFloat(wire.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">International Wire - {wire.beneficiaryName}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <p><span className="font-medium">From:</span> {wire.userName}</p>
+                      <p><span className="font-medium">Bank:</span> {wire.beneficiaryBankName}</p>
+                      <p><span className="font-medium">SWIFT:</span> {wire.swiftCode}</p>
+                      <p><span className="font-medium">Account:</span> {wire.beneficiaryAccountNumber}</p>
+                      <p><span className="font-medium">Country:</span> {wire.beneficiaryCountry}</p>
+                      <p><span className="font-medium">Date:</span> {new Date(wire.createdAt).toLocaleString()}</p>
+                      <p><span className="font-medium">Reference:</span> {wire.referenceNumber}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2 mt-4 lg:mt-0">
+                    <Button
+                      onClick={() => approveInternationalWireMutation.mutate(wire.id)}
+                      disabled={approveInternationalWireMutation.isPending || disapproveInternationalWireMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid={`button-approve-international-wire-${wire.id}`}
+                    >
+                      {approveInternationalWireMutation.isPending ? 'Approving...' : 'Approve'}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => disapproveInternationalWireMutation.mutate(wire.id)}
+                      disabled={approveInternationalWireMutation.isPending || disapproveInternationalWireMutation.isPending}
+                      data-testid={`button-reject-international-wire-${wire.id}`}
+                    >
+                      {disapproveInternationalWireMutation.isPending ? 'Rejecting...' : 'Reject'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <ArrowUpRight className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No pending international wire transfers</p>
             </div>
           )}
         </CardContent>

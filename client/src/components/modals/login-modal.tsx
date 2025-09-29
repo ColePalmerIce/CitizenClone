@@ -48,6 +48,13 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     
     try {
       const response = await apiRequest('POST', '/api/user/login', { username, password });
+      
+      // Check if response is OK before proceeding
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
+        throw new Error(errorData.message || 'Invalid credentials');
+      }
+      
       const user = await response.json();
       
       // Store temporary user data
@@ -71,7 +78,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
         const match = error.message.match(/^\d+:\s*(.+)$/);
         if (match) {
           errorMessage = match[1];
-        } else {
+        } else if (error.message !== 'Failed to fetch') {
           errorMessage = error.message;
         }
       }
@@ -102,18 +109,24 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     try {
       const response = await apiRequest('POST', '/api/auth/validate-access-code', { 
         code: accessCode, 
-        userId: tempUserId 
+        username: username,
+        password: password
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Validation failed' }));
+        throw new Error(errorData.message || 'Invalid or expired access code');
+      }
       
       const result = await response.json();
       
-      if (result.valid) {
-        // Store user info in sessionStorage
-        sessionStorage.setItem('user', JSON.stringify(tempUserData));
+      if (result.valid && result.user) {
+        // Store user info in sessionStorage from the server response
+        sessionStorage.setItem('user', JSON.stringify(result.user));
         
         toast({
           title: "Login successful",
-          description: `${getTimeGreeting()}, ${tempUserData.firstName || tempUserData.username}!`,
+          description: `${getTimeGreeting()}, ${result.user.firstName || result.user.username}!`,
         });
         
         onOpenChange(false);
@@ -140,7 +153,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
         const match = error.message.match(/^\d+:\s*(.+)$/);
         if (match) {
           errorMessage = match[1];
-        } else {
+        } else if (error.message !== 'Failed to fetch') {
           errorMessage = error.message;
         }
       }

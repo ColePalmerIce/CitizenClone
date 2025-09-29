@@ -563,6 +563,7 @@ export const adminUsersRelations = relations(adminUsers, ({ many }) => ({
 export const accessCodes = pgTable("access_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
+  userId: varchar("user_id"), // user ID this code is for (null means any user can use it)
   expiresAt: timestamp("expires_at").notNull(),
   isUsed: boolean("is_used").default(false),
   usedBy: varchar("used_by"), // user ID who used the code
