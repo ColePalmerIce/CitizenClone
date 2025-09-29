@@ -15,6 +15,8 @@ import {
   insertCreditLimitIncreaseRequestSchema,
   insertDebitLimitIncreaseRequestSchema,
   insertPendingExternalTransferSchema,
+  insertDomesticWireTransferSchema,
+  insertInternationalWireTransferSchema,
   enhancedCustomerCreationSchema,
   type Transaction,
   type EnhancedCustomerCreationData,
@@ -2041,6 +2043,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Unblock customer error:', error);
       res.status(500).json({ message: "Failed to unblock customer account" });
+    }
+  });
+
+  // Wire Transfer Endpoints
+
+  // Create domestic wire transfer
+  app.post("/api/user/domestic-wire-transfer", requireActiveCustomer, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const validatedData = insertDomesticWireTransferSchema.parse({
+        ...req.body,
+        userId
+      });
+
+      // Validate the from account belongs to the user
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      const fromAccount = accounts.find(acc => acc.id === validatedData.fromAccountId);
+      
+      if (!fromAccount) {
+        return res.status(404).json({ message: "Source account not found" });
+      }
+
+      // Check if user has sufficient funds
+      const balance = parseFloat(fromAccount.balance || '0');
+      const transferAmount = parseFloat(validatedData.amount);
+      
+      if (balance < transferAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+
+      // Create domestic wire transfer
+      const wireTransfer = await storage.createDomesticWireTransfer(validatedData);
+
+      // Create corresponding transaction record for transaction history
+      await storage.createTransaction({
+        accountId: fromAccount.id,
+        type: 'debit',
+        amount: validatedData.amount,
+        description: `Domestic wire transfer to ${validatedData.beneficiaryName} - ${validatedData.purpose || 'Wire Transfer'}`,
+        balanceAfter: (balance - transferAmount).toFixed(2),
+        status: 'completed',
+        reference: `WIRE${Date.now()}`,
+        merchantName: validatedData.beneficiaryName,
+        merchantLocation: validatedData.beneficiaryBankName,
+        merchantCategory: 'wire-transfer'
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(fromAccount.id, (balance - transferAmount).toFixed(2));
+
+      res.json({ 
+        success: true,
+        wireTransfer,
+        message: `Domestic wire transfer of $${transferAmount.toFixed(2)} initiated successfully`
+      });
+    } catch (error) {
+      console.error('Domestic wire transfer error:', error);
+      res.status(400).json({ message: "Invalid wire transfer data" });
+    }
+  });
+
+  // Create international wire transfer
+  app.post("/api/user/international-wire-transfer", requireActiveCustomer, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const validatedData = insertInternationalWireTransferSchema.parse({
+        ...req.body,
+        userId
+      });
+
+      // Validate the from account belongs to the user
+      const accounts = await storage.getBankAccountsByUserId(userId);
+      const fromAccount = accounts.find(acc => acc.id === validatedData.fromAccountId);
+      
+      if (!fromAccount) {
+        return res.status(404).json({ message: "Source account not found" });
+      }
+
+      // Check if user has sufficient funds
+      const balance = parseFloat(fromAccount.balance || '0');
+      const transferAmount = parseFloat(validatedData.amount);
+      
+      if (balance < transferAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+
+      // Create international wire transfer
+      const wireTransfer = await storage.createInternationalWireTransfer(validatedData);
+
+      // Create corresponding transaction record for transaction history
+      await storage.createTransaction({
+        accountId: fromAccount.id,
+        type: 'debit',
+        amount: validatedData.amount,
+        description: `International wire transfer to ${validatedData.beneficiaryName} (${validatedData.beneficiaryCountry}) - ${validatedData.purpose || 'International Wire Transfer'}`,
+        balanceAfter: (balance - transferAmount).toFixed(2),
+        status: 'completed',
+        reference: `INTLWIRE${Date.now()}`,
+        merchantName: validatedData.beneficiaryName,
+        merchantLocation: `${validatedData.beneficiaryBankName}, ${validatedData.beneficiaryCountry}`,
+        merchantCategory: 'international-wire-transfer'
+      });
+
+      // Update account balance
+      await storage.updateBankAccountBalance(fromAccount.id, (balance - transferAmount).toFixed(2));
+
+      res.json({ 
+        success: true,
+        wireTransfer,
+        message: `International wire transfer of $${transferAmount.toFixed(2)} initiated successfully`
+      });
+    } catch (error) {
+      console.error('International wire transfer error:', error);
+      res.status(400).json({ message: "Invalid wire transfer data" });
+    }
+  });
+
+  // Get user's domestic wire transfers
+  app.get("/api/user/domestic-wire-transfers", requireActiveCustomer, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const wireTransfers = await storage.getDomesticWireTransfersByUserId(userId);
+      res.json(wireTransfers);
+    } catch (error) {
+      console.error('Get domestic wire transfers error:', error);
+      res.status(500).json({ message: "Failed to fetch wire transfers" });
+    }
+  });
+
+  // Get user's international wire transfers
+  app.get("/api/user/international-wire-transfers", requireActiveCustomer, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const wireTransfers = await storage.getInternationalWireTransfersByUserId(userId);
+      res.json(wireTransfers);
+    } catch (error) {
+      console.error('Get international wire transfers error:', error);
+      res.status(500).json({ message: "Failed to fetch wire transfers" });
+    }
+  });
+
+  // Admin endpoints for wire transfers
+
+  // Get all domestic wire transfers (admin)
+  app.get("/api/admin/domestic-wire-transfers", requireAdmin, async (req, res) => {
+    try {
+      const wireTransfers = await storage.getAllDomesticWireTransfers();
+      
+      // Enrich with user and account details
+      const enrichedTransfers = await Promise.all(wireTransfers.map(async (transfer) => {
+        const user = await storage.getUser(transfer.userId);
+        const account = await storage.getBankAccount(transfer.fromAccountId);
+        
+        return {
+          ...transfer,
+          userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown User',
+          userEmail: user?.email,
+          fromAccountNumber: account?.accountNumber,
+          fromAccountType: account?.accountType
+        };
+      }));
+
+      res.json(enrichedTransfers);
+    } catch (error) {
+      console.error('Get all domestic wire transfers error:', error);
+      res.status(500).json({ message: "Failed to fetch wire transfers" });
+    }
+  });
+
+  // Get all international wire transfers (admin)
+  app.get("/api/admin/international-wire-transfers", requireAdmin, async (req, res) => {
+    try {
+      const wireTransfers = await storage.getAllInternationalWireTransfers();
+      
+      // Enrich with user and account details
+      const enrichedTransfers = await Promise.all(wireTransfers.map(async (transfer) => {
+        const user = await storage.getUser(transfer.userId);
+        const account = await storage.getBankAccount(transfer.fromAccountId);
+        
+        return {
+          ...transfer,
+          userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown User',
+          userEmail: user?.email,
+          fromAccountNumber: account?.accountNumber,
+          fromAccountType: account?.accountType
+        };
+      }));
+
+      res.json(enrichedTransfers);
+    } catch (error) {
+      console.error('Get all international wire transfers error:', error);
+      res.status(500).json({ message: "Failed to fetch wire transfers" });
     }
   });
 
