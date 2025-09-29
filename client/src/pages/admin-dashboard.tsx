@@ -3104,6 +3104,12 @@ function AccessCodesTab() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [generatedCodes, setGeneratedCodes] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+
+  // Query for all customers
+  const { data: customers } = useQuery<any[]>({
+    queryKey: ['/api/admin/customers'],
+  });
 
   // Query for access codes
   const { data: accessCodes, isLoading } = useQuery<any[]>({
@@ -3112,11 +3118,15 @@ function AccessCodesTab() {
   });
 
   const safeAccessCodes = accessCodes || [];
+  const safeCustomers = customers || [];
 
   // Generate access codes mutation
   const generateCodesMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/generate-access-codes', { count: 5 });
+      const response = await apiRequest('POST', '/api/admin/generate-access-codes', { 
+        count: 5, 
+        userId: selectedUserId || null 
+      });
       return response.json();
     },
     onSuccess: (data) => {
@@ -3138,21 +3148,50 @@ function AccessCodesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Access Codes Management</h2>
-          <p className="text-gray-600 dark:text-gray-300">Generate and manage two-factor authentication codes for users</p>
-        </div>
-        <Button
-          onClick={() => generateCodesMutation.mutate()}
-          disabled={generateCodesMutation.isPending}
-          className="bg-blue-600 hover:bg-blue-700"
-          data-testid="button-generate-codes"
-        >
-          <Lock className="w-4 h-4 mr-2" />
-          {generateCodesMutation.isPending ? 'Generating...' : 'Generate 5 Codes'}
-        </Button>
+      <div>
+        <h2 className="text-2xl font-bold">Access Codes Management</h2>
+        <p className="text-gray-600 dark:text-gray-300">Generate and manage two-factor authentication codes for users</p>
       </div>
+
+      {/* Code Generation Card */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+        <CardHeader>
+          <CardTitle>Generate New Access Codes</CardTitle>
+          <CardDescription>Create secure two-factor authentication codes for specific users</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-2 block">Select User (Optional)</label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger data-testid="select-user-for-code">
+                  <SelectValue placeholder="Any user can use these codes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any user (generic codes)</SelectItem>
+                  {safeCustomers.map((customer: any) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.firstName} {customer.lastName} ({customer.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Leave blank to generate generic codes usable by any user
+              </p>
+            </div>
+            <Button
+              onClick={() => generateCodesMutation.mutate()}
+              disabled={generateCodesMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+              data-testid="button-generate-codes"
+            >
+              <Lock className="w-4 h-4 mr-2" />
+              {generateCodesMutation.isPending ? 'Generating...' : 'Generate 5 Codes'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recently Generated Codes Display */}
       {generatedCodes.length > 0 && (
@@ -3165,16 +3204,29 @@ function AccessCodesTab() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {generatedCodes.map((code: any, index: number) => (
+              {generatedCodes.map((code: any, index: number) => {
+                const codeUser = code.userId ? safeCustomers.find((c: any) => c.id === code.userId) : null;
+                return (
                 <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-blue-300 dark:border-blue-700">
                   <div className="text-3xl font-mono font-bold text-center text-blue-600 dark:text-blue-400 tracking-widest">
                     {code.code}
                   </div>
-                  <div className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
-                    Expires: {new Date(code.expiresAt).toLocaleTimeString()}
+                  <div className="text-xs text-center mt-2 space-y-1">
+                    {codeUser ? (
+                      <p className="text-blue-600 dark:text-blue-400 font-medium">
+                        For: {codeUser.firstName} {codeUser.lastName}
+                      </p>
+                    ) : (
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Any user
+                      </p>
+                    )}
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Expires: {new Date(code.expiresAt).toLocaleTimeString()}
+                    </p>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </CardContent>
         </Card>
@@ -3197,7 +3249,9 @@ function AccessCodesTab() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {safeAccessCodes
                 .filter((code: any) => !code.isUsed && new Date(code.expiresAt) > new Date())
-                .map((code: any) => (
+                .map((code: any) => {
+                  const codeUser = code.userId ? safeCustomers.find((c: any) => c.id === code.userId) : null;
+                  return (
                   <div key={code.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
                     <div className="text-2xl font-mono font-bold text-center text-gray-900 dark:text-gray-100 tracking-wider">
                       {code.code}
@@ -3207,12 +3261,21 @@ function AccessCodesTab() {
                         <Lock className="w-3 h-3 text-green-600" />
                         <span className="text-green-600 font-medium">Valid</span>
                       </div>
+                      {codeUser ? (
+                        <p className="text-blue-600 dark:text-blue-400 font-medium">
+                          For: {codeUser.firstName} {codeUser.lastName}
+                        </p>
+                      ) : (
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Any user
+                        </p>
+                      )}
                       <p className="text-gray-500 dark:text-gray-400">
                         Expires: {new Date(code.expiresAt).toLocaleString()}
                       </p>
                     </div>
                   </div>
-                ))}
+                )})}
             </div>
           ) : (
             <div className="text-center py-8">

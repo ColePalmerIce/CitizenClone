@@ -46,6 +46,16 @@ The architecture follows a monorepo structure with shared TypeScript types and s
 
 ## Recent Changes
 
+### September 29, 2025 - Secure Two-Factor Authentication with User-Bound Access Codes Complete
+- **User-Bound Access Code System**: Implemented secure two-factor authentication where access codes can be bound to specific users, preventing code theft attacks
+- **Admin Code Generation Interface**: Enhanced admin panel with user selector allowing admins to generate codes for specific users or create generic codes usable by anyone
+- **Ownership Validation Security**: Backend validates code ownership - if code.userId is set, it must match the authenticated user's ID or the login is rejected
+- **Security Audit Logging**: Comprehensive logging of access code ownership mismatches for security monitoring and incident response
+- **Flexible Code Types**: Support for both user-specific codes (bound to userId) and generic codes (userId is null) for different authentication scenarios
+- **Professional Admin UI**: Access codes display shows which user each code is assigned to, with clear visual indicators for generic vs user-specific codes
+- **Database Schema Enhancement**: Added userId column to access_codes table with proper nullable varchar type for optional user binding
+- **Complete Authentication Flow**: Two-step authentication requiring valid credentials first, then access code validation with ownership verification
+
 ### September 29, 2025 - Comprehensive Wire Transfer System Complete
 - **Complete Wire Transfer Infrastructure**: Implemented full domestic and international wire transfer capabilities with dedicated database schema, storage methods, and API endpoints
 - **Banking-Compliant Wire Processing**: Added comprehensive wire transfer forms with proper SWIFT codes, routing numbers, beneficiary details, and fee structures ($25 domestic, $45+$25 international)

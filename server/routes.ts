@@ -2242,7 +2242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/generate-access-codes", requireAdmin, async (req, res) => {
     try {
       const adminId = req.session.adminId!;
-      const { count = 5 } = req.body;
+      const { count = 5, userId = null } = req.body;
       
       const codes = [];
       const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
@@ -2253,6 +2253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const accessCode = await storage.createAccessCode({
           code,
+          userId,
           expiresAt: expirationTime,
           isUsed: false,
           generatedBy: adminId,
