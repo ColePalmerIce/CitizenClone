@@ -2051,7 +2051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create domestic wire transfer
   app.post("/api/user/domestic-wire-transfer", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const validatedData = insertDomesticWireTransferSchema.parse({
         ...req.body,
         userId
@@ -2086,7 +2086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'completed',
         reference: `WIRE${Date.now()}`,
         merchantName: validatedData.beneficiaryName,
-        merchantLocation: validatedData.beneficiaryBankName,
+        merchantLocation: validatedData.recipientBankName,
         merchantCategory: 'wire-transfer'
       });
 
@@ -2107,7 +2107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create international wire transfer
   app.post("/api/user/international-wire-transfer", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const validatedData = insertInternationalWireTransferSchema.parse({
         ...req.body,
         userId
@@ -2142,7 +2142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'completed',
         reference: `INTLWIRE${Date.now()}`,
         merchantName: validatedData.beneficiaryName,
-        merchantLocation: `${validatedData.beneficiaryBankName}, ${validatedData.beneficiaryCountry}`,
+        merchantLocation: `${validatedData.recipientBankName}, ${validatedData.beneficiaryCountry}`,
         merchantCategory: 'international-wire-transfer'
       });
 
@@ -2163,7 +2163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's domestic wire transfers
   app.get("/api/user/domestic-wire-transfers", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const wireTransfers = await storage.getDomesticWireTransfersByUserId(userId);
       res.json(wireTransfers);
     } catch (error) {
@@ -2175,7 +2175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's international wire transfers
   app.get("/api/user/international-wire-transfers", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const wireTransfers = await storage.getInternationalWireTransfersByUserId(userId);
       res.json(wireTransfers);
     } catch (error) {

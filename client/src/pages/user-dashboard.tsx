@@ -10,7 +10,9 @@ import { z } from "zod";
 import { 
   insertCreditLimitIncreaseRequestSchema, 
   insertDebitLimitIncreaseRequestSchema,
-  insertPendingExternalTransferSchema
+  insertPendingExternalTransferSchema,
+  insertDomesticWireTransferSchema,
+  insertInternationalWireTransferSchema
 } from "@shared/schema";
 import { 
   Card, 
@@ -512,6 +514,43 @@ export default function UserDashboard() {
     purpose: ''
   });
 
+  // Wire transfer form states
+  const [domesticWireForm, setDomesticWireForm] = useState({
+    fromAccountId: '',
+    recipientBankName: '',
+    recipientBankAddress: '',
+    recipientRoutingNumber: '',
+    recipientAccountNumber: '',
+    beneficiaryName: '',
+    beneficiaryAddress: '',
+    amount: '',
+    purpose: '',
+    reference: '',
+    senderFee: '25.00',
+    estimatedCompletionDate: ''
+  });
+
+  const [internationalWireForm, setInternationalWireForm] = useState({
+    fromAccountId: '',
+    recipientBankName: '',
+    recipientBankAddress: '',
+    recipientBankSwift: '',
+    recipientRoutingNumber: '',
+    recipientAccountNumber: '',
+    beneficiaryName: '',
+    beneficiaryAddress: '',
+    beneficiaryCountry: '',
+    correspondentBankName: '',
+    correspondentBankSwift: '',
+    amount: '',
+    purpose: '',
+    reference: '',
+    senderFee: '45.00',
+    intermediaryFee: '25.00',
+    recipientFee: '15.00',
+    estimatedCompletionDate: ''
+  });
+
   // Dialog and confirmation states
   const [isExternalTransferDialogOpen, setIsExternalTransferDialogOpen] = useState(false);
   const [showTransferConfirmation, setShowTransferConfirmation] = useState(false);
@@ -789,6 +828,102 @@ export default function UserDashboard() {
       });
       setShowTransferConfirmation(false);
     }
+  });
+
+  // Domestic wire transfer mutation
+  const domesticWireMutation = useMutation({
+    mutationFn: async (wireData: any) => {
+      const response = await apiRequest('POST', '/api/user/domestic-wire-transfer', wireData);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Domestic wire transfer failed');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Wire Transfer Initiated",
+        description: data.message || "Your domestic wire transfer has been successfully initiated.",
+      });
+      // Reset form
+      setDomesticWireForm({
+        fromAccountId: '',
+        recipientBankName: '',
+        recipientBankAddress: '',
+        recipientRoutingNumber: '',
+        recipientAccountNumber: '',
+        beneficiaryName: '',
+        beneficiaryAddress: '',
+        amount: '',
+        purpose: '',
+        reference: '',
+        senderFee: '25.00',
+        estimatedCompletionDate: ''
+      });
+      setIsTransferDialogOpen(false);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Wire Transfer Failed",
+        description: error.message || "Failed to process wire transfer. Please try again.",
+      });
+    },
+  });
+
+  // International wire transfer mutation
+  const internationalWireMutation = useMutation({
+    mutationFn: async (wireData: any) => {
+      const response = await apiRequest('POST', '/api/user/international-wire-transfer', wireData);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'International wire transfer failed');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "International Wire Transfer Initiated",
+        description: data.message || "Your international wire transfer has been successfully initiated.",
+      });
+      // Reset form
+      setInternationalWireForm({
+        fromAccountId: '',
+        recipientBankName: '',
+        recipientBankAddress: '',
+        recipientBankSwift: '',
+        recipientRoutingNumber: '',
+        recipientAccountNumber: '',
+        beneficiaryName: '',
+        beneficiaryAddress: '',
+        beneficiaryCountry: '',
+        correspondentBankName: '',
+        correspondentBankSwift: '',
+        amount: '',
+        purpose: '',
+        reference: '',
+        senderFee: '45.00',
+        intermediaryFee: '25.00',
+        recipientFee: '15.00',
+        estimatedCompletionDate: ''
+      });
+      setIsTransferDialogOpen(false);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/user/account'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "International Wire Transfer Failed",
+        description: error.message || "Failed to process international wire transfer. Please try again.",
+      });
+    },
   });
 
   // Query for pending external transfers
@@ -2835,9 +2970,10 @@ export default function UserDashboard() {
                 </h3>
                 
                 <Tabs defaultValue="domestic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="domestic">Domestic Transfer</TabsTrigger>
-                    <TabsTrigger value="international">International Transfer</TabsTrigger>
+                    <TabsTrigger value="domestic-wire">Domestic Wire</TabsTrigger>
+                    <TabsTrigger value="international-wire">International Wire</TabsTrigger>
                     <TabsTrigger value="external">External Transfer</TabsTrigger>
                   </TabsList>
                   
@@ -2904,63 +3040,275 @@ export default function UserDashboard() {
                     </Button>
                   </TabsContent>
                   
-                  <TabsContent value="international" className="space-y-4 mt-4">
+                  <TabsContent value="domestic-wire" className="space-y-4 mt-4">
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                      <h4 className="font-semibold text-blue-800 mb-2">Domestic Wire Transfer</h4>
+                      <p className="text-blue-700 text-sm">Same-day processing within the United States. Fee: $25.00</p>
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="recipientBank">Recipient Bank</Label>
-                        <Input
-                          id="recipientBank"
-                          placeholder="Bank name"
-                          data-testid="input-recipient-bank"
-                        />
+                        <Label htmlFor="domesticFromAccount">From Account</Label>
+                        <Select 
+                          value={domesticWireForm.fromAccountId} 
+                          onValueChange={(value) => setDomesticWireForm({...domesticWireForm, fromAccountId: value})}
+                        >
+                          <SelectTrigger data-testid="select-domestic-wire-from-account">
+                            <SelectValue placeholder="Select source account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allAccounts && Array.isArray(allAccounts) && 
+                              (allAccounts as BankAccount[]).map((account: BankAccount) => (
+                                <SelectItem key={account.id} value={account.id}>
+                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                </SelectItem>
+                              )) as React.ReactNode[]
+                            }
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
-                        <Label htmlFor="swiftCode">SWIFT/BIC Code</Label>
+                        <Label htmlFor="domesticAmount">Amount ($)</Label>
                         <Input
-                          id="swiftCode"
-                          placeholder="e.g., FCBTUS33"
-                          data-testid="input-swift-code"
+                          id="domesticAmount"
+                          type="number"
+                          step="0.01"
+                          className="text-lg"
+                          value={domesticWireForm.amount}
+                          onChange={(e) => setDomesticWireForm({...domesticWireForm, amount: e.target.value})}
+                          placeholder="0.00"
+                          data-testid="input-domestic-wire-amount"
                         />
                       </div>
                     </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="recipientAccount">Recipient Account</Label>
+                        <Label htmlFor="domesticRecipientBank">Recipient Bank Name</Label>
                         <Input
-                          id="recipientAccount"
-                          placeholder="International account number"
-                          data-testid="input-recipient-account"
+                          id="domesticRecipientBank"
+                          value={domesticWireForm.recipientBankName}
+                          onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientBankName: e.target.value})}
+                          placeholder="e.g., Wells Fargo Bank"
+                          data-testid="input-domestic-recipient-bank"
                         />
+                      </div>
+                      <div>
+                        <Label htmlFor="domesticRoutingNumber">Routing Number</Label>
+                        <Input
+                          id="domesticRoutingNumber"
+                          value={domesticWireForm.recipientRoutingNumber}
+                          onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientRoutingNumber: e.target.value})}
+                          placeholder="9-digit routing number"
+                          data-testid="input-domestic-routing-number"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="domesticAccountNumber">Recipient Account Number</Label>
+                        <Input
+                          id="domesticAccountNumber"
+                          value={domesticWireForm.recipientAccountNumber}
+                          onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientAccountNumber: e.target.value})}
+                          placeholder="Account number"
+                          data-testid="input-domestic-account-number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="domesticBeneficiaryName">Beneficiary Name</Label>
+                        <Input
+                          id="domesticBeneficiaryName"
+                          value={domesticWireForm.beneficiaryName}
+                          onChange={(e) => setDomesticWireForm({...domesticWireForm, beneficiaryName: e.target.value})}
+                          placeholder="Recipient's full name"
+                          data-testid="input-domestic-beneficiary-name"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="domesticPurpose">Wire Purpose</Label>
+                      <Input
+                        id="domesticPurpose"
+                        value={domesticWireForm.purpose}
+                        onChange={(e) => setDomesticWireForm({...domesticWireForm, purpose: e.target.value})}
+                        placeholder="e.g., Real estate purchase, business payment"
+                        data-testid="input-domestic-purpose"
+                      />
+                    </div>
+                    
+                    <Button 
+                      className="w-full" 
+                      data-testid="button-domestic-wire-transfer"
+                      disabled={!domesticWireForm.fromAccountId || !domesticWireForm.amount || !domesticWireForm.recipientBankName || 
+                               !domesticWireForm.recipientRoutingNumber || !domesticWireForm.recipientAccountNumber || 
+                               !domesticWireForm.beneficiaryName || domesticWireMutation.isPending}
+                      onClick={() => {
+                        domesticWireMutation.mutate(domesticWireForm);
+                      }}
+                    >
+                      {domesticWireMutation.isPending ? 'Processing...' : `Send Domestic Wire - $${domesticWireForm.amount || '0'}`}
+                    </Button>
+                  </TabsContent>
+                  
+                  <TabsContent value="international-wire" className="space-y-4 mt-4">
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                      <h4 className="font-semibold text-amber-800 mb-2">International Wire Transfer</h4>
+                      <p className="text-amber-700 text-sm">Global transfers via SWIFT network. Processing: 1-5 business days. Fees: $45 + intermediary fees</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="intlFromAccount">From Account</Label>
+                        <Select 
+                          value={internationalWireForm.fromAccountId} 
+                          onValueChange={(value) => setInternationalWireForm({...internationalWireForm, fromAccountId: value})}
+                        >
+                          <SelectTrigger data-testid="select-intl-wire-from-account">
+                            <SelectValue placeholder="Select source account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allAccounts && Array.isArray(allAccounts) && 
+                              (allAccounts as BankAccount[]).map((account: BankAccount) => (
+                                <SelectItem key={account.id} value={account.id}>
+                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                </SelectItem>
+                              )) as React.ReactNode[]
+                            }
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="intlAmount">Amount ($)</Label>
                         <Input
                           id="intlAmount"
                           type="number"
+                          step="0.01"
+                          className="text-lg"
+                          value={internationalWireForm.amount}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, amount: e.target.value})}
                           placeholder="0.00"
-                          data-testid="input-intl-amount"
+                          data-testid="input-intl-wire-amount"
                         />
                       </div>
                     </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="intlRecipientBank">Recipient Bank Name</Label>
+                        <Input
+                          id="intlRecipientBank"
+                          value={internationalWireForm.recipientBankName}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientBankName: e.target.value})}
+                          placeholder="Bank name"
+                          data-testid="input-intl-recipient-bank"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="intlSwiftCode">SWIFT/BIC Code</Label>
+                        <Input
+                          id="intlSwiftCode"
+                          value={internationalWireForm.recipientBankSwift}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientBankSwift: e.target.value})}
+                          placeholder="e.g., CHASUS33"
+                          data-testid="input-intl-swift-code"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="intlAccountNumber">Recipient Account Number</Label>
+                        <Input
+                          id="intlAccountNumber"
+                          value={internationalWireForm.recipientAccountNumber}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientAccountNumber: e.target.value})}
+                          placeholder="International account number"
+                          data-testid="input-intl-account-number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="intlBeneficiaryName">Beneficiary Name</Label>
+                        <Input
+                          id="intlBeneficiaryName"
+                          value={internationalWireForm.beneficiaryName}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryName: e.target.value})}
+                          placeholder="Recipient's full name"
+                          data-testid="input-intl-beneficiary-name"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="intlBeneficiaryAddress">Beneficiary Address</Label>
+                        <Input
+                          id="intlBeneficiaryAddress"
+                          value={internationalWireForm.beneficiaryAddress}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryAddress: e.target.value})}
+                          placeholder="Full address"
+                          data-testid="input-intl-beneficiary-address"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="intlBeneficiaryCountry">Beneficiary Country</Label>
+                        <Input
+                          id="intlBeneficiaryCountry"
+                          value={internationalWireForm.beneficiaryCountry}
+                          onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryCountry: e.target.value})}
+                          placeholder="Country"
+                          data-testid="input-intl-beneficiary-country"
+                        />
+                      </div>
+                    </div>
+                    
                     <div>
-                      <Label htmlFor="recipientName">Recipient Name</Label>
+                      <Label htmlFor="intlPurpose">Wire Purpose</Label>
                       <Input
-                        id="recipientName"
-                        placeholder="Full name as shown on account"
-                        data-testid="input-recipient-name"
+                        id="intlPurpose"
+                        value={internationalWireForm.purpose}
+                        onChange={(e) => setInternationalWireForm({...internationalWireForm, purpose: e.target.value})}
+                        placeholder="e.g., Family support, business payment, property purchase"
+                        data-testid="input-intl-purpose"
                       />
                     </div>
-                    <div className="p-3 bg-orange-50 rounded-lg text-sm">
-                      <p className="text-orange-800">
-                        <strong>Wire Transfer:</strong> Uses wire routing (053100300) + SWIFT (FCBTUS33)
-                      </p>
-                      <p className="text-orange-600 mt-1">Fee: $25 | Processing time: Same day</p>
+                    
+                    <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                      <h5 className="font-semibold text-gray-800 mb-2">Fee Breakdown:</h5>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span>Sender Fee:</span>
+                          <span>$45.00</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Intermediary Fee (est.):</span>
+                          <span>$25.00</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Recipient Fee (est.):</span>
+                          <span>$15.00</span>
+                        </div>
+                        <div className="flex justify-between font-semibold border-t pt-1">
+                          <span>Total Estimated Fees:</span>
+                          <span>$85.00</span>
+                        </div>
+                      </div>
                     </div>
+                    
                     <Button 
                       className="w-full" 
-                      data-testid="button-international-transfer"
+                      data-testid="button-international-wire-transfer"
+                      disabled={!internationalWireForm.fromAccountId || !internationalWireForm.amount || !internationalWireForm.recipientBankName || 
+                               !internationalWireForm.recipientBankSwift || !internationalWireForm.recipientAccountNumber || 
+                               !internationalWireForm.beneficiaryName || !internationalWireForm.beneficiaryCountry || 
+                               internationalWireMutation.isPending}
+                      onClick={() => {
+                        internationalWireMutation.mutate(internationalWireForm);
+                      }}
                     >
-                      Send Wire Transfer
+                      {internationalWireMutation.isPending ? 'Processing...' : `Send International Wire - $${internationalWireForm.amount || '0'}`}
                     </Button>
                   </TabsContent>
                   
