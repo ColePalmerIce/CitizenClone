@@ -18,7 +18,11 @@ interface LoginModalProps {
 export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<'credentials' | 'access-code'>('credentials');
+  const [tempUserId, setTempUserId] = useState<string | null>(null);
+  const [tempUserData, setTempUserData] = useState<any>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -29,7 +33,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     return "Good evening";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       toast({
@@ -44,34 +48,26 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
     
     try {
       const response = await apiRequest('POST', '/api/user/login', { username, password });
-      
-      // apiRequest throws on non-ok responses, so if we get here, it was successful
       const user = await response.json();
       
-      // Store user info in sessionStorage
-      sessionStorage.setItem('user', JSON.stringify(user));
+      // Store temporary user data
+      setTempUserId(user.id);
+      setTempUserData(user);
       
-      // Show success message with time-based greeting
+      // Move to access code step
+      setStep('access-code');
+      
       toast({
-        title: "Login successful",
-        description: `${getTimeGreeting()}, ${user.firstName || user.username}!`,
+        title: "Credentials verified",
+        description: "Please enter your access code to complete login",
       });
-      
-      onOpenChange(false);
-      
-      // Navigate to user dashboard after a brief delay
-      setTimeout(() => {
-        setLocation("/dashboard");
-      }, 1000);
       
     } catch (error: any) {
       console.error('Login error:', error);
       
-      // Try to parse error message from API response
       let errorMessage = "Please check your username and password";
       
       if (error.message) {
-        // Extract actual error message from "401: Invalid credentials" format
         const match = error.message.match(/^\d+:\s*(.+)$/);
         if (match) {
           errorMessage = match[1];
@@ -82,6 +78,75 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
       
       toast({
         title: "Login failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAccessCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accessCode) {
+      toast({
+        title: "Access code required",
+        description: "Please enter your access code",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await apiRequest('POST', '/api/auth/validate-access-code', { 
+        code: accessCode, 
+        userId: tempUserId 
+      });
+      
+      const result = await response.json();
+      
+      if (result.valid) {
+        // Store user info in sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(tempUserData));
+        
+        toast({
+          title: "Login successful",
+          description: `${getTimeGreeting()}, ${tempUserData.firstName || tempUserData.username}!`,
+        });
+        
+        onOpenChange(false);
+        
+        // Reset form
+        setUsername("");
+        setPassword("");
+        setAccessCode("");
+        setStep('credentials');
+        setTempUserId(null);
+        setTempUserData(null);
+        
+        setTimeout(() => {
+          setLocation("/dashboard");
+        }, 1000);
+      }
+      
+    } catch (error: any) {
+      console.error('Access code validation error:', error);
+      
+      let errorMessage = "Invalid or expired access code";
+      
+      if (error.message) {
+        const match = error.message.match(/^\d+:\s*(.+)$/);
+        if (match) {
+          errorMessage = match[1];
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
+        title: "Access code validation failed",
         description: errorMessage,
         variant: "destructive",
       });
@@ -115,94 +180,149 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="login-type">Login Type</Label>
-            <Select defaultValue="digital-banking">
-              <SelectTrigger data-testid="select-login-type">
-                <SelectValue placeholder="Select login type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="digital-banking">First Citizens Digital Banking</SelectItem>
-                <SelectItem value="commercial-advantage">Commercial Advantage</SelectItem>
-                <SelectItem value="wealth">Wealth</SelectItem>
-                <SelectItem value="other-services">Other Services</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-4">
+        {step === 'credentials' ? (
+          <form onSubmit={handleCredentialsSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="user-id">Username*</Label>
-              <Input 
-                id="user-id" 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                data-testid="input-user-id"
-                required
-              />
+              <Label htmlFor="login-type">Login Type</Label>
+              <Select defaultValue="digital-banking">
+                <SelectTrigger data-testid="select-login-type">
+                  <SelectValue placeholder="Select login type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="digital-banking">First Citizens Digital Banking</SelectItem>
+                  <SelectItem value="commercial-advantage">Commercial Advantage</SelectItem>
+                  <SelectItem value="wealth">Wealth</SelectItem>
+                  <SelectItem value="other-services">Other Services</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <Label htmlFor="password">Password*</Label>
-              <Input 
-                id="password" 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                data-testid="input-password"
-                required
-              />
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <Button 
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-secondary"
-              disabled={isLoading}
-              data-testid="button-login-submit"
-            >
-              {isLoading ? "Logging in..." : "Log In"}
-            </Button>
-            <div className="text-center text-sm space-y-2">
+            <div className="space-y-4">
               <div>
+                <Label htmlFor="user-id">Username*</Label>
+                <Input 
+                  id="user-id" 
+                  type="text" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  data-testid="input-user-id"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password*</Label>
+                <Input 
+                  id="password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  data-testid="input-password"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Button 
+                type="submit"
+                className="w-full bg-primary text-primary-foreground hover:bg-secondary"
+                disabled={isLoading}
+                data-testid="button-login-submit"
+              >
+                {isLoading ? "Verifying..." : "Continue"}
+              </Button>
+              <div className="text-center text-sm space-y-2">
+                <div>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-primary"
+                    data-testid="link-enroll-now"
+                  >
+                    Enroll Now
+                  </Button>
+                  <span className="mx-2 text-muted-foreground">•</span>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-primary"
+                    data-testid="link-forgot-id"
+                  >
+                    Forgot ID
+                  </Button>
+                  <span className="mx-2 text-muted-foreground">/</span>
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-primary"
+                    data-testid="link-forgot-password"
+                  >
+                    Password?
+                  </Button>
+                </div>
                 <Button 
                   variant="link" 
                   className="p-0 h-auto text-primary"
-                  data-testid="link-enroll-now"
+                  data-testid="link-first-time-login"
                 >
-                  Enroll Now
-                </Button>
-                <span className="mx-2 text-muted-foreground">•</span>
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto text-primary"
-                  data-testid="link-forgot-id"
-                >
-                  Forgot ID
-                </Button>
-                <span className="mx-2 text-muted-foreground">/</span>
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto text-primary"
-                  data-testid="link-forgot-password"
-                >
-                  Password?
+                  First Time Log In
                 </Button>
               </div>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleAccessCodeSubmit} className="space-y-6">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">Two-Factor Authentication</h3>
+              <p className="text-sm text-blue-700">
+                For your security, please enter the access code provided by your bank administrator. This code is valid for 10 minutes.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="access-code">Access Code*</Label>
+              <Input 
+                id="access-code" 
+                type="text" 
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                placeholder="Enter 6-digit access code"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+                data-testid="input-access-code"
+                required
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Contact your bank administrator if you don't have an access code
+              </p>
+            </div>
+
+            <div className="space-y-3">
               <Button 
-                variant="link" 
-                className="p-0 h-auto text-primary"
-                data-testid="link-first-time-login"
+                type="submit"
+                className="w-full bg-primary text-primary-foreground hover:bg-secondary"
+                disabled={isLoading}
+                data-testid="button-access-code-submit"
               >
-                First Time Log In
+                {isLoading ? "Validating..." : "Complete Login"}
+              </Button>
+              <Button 
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setStep('credentials');
+                  setAccessCode('');
+                  setTempUserId(null);
+                  setTempUserData(null);
+                }}
+                data-testid="button-back-to-credentials"
+              >
+                Back to Login
               </Button>
             </div>
-          </div>
-        </form>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
