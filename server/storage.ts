@@ -25,6 +25,10 @@ import {
   type SelectDebitLimitIncreaseRequest,
   type PendingExternalTransfer,
   type InsertPendingExternalTransfer,
+  type DomesticWireTransfer,
+  type InsertDomesticWireTransfer,
+  type InternationalWireTransfer,
+  type InsertInternationalWireTransfer,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
@@ -109,6 +113,18 @@ export interface IStorage {
   getPendingExternalTransfersByUserId(userId: string): Promise<PendingExternalTransfer[]>;
   getAllPendingExternalTransfers(): Promise<PendingExternalTransfer[]>;
   updatePendingExternalTransferStatus(id: string, status: string, processedBy?: string, rejectionReason?: string): Promise<PendingExternalTransfer | undefined>;
+
+  // Wire transfers
+  createDomesticWireTransfer(transfer: InsertDomesticWireTransfer): Promise<DomesticWireTransfer>;
+  createInternationalWireTransfer(transfer: InsertInternationalWireTransfer): Promise<InternationalWireTransfer>;
+  getDomesticWireTransfer(id: string): Promise<DomesticWireTransfer | undefined>;
+  getInternationalWireTransfer(id: string): Promise<InternationalWireTransfer | undefined>;
+  getDomesticWireTransfersByUserId(userId: string): Promise<DomesticWireTransfer[]>;
+  getInternationalWireTransfersByUserId(userId: string): Promise<InternationalWireTransfer[]>;
+  getAllDomesticWireTransfers(): Promise<DomesticWireTransfer[]>;
+  getAllInternationalWireTransfers(): Promise<InternationalWireTransfer[]>;
+  updateDomesticWireTransferStatus(id: string, status: string, processedBy?: string): Promise<DomesticWireTransfer | undefined>;
+  updateInternationalWireTransferStatus(id: string, status: string, processedBy?: string): Promise<InternationalWireTransfer | undefined>;
 
   // Admin dashboard utilities
   getTotalCustomers(): Promise<number>;
@@ -466,6 +482,19 @@ export class MemStorage implements IStorage {
   async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> { throw new Error("Not implemented in MemStorage"); }
   async getCustomerProfile(userId: string): Promise<CustomerProfile | undefined> { return undefined; }
   async updateCustomerProfile(userId: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined> { return undefined; }
+  
+  // Wire transfer placeholder implementations
+  async createDomesticWireTransfer(transfer: InsertDomesticWireTransfer): Promise<DomesticWireTransfer> { throw new Error("Not implemented in MemStorage"); }
+  async createInternationalWireTransfer(transfer: InsertInternationalWireTransfer): Promise<InternationalWireTransfer> { throw new Error("Not implemented in MemStorage"); }
+  async getDomesticWireTransfer(id: string): Promise<DomesticWireTransfer | undefined> { return undefined; }
+  async getInternationalWireTransfer(id: string): Promise<InternationalWireTransfer | undefined> { return undefined; }
+  async getDomesticWireTransfersByUserId(userId: string): Promise<DomesticWireTransfer[]> { return []; }
+  async getInternationalWireTransfersByUserId(userId: string): Promise<InternationalWireTransfer[]> { return []; }
+  async getAllDomesticWireTransfers(): Promise<DomesticWireTransfer[]> { return []; }
+  async getAllInternationalWireTransfers(): Promise<InternationalWireTransfer[]> { return []; }
+  async updateDomesticWireTransferStatus(id: string, status: string, processedBy?: string): Promise<DomesticWireTransfer | undefined> { return undefined; }
+  async updateInternationalWireTransferStatus(id: string, status: string, processedBy?: string): Promise<InternationalWireTransfer | undefined> { return undefined; }
+  
   async getTotalCustomers(): Promise<number> { return 0; }
   async getTotalAccountBalance(): Promise<string> { return "0.00"; }
   async getRecentTransactions(limit?: number): Promise<Transaction[]> { return []; }

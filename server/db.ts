@@ -13,6 +13,9 @@ import {
   customerProfiles,
   creditLimitIncreaseRequests,
   debitLimitIncreaseRequests,
+  pendingExternalTransfers,
+  domesticWireTransfers,
+  internationalWireTransfers,
   type User,
   type InsertUser,
   type SearchQuery,
@@ -39,7 +42,10 @@ import {
   type SelectDebitLimitIncreaseRequest,
   type PendingExternalTransfer,
   type InsertPendingExternalTransfer,
-  pendingExternalTransfers,
+  type DomesticWireTransfer,
+  type InsertDomesticWireTransfer,
+  type InternationalWireTransfer,
+  type InsertInternationalWireTransfer,
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import type { IStorage } from "./storage";
@@ -491,6 +497,83 @@ export class PostgreSQLStorage implements IStorage {
     const result = await db.update(pendingExternalTransfers)
       .set(updateData)
       .where(eq(pendingExternalTransfers.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Wire transfer methods
+  async createDomesticWireTransfer(transfer: InsertDomesticWireTransfer): Promise<DomesticWireTransfer> {
+    const result = await db.insert(domesticWireTransfers).values(transfer).returning();
+    return result[0];
+  }
+
+  async createInternationalWireTransfer(transfer: InsertInternationalWireTransfer): Promise<InternationalWireTransfer> {
+    const result = await db.insert(internationalWireTransfers).values(transfer).returning();
+    return result[0];
+  }
+
+  async getDomesticWireTransfer(id: string): Promise<DomesticWireTransfer | undefined> {
+    const result = await db.select().from(domesticWireTransfers).where(eq(domesticWireTransfers.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getInternationalWireTransfer(id: string): Promise<InternationalWireTransfer | undefined> {
+    const result = await db.select().from(internationalWireTransfers).where(eq(internationalWireTransfers.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getDomesticWireTransfersByUserId(userId: string): Promise<DomesticWireTransfer[]> {
+    return await db.select().from(domesticWireTransfers)
+      .where(eq(domesticWireTransfers.userId, userId))
+      .orderBy(desc(domesticWireTransfers.createdAt));
+  }
+
+  async getInternationalWireTransfersByUserId(userId: string): Promise<InternationalWireTransfer[]> {
+    return await db.select().from(internationalWireTransfers)
+      .where(eq(internationalWireTransfers.userId, userId))
+      .orderBy(desc(internationalWireTransfers.createdAt));
+  }
+
+  async getAllDomesticWireTransfers(): Promise<DomesticWireTransfer[]> {
+    return await db.select().from(domesticWireTransfers)
+      .orderBy(desc(domesticWireTransfers.createdAt));
+  }
+
+  async getAllInternationalWireTransfers(): Promise<InternationalWireTransfer[]> {
+    return await db.select().from(internationalWireTransfers)
+      .orderBy(desc(internationalWireTransfers.createdAt));
+  }
+
+  async updateDomesticWireTransferStatus(id: string, status: string, processedBy?: string): Promise<DomesticWireTransfer | undefined> {
+    const updateData: any = { 
+      status,
+      processedAt: new Date()
+    };
+    
+    if (processedBy) {
+      updateData.processedBy = processedBy;
+    }
+
+    const result = await db.update(domesticWireTransfers)
+      .set(updateData)
+      .where(eq(domesticWireTransfers.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateInternationalWireTransferStatus(id: string, status: string, processedBy?: string): Promise<InternationalWireTransfer | undefined> {
+    const updateData: any = { 
+      status,
+      processedAt: new Date()
+    };
+    
+    if (processedBy) {
+      updateData.processedBy = processedBy;
+    }
+
+    const result = await db.update(internationalWireTransfers)
+      .set(updateData)
+      .where(eq(internationalWireTransfers.id, id))
       .returning();
     return result[0];
   }
