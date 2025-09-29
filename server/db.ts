@@ -240,7 +240,7 @@ export class PostgreSQLStorage implements IStorage {
   }
 
   async getAllBankAccounts(): Promise<any[]> {
-    // Join bank accounts with user information to get complete customer details
+    // Join bank accounts with user information to get complete customer details including user status
     const result = await db.select({
       // Bank account fields
       id: bankAccounts.id,
@@ -249,13 +249,17 @@ export class PostgreSQLStorage implements IStorage {
       routingNumber: bankAccounts.routingNumber,
       accountType: bankAccounts.accountType,
       balance: bankAccounts.balance,
-      status: bankAccounts.status,
+      bankAccountStatus: bankAccounts.status,
       createdAt: bankAccounts.createdAt,
-      // User fields
+      // User fields including status for admin block/unblock controls
       firstName: users.firstName,
       lastName: users.lastName,
       email: users.email,
-      username: users.username
+      username: users.username,
+      status: users.status,
+      statusReason: users.statusReason,
+      statusUpdatedBy: users.statusUpdatedBy,
+      statusUpdatedAt: users.statusUpdatedAt
     })
     .from(bankAccounts)
     .innerJoin(users, eq(bankAccounts.userId, users.id))
