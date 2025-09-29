@@ -538,7 +538,7 @@ export default function AdminDashboard() {
 
         {/* Main Content */}
         <div className="flex-1 lg:ml-0">
-          <main className="p-4 lg:p-8">
+          <main className="p-4 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
             {selectedTab === "overview" && (
               <OverviewTab 
                 stats={safeStats} 
