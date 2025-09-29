@@ -141,6 +141,8 @@ export class MemStorage implements IStorage {
   private creditLimitIncreaseRequests: Map<string, SelectCreditLimitIncreaseRequest>;
   private debitLimitIncreaseRequests: Map<string, SelectDebitLimitIncreaseRequest>;
   private pendingExternalTransfers: Map<string, PendingExternalTransfer>;
+  private domesticWireTransfers: Map<string, DomesticWireTransfer>;
+  private internationalWireTransfers: Map<string, InternationalWireTransfer>;
 
   constructor() {
     this.users = new Map();
@@ -151,6 +153,8 @@ export class MemStorage implements IStorage {
     this.creditLimitIncreaseRequests = new Map();
     this.debitLimitIncreaseRequests = new Map();
     this.pendingExternalTransfers = new Map();
+    this.domesticWireTransfers = new Map();
+    this.internationalWireTransfers = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -483,17 +487,214 @@ export class MemStorage implements IStorage {
   async getCustomerProfile(userId: string): Promise<CustomerProfile | undefined> { return undefined; }
   async updateCustomerProfile(userId: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined> { return undefined; }
   
-  // Wire transfer placeholder implementations
-  async createDomesticWireTransfer(transfer: InsertDomesticWireTransfer): Promise<DomesticWireTransfer> { throw new Error("Not implemented in MemStorage"); }
-  async createInternationalWireTransfer(transfer: InsertInternationalWireTransfer): Promise<InternationalWireTransfer> { throw new Error("Not implemented in MemStorage"); }
-  async getDomesticWireTransfer(id: string): Promise<DomesticWireTransfer | undefined> { return undefined; }
-  async getInternationalWireTransfer(id: string): Promise<InternationalWireTransfer | undefined> { return undefined; }
-  async getDomesticWireTransfersByUserId(userId: string): Promise<DomesticWireTransfer[]> { return []; }
-  async getInternationalWireTransfersByUserId(userId: string): Promise<InternationalWireTransfer[]> { return []; }
-  async getAllDomesticWireTransfers(): Promise<DomesticWireTransfer[]> { return []; }
-  async getAllInternationalWireTransfers(): Promise<InternationalWireTransfer[]> { return []; }
-  async updateDomesticWireTransferStatus(id: string, status: string, processedBy?: string): Promise<DomesticWireTransfer | undefined> { return undefined; }
-  async updateInternationalWireTransferStatus(id: string, status: string, processedBy?: string): Promise<InternationalWireTransfer | undefined> { return undefined; }
+  // Wire transfer implementations
+  async createDomesticWireTransfer(transfer: InsertDomesticWireTransfer): Promise<DomesticWireTransfer> {
+    // Validate source account and balance
+    const fromAccount = await this.getBankAccount(transfer.fromAccountId);
+    if (!fromAccount) {
+      throw new Error("Source account not found");
+    }
+    
+    const transferAmount = parseFloat(transfer.amount.toString());
+    const currentBalance = parseFloat(fromAccount.balance.toString());
+    const senderFee = transfer.senderFee ? parseFloat(transfer.senderFee.toString()) : 25.00;
+    const totalAmount = transferAmount + senderFee;
+    
+    if (currentBalance < totalAmount) {
+      throw new Error(`Insufficient funds. Available: $${currentBalance.toFixed(2)}, Required: $${totalAmount.toFixed(2)}`);
+    }
+
+    const id = randomUUID();
+    const timestamp = Date.now();
+    const wireTransfer: DomesticWireTransfer = {
+      id,
+      ...transfer,
+      status: transfer.status || "pending",
+      federalReference: `FED${timestamp.toString().slice(-6)}${id.substring(0, 6).toUpperCase()}`,
+      senderFee: senderFee.toFixed(2),
+      createdAt: new Date(),
+    };
+
+    // Update account balance
+    const newBalance = (currentBalance - totalAmount).toFixed(2);
+    await this.updateBankAccountBalance(transfer.fromAccountId, newBalance);
+
+    // Create debit transaction for the wire transfer
+    const transaction: InsertTransaction = {
+      accountId: transfer.fromAccountId,
+      userId: transfer.userId,
+      type: "debit",
+      amount: transferAmount.toFixed(2),
+      description: `Domestic wire transfer to ${transfer.beneficiaryName}`,
+      merchantName: transfer.recipientBankName,
+      merchantLocation: "Domestic Wire Transfer",
+      merchantCategory: "wire-transfer",
+      reference: wireTransfer.federalReference,
+      balanceAfter: (currentBalance - transferAmount).toFixed(2),
+    };
+    await this.createTransaction(transaction);
+
+    // Create separate transaction for fee if applicable
+    if (senderFee > 0) {
+      const feeTransaction: InsertTransaction = {
+        accountId: transfer.fromAccountId,
+        userId: transfer.userId,
+        type: "debit",
+        amount: senderFee.toFixed(2),
+        description: "Domestic wire transfer fee",
+        merchantName: "First Citizens Bank",
+        merchantLocation: "Wire Transfer Fee",
+        merchantCategory: "fee",
+        reference: `FEE-${wireTransfer.federalReference}`,
+        balanceAfter: newBalance,
+      };
+      await this.createTransaction(feeTransaction);
+    }
+
+    this.domesticWireTransfers.set(id, wireTransfer);
+    return wireTransfer;
+  }
+
+  async createInternationalWireTransfer(transfer: InsertInternationalWireTransfer): Promise<InternationalWireTransfer> {
+    // Validate source account and balance
+    const fromAccount = await this.getBankAccount(transfer.fromAccountId);
+    if (!fromAccount) {
+      throw new Error("Source account not found");
+    }
+    
+    const transferAmount = parseFloat(transfer.amount.toString());
+    const currentBalance = parseFloat(fromAccount.balance.toString());
+    const senderFee = transfer.senderFee ? parseFloat(transfer.senderFee.toString()) : 45.00;
+    const intermediaryFee = transfer.intermediaryFee ? parseFloat(transfer.intermediaryFee.toString()) : 25.00;
+    const totalAmount = transferAmount + senderFee + intermediaryFee;
+    
+    if (currentBalance < totalAmount) {
+      throw new Error(`Insufficient funds. Available: $${currentBalance.toFixed(2)}, Required: $${totalAmount.toFixed(2)}`);
+    }
+
+    const id = randomUUID();
+    const timestamp = Date.now();
+    const wireTransfer: InternationalWireTransfer = {
+      id,
+      ...transfer,
+      status: transfer.status || "pending",
+      currency: transfer.currency || "USD",
+      swiftReference: `SW${timestamp.toString().slice(-6)}${id.substring(0, 6).toUpperCase()}`,
+      senderFee: senderFee.toFixed(2),
+      intermediaryFee: intermediaryFee.toFixed(2),
+      createdAt: new Date(),
+    };
+
+    // Update account balance
+    const newBalance = (currentBalance - totalAmount).toFixed(2);
+    await this.updateBankAccountBalance(transfer.fromAccountId, newBalance);
+
+    // Create debit transaction for the wire transfer
+    const transaction: InsertTransaction = {
+      accountId: transfer.fromAccountId,
+      userId: transfer.userId,
+      type: "debit",
+      amount: transferAmount.toFixed(2),
+      description: `International wire transfer to ${transfer.beneficiaryName} in ${transfer.beneficiaryCountry}`,
+      merchantName: transfer.recipientBankName,
+      merchantLocation: "International Wire Transfer",
+      merchantCategory: "international-wire-transfer",
+      reference: wireTransfer.swiftReference,
+      balanceAfter: (currentBalance - transferAmount).toFixed(2),
+    };
+    await this.createTransaction(transaction);
+
+    // Create transaction for sender fee
+    if (senderFee > 0) {
+      const senderFeeTransaction: InsertTransaction = {
+        accountId: transfer.fromAccountId,
+        userId: transfer.userId,
+        type: "debit",
+        amount: senderFee.toFixed(2),
+        description: "International wire transfer sender fee",
+        merchantName: "First Citizens Bank",
+        merchantLocation: "Wire Transfer Fee",
+        merchantCategory: "fee",
+        reference: `SFEE-${wireTransfer.swiftReference}`,
+        balanceAfter: (currentBalance - transferAmount - senderFee).toFixed(2),
+      };
+      await this.createTransaction(senderFeeTransaction);
+    }
+
+    // Create transaction for intermediary fee
+    if (intermediaryFee > 0) {
+      const intermediaryFeeTransaction: InsertTransaction = {
+        accountId: transfer.fromAccountId,
+        userId: transfer.userId,
+        type: "debit",
+        amount: intermediaryFee.toFixed(2),
+        description: "International wire transfer intermediary fee",
+        merchantName: "Correspondent Bank",
+        merchantLocation: "Wire Transfer Fee",
+        merchantCategory: "fee",
+        reference: `IFEE-${wireTransfer.swiftReference}`,
+        balanceAfter: newBalance,
+      };
+      await this.createTransaction(intermediaryFeeTransaction);
+    }
+
+    this.internationalWireTransfers.set(id, wireTransfer);
+    return wireTransfer;
+  }
+
+  async getDomesticWireTransfer(id: string): Promise<DomesticWireTransfer | undefined> {
+    return this.domesticWireTransfers.get(id);
+  }
+
+  async getInternationalWireTransfer(id: string): Promise<InternationalWireTransfer | undefined> {
+    return this.internationalWireTransfers.get(id);
+  }
+
+  async getDomesticWireTransfersByUserId(userId: string): Promise<DomesticWireTransfer[]> {
+    return Array.from(this.domesticWireTransfers.values()).filter(transfer => transfer.userId === userId);
+  }
+
+  async getInternationalWireTransfersByUserId(userId: string): Promise<InternationalWireTransfer[]> {
+    return Array.from(this.internationalWireTransfers.values()).filter(transfer => transfer.userId === userId);
+  }
+
+  async getAllDomesticWireTransfers(): Promise<DomesticWireTransfer[]> {
+    return Array.from(this.domesticWireTransfers.values());
+  }
+
+  async getAllInternationalWireTransfers(): Promise<InternationalWireTransfer[]> {
+    return Array.from(this.internationalWireTransfers.values());
+  }
+
+  async updateDomesticWireTransferStatus(id: string, status: string, processedBy?: string): Promise<DomesticWireTransfer | undefined> {
+    const transfer = this.domesticWireTransfers.get(id);
+    if (transfer) {
+      const updatedTransfer = { 
+        ...transfer, 
+        status, 
+        processedBy: processedBy || transfer.processedBy,
+        processedAt: new Date()
+      };
+      this.domesticWireTransfers.set(id, updatedTransfer);
+      return updatedTransfer;
+    }
+    return undefined;
+  }
+
+  async updateInternationalWireTransferStatus(id: string, status: string, processedBy?: string): Promise<InternationalWireTransfer | undefined> {
+    const transfer = this.internationalWireTransfers.get(id);
+    if (transfer) {
+      const updatedTransfer = { 
+        ...transfer, 
+        status, 
+        processedBy: processedBy || transfer.processedBy,
+        processedAt: new Date()
+      };
+      this.internationalWireTransfers.set(id, updatedTransfer);
+      return updatedTransfer;
+    }
+    return undefined;
+  }
   
   async getTotalCustomers(): Promise<number> { return 0; }
   async getTotalAccountBalance(): Promise<string> { return "0.00"; }
