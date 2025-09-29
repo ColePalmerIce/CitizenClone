@@ -2238,6 +2238,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Access code generation (Admin generates codes for users)
+  app.post("/api/admin/generate-access-codes", requireAdmin, async (req, res) => {
+    try {
+      const adminId = req.session.adminId!;
+      const { count = 5 } = req.body;
+      
+      const codes = [];
+      const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+      
+      for (let i = 0; i < count; i++) {
+        // Generate random 6-digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        const accessCode = await storage.createAccessCode({
+          code,
+          expiresAt: expirationTime,
+          isUsed: false,
+          generatedBy: adminId,
+          usedBy: null,
+        });
+        
+        codes.push(accessCode);
+      }
+      
+      res.json({ 
+        codes: codes.map(c => ({ code: c.code, expiresAt: c.expiresAt })),
+        expirationMinutes: 10
+      });
+    } catch (error) {
+      console.error('Generate access codes error:', error);
+      res.status(500).json({ message: "Failed to generate access codes" });
+    }
+  });
+
+  // Get all access codes (Admin)
+  app.get("/api/admin/access-codes", requireAdmin, async (req, res) => {
+    try {
+      const codes = await storage.getValidAccessCodes();
+      res.json(codes);
+    } catch (error) {
+      console.error('Get access codes error:', error);
+      res.status(500).json({ message: "Failed to fetch access codes" });
+    }
+  });
+
+  // Validate access code during login
+  app.post("/api/auth/validate-access-code", async (req, res) => {
+    try {
+      const { code, userId } = req.body;
+      
+      if (!code || !userId) {
+        return res.status(400).json({ message: "Code and user ID required" });
+      }
+      
+      const accessCode = await storage.getAccessCode(code);
+      
+      if (!accessCode) {
+        return res.status(401).json({ message: "Invalid access code" });
+      }
+      
+      if (accessCode.isUsed) {
+        return res.status(401).json({ message: "Access code already used" });
+      }
+      
+      const now = new Date();
+      const expiresAt = new Date(accessCode.expiresAt);
+      
+      if (expiresAt < now) {
+        return res.status(401).json({ message: "Access code has expired" });
+      }
+      
+      // Mark code as used
+      await storage.markAccessCodeAsUsed(code, userId);
+      
+      res.json({ valid: true, message: "Access code validated successfully" });
+    } catch (error) {
+      console.error('Validate access code error:', error);
+      res.status(500).json({ message: "Failed to validate access code" });
+    }
+  });
+
+  // Approve domestic wire transfer (Admin)
+  app.post("/api/admin/approve-domestic-wire/:transferId", requireAdmin, async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      const adminId = req.session.adminId!;
+      
+      const transfer = await storage.getDomesticWireTransfer(transferId);
+      if (!transfer) {
+        return res.status(404).json({ message: "Wire transfer not found" });
+      }
+      
+      if (transfer.status !== 'pending') {
+        return res.status(400).json({ message: "Transfer is not pending" });
+      }
+      
+      // Update transfer status to processing
+      await storage.updateDomesticWireTransferStatus(transferId, 'processing', adminId);
+      
+      res.json({ message: "Domestic wire transfer approved successfully" });
+    } catch (error) {
+      console.error('Approve domestic wire error:', error);
+      res.status(500).json({ message: "Failed to approve wire transfer" });
+    }
+  });
+
+  // Disapprove domestic wire transfer (Admin)
+  app.post("/api/admin/disapprove-domestic-wire/:transferId", requireAdmin, async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      const adminId = req.session.adminId!;
+      
+      const transfer = await storage.getDomesticWireTransfer(transferId);
+      if (!transfer) {
+        return res.status(404).json({ message: "Wire transfer not found" });
+      }
+      
+      if (transfer.status !== 'pending') {
+        return res.status(400).json({ message: "Transfer is not pending" });
+      }
+      
+      // Update transfer status to failed
+      await storage.updateDomesticWireTransferStatus(transferId, 'failed', adminId);
+      
+      res.json({ message: "Domestic wire transfer disapproved successfully" });
+    } catch (error) {
+      console.error('Disapprove domestic wire error:', error);
+      res.status(500).json({ message: "Failed to disapprove wire transfer" });
+    }
+  });
+
+  // Approve international wire transfer (Admin)
+  app.post("/api/admin/approve-international-wire/:transferId", requireAdmin, async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      const adminId = req.session.adminId!;
+      
+      const transfer = await storage.getInternationalWireTransfer(transferId);
+      if (!transfer) {
+        return res.status(404).json({ message: "Wire transfer not found" });
+      }
+      
+      if (transfer.status !== 'pending') {
+        return res.status(400).json({ message: "Transfer is not pending" });
+      }
+      
+      // Update transfer status to processing
+      await storage.updateInternationalWireTransferStatus(transferId, 'processing', adminId);
+      
+      res.json({ message: "International wire transfer approved successfully" });
+    } catch (error) {
+      console.error('Approve international wire error:', error);
+      res.status(500).json({ message: "Failed to approve wire transfer" });
+    }
+  });
+
+  // Disapprove international wire transfer (Admin)
+  app.post("/api/admin/disapprove-international-wire/:transferId", requireAdmin, async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      const adminId = req.session.adminId!;
+      
+      const transfer = await storage.getInternationalWireTransfer(transferId);
+      if (!transfer) {
+        return res.status(404).json({ message: "Wire transfer not found" });
+      }
+      
+      if (transfer.status !== 'pending') {
+        return res.status(400).json({ message: "Transfer is not pending" });
+      }
+      
+      // Update transfer status to failed
+      await storage.updateInternationalWireTransferStatus(transferId, 'failed', adminId);
+      
+      res.json({ message: "International wire transfer disapproved successfully" });
+    } catch (error) {
+      console.error('Disapprove international wire error:', error);
+      res.status(500).json({ message: "Failed to disapprove wire transfer" });
+    }
+  });
+
   // Seed admin user on first run
   app.post("/api/admin/seed", async (req, res) => {
     try {
