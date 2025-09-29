@@ -404,8 +404,9 @@ export default function AdminDashboard() {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           lg:translate-x-0 transition-transform duration-300 ease-in-out
           fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-sm border-r
+          flex flex-col
         `}>
-          <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
+          <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700 flex-shrink-0">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
                 <Building className="w-5 h-5 text-white" />
@@ -417,7 +418,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <nav className="p-4 space-y-2">
+          <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
             <Button
               variant={selectedTab === "overview" ? "secondary" : "ghost"}
               className="w-full justify-start"
@@ -504,7 +505,7 @@ export default function AdminDashboard() {
             </Button>
           </nav>
 
-          <div className="absolute bottom-4 left-4 right-4 space-y-4">
+          <div className="p-4 border-t space-y-4 flex-shrink-0">
             <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {admin.firstName} {admin.lastName}
