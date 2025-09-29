@@ -409,6 +409,116 @@ export const insertPendingExternalTransferSchema = createInsertSchema(pendingExt
 export type PendingExternalTransfer = typeof pendingExternalTransfers.$inferSelect;
 export type InsertPendingExternalTransfer = z.infer<typeof insertPendingExternalTransferSchema>;
 
+// Domestic wire transfers table
+export const domesticWireTransfers = pgTable("domestic_wire_transfers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  fromAccountId: varchar("from_account_id").notNull(),
+  
+  // Recipient bank details
+  recipientBankName: text("recipient_bank_name").notNull(),
+  recipientBankAddress: text("recipient_bank_address").notNull(),
+  recipientRoutingNumber: text("recipient_routing_number").notNull(),
+  recipientAccountNumber: text("recipient_account_number").notNull(),
+  
+  // Beneficiary details
+  beneficiaryName: text("beneficiary_name").notNull(),
+  beneficiaryAddress: text("beneficiary_address").notNull(),
+  beneficiaryAccountType: text("beneficiary_account_type").notNull(), // checking, savings
+  
+  // Transfer details
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  purpose: text("purpose").notNull(),
+  reference: text("reference"), // optional reference number
+  
+  // Processing details
+  status: text("status").default("pending"), // pending, processing, completed, failed
+  processedBy: varchar("processed_by"), // admin ID who processed
+  processedAt: timestamp("processed_at"),
+  
+  // Wire details
+  federalReference: text("federal_reference"), // Federal reference number for tracking
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  actualCompletionDate: timestamp("actual_completion_date"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// International wire transfers table  
+export const internationalWireTransfers = pgTable("international_wire_transfers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  fromAccountId: varchar("from_account_id").notNull(),
+  
+  // Correspondent bank details (intermediary bank)
+  correspondentBankName: text("correspondent_bank_name"),
+  correspondentBankSwift: text("correspondent_bank_swift"),
+  correspondentBankAddress: text("correspondent_bank_address"),
+  
+  // Recipient bank details
+  recipientBankName: text("recipient_bank_name").notNull(),
+  recipientBankSwift: text("recipient_bank_swift").notNull(),
+  recipientBankAddress: text("recipient_bank_address").notNull(),
+  recipientIBAN: text("recipient_iban"), // International Bank Account Number
+  recipientAccountNumber: text("recipient_account_number").notNull(),
+  
+  // Beneficiary details
+  beneficiaryName: text("beneficiary_name").notNull(),
+  beneficiaryAddress: text("beneficiary_address").notNull(),
+  beneficiaryCountry: text("beneficiary_country").notNull(),
+  beneficiaryPhoneNumber: text("beneficiary_phone_number"),
+  
+  // Transfer details
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  exchangeRate: decimal("exchange_rate", { precision: 10, scale: 4 }),
+  purpose: text("purpose").notNull(),
+  reference: text("reference"), // optional reference number
+  
+  // Fees
+  senderFee: decimal("sender_fee", { precision: 8, scale: 2 }).default("0.00"),
+  intermediaryFee: decimal("intermediary_fee", { precision: 8, scale: 2 }).default("0.00"),
+  recipientFee: decimal("recipient_fee", { precision: 8, scale: 2 }).default("0.00"),
+  
+  // Processing details
+  status: text("status").default("pending"), // pending, processing, completed, failed
+  processedBy: varchar("processed_by"), // admin ID who processed
+  processedAt: timestamp("processed_at"),
+  
+  // Wire details
+  swiftReference: text("swift_reference"), // SWIFT message reference
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  actualCompletionDate: timestamp("actual_completion_date"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for wire transfers
+export const insertDomesticWireTransferSchema = createInsertSchema(domesticWireTransfers).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+  processedBy: true,
+  federalReference: true,
+  actualCompletionDate: true,
+});
+
+export const insertInternationalWireTransferSchema = createInsertSchema(internationalWireTransfers).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+  processedBy: true,
+  swiftReference: true,
+  actualCompletionDate: true,
+});
+
+// Types for wire transfers
+export type DomesticWireTransfer = typeof domesticWireTransfers.$inferSelect;
+export type InsertDomesticWireTransfer = z.infer<typeof insertDomesticWireTransferSchema>;
+
+export type InternationalWireTransfer = typeof internationalWireTransfers.$inferSelect;
+export type InsertInternationalWireTransfer = z.infer<typeof insertInternationalWireTransferSchema>;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   bankAccounts: many(bankAccounts),
@@ -460,6 +570,37 @@ export const pendingExternalTransfersRelations = relations(pendingExternalTransf
   }),
   processedByAdmin: one(adminUsers, {
     fields: [pendingExternalTransfers.processedBy],
+    references: [adminUsers.id],
+  }),
+}));
+
+// Wire transfer relations
+export const domesticWireTransfersRelations = relations(domesticWireTransfers, ({ one }) => ({
+  user: one(users, {
+    fields: [domesticWireTransfers.userId],
+    references: [users.id],
+  }),
+  fromAccount: one(bankAccounts, {
+    fields: [domesticWireTransfers.fromAccountId],
+    references: [bankAccounts.id],
+  }),
+  processedByAdmin: one(adminUsers, {
+    fields: [domesticWireTransfers.processedBy],
+    references: [adminUsers.id],
+  }),
+}));
+
+export const internationalWireTransfersRelations = relations(internationalWireTransfers, ({ one }) => ({
+  user: one(users, {
+    fields: [internationalWireTransfers.userId],
+    references: [users.id],
+  }),
+  fromAccount: one(bankAccounts, {
+    fields: [internationalWireTransfers.fromAccountId],
+    references: [bankAccounts.id],
+  }),
+  processedByAdmin: one(adminUsers, {
+    fields: [internationalWireTransfers.processedBy],
     references: [adminUsers.id],
   }),
 }));
