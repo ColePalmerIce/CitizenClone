@@ -16,6 +16,7 @@ import {
   pendingExternalTransfers,
   domesticWireTransfers,
   internationalWireTransfers,
+  accessCodes,
   type User,
   type InsertUser,
   type SearchQuery,
@@ -46,8 +47,10 @@ import {
   type InsertDomesticWireTransfer,
   type InternationalWireTransfer,
   type InsertInternationalWireTransfer,
+  type AccessCode,
+  type InsertAccessCode,
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, gt, lt } from "drizzle-orm";
 import type { IStorage } from "./storage";
 import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
 
@@ -396,6 +399,54 @@ export class PostgreSQLStorage implements IStorage {
       .where(eq(customerProfiles.userId, userId))
       .returning();
     return result[0];
+  }
+
+  // Access codes
+  async createAccessCode(code: InsertAccessCode): Promise<AccessCode> {
+    const result = await db.insert(accessCodes).values(code).returning();
+    return result[0];
+  }
+
+  async getAccessCode(code: string): Promise<AccessCode | undefined> {
+    const result = await db.select().from(accessCodes)
+      .where(eq(accessCodes.code, code))
+      .limit(1);
+    return result[0];
+  }
+
+  async getValidAccessCodes(): Promise<AccessCode[]> {
+    const now = new Date();
+    return await db.select().from(accessCodes)
+      .where(
+        and(
+          eq(accessCodes.isUsed, false),
+          gt(accessCodes.expiresAt, now)
+        )
+      )
+      .orderBy(desc(accessCodes.createdAt));
+  }
+
+  async getAllAccessCodes(): Promise<AccessCode[]> {
+    return await db.select().from(accessCodes)
+      .orderBy(desc(accessCodes.createdAt));
+  }
+
+  async markAccessCodeAsUsed(code: string, userId: string): Promise<AccessCode | undefined> {
+    const result = await db.update(accessCodes)
+      .set({ 
+        isUsed: true, 
+        usedBy: userId,
+        usedAt: new Date()
+      })
+      .where(eq(accessCodes.code, code))
+      .returning();
+    return result[0];
+  }
+
+  async deleteExpiredAccessCodes(): Promise<void> {
+    const now = new Date();
+    await db.delete(accessCodes)
+      .where(lt(accessCodes.expiresAt, now));
   }
 
   // Admin dashboard utilities

@@ -559,6 +559,27 @@ export const adminUsersRelations = relations(adminUsers, ({ many }) => ({
   processedExternalTransfers: many(pendingExternalTransfers),
 }));
 
+// Access codes table for 2FA authentication
+export const accessCodes = pgTable("access_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").default(false),
+  usedBy: varchar("used_by"), // user ID who used the code
+  usedAt: timestamp("used_at"),
+  generatedBy: varchar("generated_by").notNull(), // admin ID who generated
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAccessCodeSchema = createInsertSchema(accessCodes).omit({
+  id: true,
+  createdAt: true,
+  usedAt: true,
+});
+
+export type AccessCode = typeof accessCodes.$inferSelect;
+export type InsertAccessCode = z.infer<typeof insertAccessCodeSchema>;
+
 export const pendingExternalTransfersRelations = relations(pendingExternalTransfers, ({ one }) => ({
   user: one(users, {
     fields: [pendingExternalTransfers.userId],

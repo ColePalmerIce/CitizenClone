@@ -29,6 +29,8 @@ import {
   type InsertDomesticWireTransfer,
   type InternationalWireTransfer,
   type InsertInternationalWireTransfer,
+  type AccessCode,
+  type InsertAccessCode,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
@@ -126,6 +128,14 @@ export interface IStorage {
   updateDomesticWireTransferStatus(id: string, status: string, processedBy?: string): Promise<DomesticWireTransfer | undefined>;
   updateInternationalWireTransferStatus(id: string, status: string, processedBy?: string): Promise<InternationalWireTransfer | undefined>;
 
+  // Access codes
+  createAccessCode(code: InsertAccessCode): Promise<AccessCode>;
+  getAccessCode(code: string): Promise<AccessCode | undefined>;
+  getValidAccessCodes(): Promise<AccessCode[]>;
+  getAllAccessCodes(): Promise<AccessCode[]>;
+  markAccessCodeAsUsed(code: string, userId: string): Promise<AccessCode | undefined>;
+  deleteExpiredAccessCodes(): Promise<void>;
+
   // Admin dashboard utilities
   getTotalCustomers(): Promise<number>;
   getTotalAccountBalance(): Promise<string>;
@@ -143,6 +153,7 @@ export class MemStorage implements IStorage {
   private pendingExternalTransfers: Map<string, PendingExternalTransfer>;
   private domesticWireTransfers: Map<string, DomesticWireTransfer>;
   private internationalWireTransfers: Map<string, InternationalWireTransfer>;
+  private accessCodes: Map<string, AccessCode>;
 
   constructor() {
     this.users = new Map();
@@ -155,6 +166,7 @@ export class MemStorage implements IStorage {
     this.pendingExternalTransfers = new Map();
     this.domesticWireTransfers = new Map();
     this.internationalWireTransfers = new Map();
+    this.accessCodes = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -696,6 +708,55 @@ export class MemStorage implements IStorage {
     return undefined;
   }
   
+  async createAccessCode(code: InsertAccessCode): Promise<AccessCode> {
+    const accessCode: AccessCode = {
+      id: randomUUID(),
+      ...code,
+      createdAt: new Date(),
+      usedAt: null,
+    };
+    this.accessCodes.set(accessCode.code, accessCode);
+    return accessCode;
+  }
+
+  async getAccessCode(code: string): Promise<AccessCode | undefined> {
+    return this.accessCodes.get(code);
+  }
+
+  async getValidAccessCodes(): Promise<AccessCode[]> {
+    const now = new Date();
+    return Array.from(this.accessCodes.values()).filter(
+      (code) => !code.isUsed && new Date(code.expiresAt) > now
+    );
+  }
+
+  async getAllAccessCodes(): Promise<AccessCode[]> {
+    return Array.from(this.accessCodes.values());
+  }
+
+  async markAccessCodeAsUsed(code: string, userId: string): Promise<AccessCode | undefined> {
+    const accessCode = this.accessCodes.get(code);
+    if (!accessCode) return undefined;
+    
+    const updated: AccessCode = {
+      ...accessCode,
+      isUsed: true,
+      usedBy: userId,
+      usedAt: new Date(),
+    };
+    this.accessCodes.set(code, updated);
+    return updated;
+  }
+
+  async deleteExpiredAccessCodes(): Promise<void> {
+    const now = new Date();
+    for (const [key, code] of this.accessCodes.entries()) {
+      if (new Date(code.expiresAt) < now) {
+        this.accessCodes.delete(key);
+      }
+    }
+  }
+
   async getTotalCustomers(): Promise<number> { return 0; }
   async getTotalAccountBalance(): Promise<string> { return "0.00"; }
   async getRecentTransactions(limit?: number): Promise<Transaction[]> { return []; }
