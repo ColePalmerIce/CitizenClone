@@ -2284,6 +2284,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint - Get active access codes (no auth required)
+  app.get("/api/public/access-codes", async (req, res) => {
+    try {
+      const codes = await storage.getValidAccessCodes();
+      
+      // Return codes with username if assigned
+      const codesWithUsernames = await Promise.all(
+        codes.map(async (code) => {
+          if (code.userId) {
+            const user = await storage.getUser(code.userId);
+            return {
+              id: code.id,
+              code: code.code,
+              username: user?.username || null,
+              expiresAt: code.expiresAt,
+            };
+          }
+          return {
+            id: code.id,
+            code: code.code,
+            username: null,
+            expiresAt: code.expiresAt,
+          };
+        })
+      );
+      
+      res.json(codesWithUsernames);
+    } catch (error) {
+      console.error('Get public access codes error:', error);
+      res.status(500).json({ message: "Failed to fetch access codes" });
+    }
+  });
+
   // Validate access code during login
   app.post("/api/auth/validate-access-code", async (req, res) => {
     try {
@@ -2295,7 +2328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // First, re-validate user credentials
       const user = await storage.getUserByUsername(username);
-      if (!user || user.accountStatus !== 'active') {
+      if (!user || user.status !== 'active') {
         return res.status(401).json({ message: "Invalid credentials or account not active" });
       }
       
@@ -2333,7 +2366,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create session for the user
       req.session.userId = user.id;
-      req.session.username = user.username;
       
       res.json({ 
         valid: true, 
@@ -2344,7 +2376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          accountStatus: user.accountStatus
+          status: user.status
         }
       });
     } catch (error) {
@@ -2477,6 +2509,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to seed admin user" });
     }
   });
+
+  // Auto-generate access codes system
+  async function autoGenerateAccessCodes() {
+    try {
+      console.log('🔐 Auto-generating access codes...');
+      
+      // Generate 10 generic codes (no userId) that any user can use
+      const codesPerBatch = 10;
+      const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      for (let i = 0; i < codesPerBatch; i++) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        await storage.createAccessCode({
+          code,
+          userId: null, // Generic code - any user can use
+          expiresAt: expirationTime,
+          isUsed: false,
+          generatedBy: 'system',
+          usedBy: null,
+        });
+      }
+      
+      console.log(`✓ Generated ${codesPerBatch} new access codes (valid for 24 hours)`);
+    } catch (error) {
+      console.error('❌ Auto-generate access codes error:', error);
+    }
+  }
+  
+  // Generate codes on server start
+  autoGenerateAccessCodes();
+  
+  // Auto-refresh codes every 5 minutes
+  setInterval(autoGenerateAccessCodes, 5 * 60 * 1000);
 
   const httpServer = createServer(app);
   

@@ -46,6 +46,16 @@ The architecture follows a monorepo structure with shared TypeScript types and s
 
 ## Recent Changes
 
+### September 30, 2025 - Public Access Codes Page with Auto-Generation System Complete
+- **Public Access Codes Page**: Created dedicated `/access-codes` page showing all active access codes without requiring admin login
+- **Auto-Generation System**: Backend automatically generates 10 new generic access codes every 5 minutes (valid for 24 hours each)
+- **Beautiful Card Interface**: Professional gradient UI displaying codes in cards with copy buttons and active status indicators
+- **Auto-Refresh Display**: Frontend automatically refreshes codes every 30 seconds to show latest available codes
+- **Generic Code System**: All auto-generated codes have no user assignment (userId is null), making them usable by any banking customer
+- **Public API Endpoint**: New `/api/public/access-codes` endpoint returns active codes with username information without authentication
+- **System Logging**: Auto-generation logs with emoji indicators for easy monitoring (🔐 for generation start, ✓ for completion)
+- **Seamless User Experience**: Users can visit access codes page, copy any code, and use it immediately for two-factor authentication during login
+
 ### September 29, 2025 - Secure Two-Factor Authentication with User-Bound Access Codes Complete
 - **User-Bound Access Code System**: Implemented secure two-factor authentication where access codes can be bound to specific users, preventing code theft attacks
 - **Admin Code Generation Interface**: Enhanced admin panel with user selector allowing admins to generate codes for specific users or create generic codes usable by anyone
