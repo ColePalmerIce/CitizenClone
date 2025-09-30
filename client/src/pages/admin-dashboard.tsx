@@ -3108,18 +3108,39 @@ function AccessCodesTab() {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   // Query for all customers
-  const { data: customers } = useQuery<any[]>({
+  const { data: customers, isError: customersError } = useQuery<any[]>({
     queryKey: ['/api/admin/customers'],
+    retry: false,
   });
 
   // Query for access codes
-  const { data: accessCodes, isLoading } = useQuery<any[]>({
+  const { data: accessCodes, isLoading, isError: codesError } = useQuery<any[]>({
     queryKey: ['/api/admin/access-codes'],
     refetchInterval: 30000,
+    retry: false,
   });
 
   const safeAccessCodes = accessCodes || [];
   const safeCustomers = customers || [];
+  
+  // Show error state if queries fail
+  if (customersError || codesError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold">Access Codes Management</h2>
+          <p className="text-gray-600 dark:text-gray-300">Generate and manage two-factor authentication codes for users</p>
+        </div>
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-red-600 dark:text-red-400">
+              Failed to load data. Please refresh the page or check your connection.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Generate access codes mutation
   const generateCodesMutation = useMutation({
@@ -3148,9 +3169,9 @@ function AccessCodesTab() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg">
       <div>
-        <h2 className="text-2xl font-bold">Access Codes Management</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Access Codes Management</h2>
         <p className="text-gray-600 dark:text-gray-300">Generate and manage two-factor authentication codes for users</p>
       </div>
 
