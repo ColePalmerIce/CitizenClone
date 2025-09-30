@@ -3115,11 +3115,11 @@ function AccessCodesTab() {
   const usedCodes = allCodes.filter((code: any) => code.isUsed);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen" style={{ background: '#f3f4f6' }}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
-        <h2 className="text-3xl font-bold mb-2">Access Codes</h2>
-        <p className="text-blue-100">Auto-generated codes for user authentication • Refreshes every 10 seconds</p>
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white" style={{ background: 'linear-gradient(to right, #2563eb, #4f46e5)' }}>
+        <h2 className="text-3xl font-bold mb-2" style={{ color: 'white' }}>Access Codes</h2>
+        <p className="text-blue-100" style={{ color: '#dbeafe' }}>Auto-generated codes for user authentication • Refreshes every 10 seconds</p>
       </div>
 
       {/* Active Codes - Main Display */}
