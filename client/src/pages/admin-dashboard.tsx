@@ -43,7 +43,9 @@ import {
   Shield,
   ChevronDown,
   Lock,
-  Unlock
+  Unlock,
+  CheckCircle,
+  Info
 } from "lucide-react";
 
 interface DashboardStats {
@@ -3100,247 +3102,118 @@ function AccountApplicationsTab() {
   );
 }
 
-// Access Codes Tab Component
+// Access Codes Tab Component - Simplified
 function AccessCodesTab() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [generatedCodes, setGeneratedCodes] = useState<any[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
-
-  // Query for all customers
-  const { data: customers, isError: customersError } = useQuery<any[]>({
-    queryKey: ['/api/admin/customers'],
-    retry: false,
-  });
-
-  // Query for access codes
-  const { data: accessCodes, isLoading, isError: codesError } = useQuery<any[]>({
+  // Query for access codes with auto-refresh every 10 seconds
+  const { data: accessCodes, isLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/access-codes'],
-    refetchInterval: 30000,
-    retry: false,
+    refetchInterval: 10000, // Refresh every 10 seconds
   });
 
-  const safeAccessCodes = accessCodes || [];
-  const safeCustomers = customers || [];
-  
-  // Show error state if queries fail
-  if (customersError || codesError) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold">Access Codes Management</h2>
-          <p className="text-gray-600 dark:text-gray-300">Generate and manage two-factor authentication codes for users</p>
-        </div>
-        <Card>
-          <CardContent className="py-8">
-            <p className="text-center text-red-600 dark:text-red-400">
-              Failed to load data. Please refresh the page or check your connection.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Generate access codes mutation
-  const generateCodesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/generate-access-codes', { 
-        count: 5, 
-        userId: selectedUserId || null 
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setGeneratedCodes(data.codes);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/access-codes'] });
-      toast({
-        title: "Access codes generated",
-        description: `Successfully generated ${data.codes.length} new access codes`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Generation failed",
-        description: error.message || "Failed to generate access codes",
-        variant: "destructive",
-      });
-    },
-  });
+  const allCodes = accessCodes || [];
+  const validCodes = allCodes.filter((code: any) => !code.isUsed && new Date(code.expiresAt) > new Date());
+  const usedCodes = allCodes.filter((code: any) => code.isUsed);
 
   return (
-    <div className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Access Codes Management</h2>
-        <p className="text-gray-600 dark:text-gray-300">Generate and manage two-factor authentication codes for users</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
+        <h2 className="text-3xl font-bold mb-2">Access Codes</h2>
+        <p className="text-blue-100">Auto-generated codes for user authentication • Refreshes every 10 seconds</p>
       </div>
 
-      {/* Code Generation Card */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+      {/* Active Codes - Main Display */}
+      <Card>
         <CardHeader>
-          <CardTitle>Generate New Access Codes</CardTitle>
-          <CardDescription>Create secure two-factor authentication codes for specific users</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="w-5 h-5 text-green-600" />
+            Active Access Codes ({validCodes.length})
+          </CardTitle>
+          <CardDescription>
+            These codes can be used by users to login. Codes expire after 24 hours.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Select User (Optional)</label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger data-testid="select-user-for-code">
-                  <SelectValue placeholder="Any user can use these codes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Any user (generic codes)</SelectItem>
-                  {safeCustomers.map((customer: any) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.firstName} {customer.lastName} ({customer.username})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Leave blank to generate generic codes usable by any user
-              </p>
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading access codes...</p>
             </div>
-            <Button
-              onClick={() => generateCodesMutation.mutate()}
-              disabled={generateCodesMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
-              data-testid="button-generate-codes"
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              {generateCodesMutation.isPending ? 'Generating...' : 'Generate 5 Codes'}
-            </Button>
-          </div>
+          ) : validCodes.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {validCodes.map((code: any) => (
+                <div key={code.id} className="relative group" data-testid={`access-code-${code.id}`}>
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all">
+                    <div className="text-2xl font-mono font-bold text-center text-blue-600 dark:text-blue-400 tracking-wider">
+                      {code.code}
+                    </div>
+                    <div className="mt-2 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Lock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">No Active Codes</p>
+              <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Codes will be generated automatically by the system</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Recently Generated Codes Display */}
-      {generatedCodes.length > 0 && (
-        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      {/* Used Codes History */}
+      {usedCodes.length > 0 && (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900 dark:text-blue-100">Newly Generated Codes</CardTitle>
-            <CardDescription className="text-blue-700 dark:text-blue-300">
-              Share these codes with users for login authentication. They expire in 10 minutes.
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-gray-500" />
+              Recently Used Codes ({usedCodes.length})
+            </CardTitle>
+            <CardDescription>
+              Codes that have been successfully used for login
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {generatedCodes.map((code: any, index: number) => {
-                const codeUser = code.userId ? safeCustomers.find((c: any) => c.id === code.userId) : null;
-                return (
-                <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-blue-300 dark:border-blue-700">
-                  <div className="text-3xl font-mono font-bold text-center text-blue-600 dark:text-blue-400 tracking-widest">
-                    {code.code}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {usedCodes.slice(0, 20).map((code: any) => (
+                <div key={code.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg" data-testid={`used-code-${code.id}`}>
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono font-bold text-lg text-gray-500 dark:text-gray-400">{code.code}</span>
+                    <Badge variant="secondary">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Used Successfully
+                    </Badge>
                   </div>
-                  <div className="text-xs text-center mt-2 space-y-1">
-                    {codeUser ? (
-                      <p className="text-blue-600 dark:text-blue-400 font-medium">
-                        For: {codeUser.firstName} {codeUser.lastName}
-                      </p>
-                    ) : (
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Any user
-                      </p>
-                    )}
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Expires: {new Date(code.expiresAt).toLocaleTimeString()}
-                    </p>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {code.usedAt ? new Date(code.usedAt).toLocaleString() : 'Recently used'}
                   </div>
                 </div>
-              )})}
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* All Active Access Codes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Access Codes</CardTitle>
-          <CardDescription>
-            All valid access codes that haven't been used yet
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">Loading access codes...</p>
+      {/* Info Card */}
+      <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="space-y-2 text-sm text-blue-900 dark:text-blue-100">
+              <p className="font-semibold">How Access Codes Work:</p>
+              <ul className="space-y-1 text-blue-800 dark:text-blue-200">
+                <li>• System automatically generates 10 new codes every 5 minutes</li>
+                <li>• Each code is valid for 24 hours after generation</li>
+                <li>• Users enter the code during login for two-factor authentication</li>
+                <li>• Once used, codes are marked as "Used Successfully"</li>
+                <li>• This page automatically refreshes every 10 seconds</li>
+              </ul>
             </div>
-          ) : safeAccessCodes.filter((code: any) => !code.isUsed && new Date(code.expiresAt) > new Date()).length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {safeAccessCodes
-                .filter((code: any) => !code.isUsed && new Date(code.expiresAt) > new Date())
-                .map((code: any) => {
-                  const codeUser = code.userId ? safeCustomers.find((c: any) => c.id === code.userId) : null;
-                  return (
-                  <div key={code.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-                    <div className="text-2xl font-mono font-bold text-center text-gray-900 dark:text-gray-100 tracking-wider">
-                      {code.code}
-                    </div>
-                    <div className="mt-3 space-y-1 text-xs text-center">
-                      <div className="flex items-center justify-center space-x-1">
-                        <Lock className="w-3 h-3 text-green-600" />
-                        <span className="text-green-600 font-medium">Valid</span>
-                      </div>
-                      {codeUser ? (
-                        <p className="text-blue-600 dark:text-blue-400 font-medium">
-                          For: {codeUser.firstName} {codeUser.lastName}
-                        </p>
-                      ) : (
-                        <p className="text-gray-600 dark:text-gray-400">
-                          Any user
-                        </p>
-                      )}
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Expires: {new Date(code.expiresAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                )})}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">No active access codes</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Generate new codes using the button above</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Used/Expired Codes History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Code History</CardTitle>
-          <CardDescription>Used and expired access codes</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {safeAccessCodes.filter((code: any) => code.isUsed || new Date(code.expiresAt) <= new Date()).length > 0 ? (
-            <div className="space-y-2">
-              {safeAccessCodes
-                .filter((code: any) => code.isUsed || new Date(code.expiresAt) <= new Date())
-                .slice(0, 20)
-                .map((code: any) => (
-                  <div key={code.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                    <div className="flex items-center space-x-4">
-                      <span className="font-mono font-bold text-gray-500 dark:text-gray-400">{code.code}</span>
-                      <Badge variant={code.isUsed ? "secondary" : "destructive"}>
-                        {code.isUsed ? 'Used' : 'Expired'}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {code.isUsed ? 
-                        `Used: ${new Date(code.usedAt || code.createdAt).toLocaleString()}` : 
-                        `Expired: ${new Date(code.expiresAt).toLocaleString()}`
-                      }
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No code history</p>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>
