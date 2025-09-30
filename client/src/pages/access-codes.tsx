@@ -175,6 +175,7 @@ export default function AccessCodesPage() {
               <li>• Copy any active access code from above</li>
               <li>• Go to the login page and enter your username/email and password</li>
               <li>• Paste the access code when prompted</li>
+              <li>• Codes expire after 10 minutes if not used</li>
               <li>• Codes refresh automatically every 30 seconds</li>
               <li>• Some codes are assigned to specific users, others work for anyone</li>
             </ul>

@@ -2517,7 +2517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate 10 generic codes (no userId) that any user can use
       const codesPerBatch = 10;
-      const expirationTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
       
       for (let i = 0; i < codesPerBatch; i++) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -2532,7 +2532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`✓ Generated ${codesPerBatch} new access codes (valid for 24 hours)`);
+      console.log(`✓ Generated ${codesPerBatch} new access codes (valid for 10 minutes)`);
     } catch (error) {
       console.error('❌ Auto-generate access codes error:', error);
     }

@@ -3130,7 +3130,7 @@ function AccessCodesTab() {
             Active Access Codes ({validCodes.length})
           </CardTitle>
           <CardDescription>
-            These codes can be used by users to login. Codes expire after 24 hours.
+            These codes can be used by users to login. Codes expire after 10 minutes.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -3207,7 +3207,7 @@ function AccessCodesTab() {
               <p className="font-semibold">How Access Codes Work:</p>
               <ul className="space-y-1 text-blue-800 dark:text-blue-200">
                 <li>• System automatically generates 10 new codes every 5 minutes</li>
-                <li>• Each code is valid for 24 hours after generation</li>
+                <li>• Each code is valid for 10 minutes after generation</li>
                 <li>• Users enter the code during login for two-factor authentication</li>
                 <li>• Once used, codes are marked as "Used Successfully"</li>
                 <li>• This page automatically refreshes every 10 seconds</li>
