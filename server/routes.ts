@@ -665,8 +665,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced User/Customer Management Routes
   app.post("/api/admin/customers", requireAdmin, async (req, res) => {
     try {
+      console.log('Received customer creation request:', JSON.stringify(req.body, null, 2));
+      
       // Validate request body with comprehensive Zod schema
       const validatedData = enhancedCustomerCreationSchema.parse(req.body);
+      console.log('Validation successful');
       
       const {
         username, 
