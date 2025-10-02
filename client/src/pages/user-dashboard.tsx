@@ -108,6 +108,53 @@ import {
 } from "lucide-react";
 import { SiVisa, SiMastercard } from 'react-icons/si';
 
+// Comprehensive list of major US banks
+const US_BANKS = [
+  "Bank of America",
+  "Wells Fargo Bank",
+  "Chase Bank (JPMorgan Chase)",
+  "Citibank",
+  "U.S. Bank",
+  "PNC Bank",
+  "Capital One",
+  "TD Bank",
+  "Truist Bank",
+  "Goldman Sachs Bank",
+  "HSBC Bank USA",
+  "Morgan Stanley Bank",
+  "American Express National Bank",
+  "Ally Bank",
+  "Citizens Bank",
+  "Fifth Third Bank",
+  "KeyBank",
+  "Huntington National Bank",
+  "Regions Bank",
+  "M&T Bank",
+  "BMO Harris Bank",
+  "Discover Bank",
+  "Navy Federal Credit Union",
+  "USAA Federal Savings Bank",
+  "Charles Schwab Bank",
+  "First Citizens Bank",
+  "Santander Bank",
+  "First National Bank",
+  "Barclays Bank Delaware",
+  "Synchrony Bank",
+  "Marcus by Goldman Sachs",
+  "Silicon Valley Bank",
+  "First Republic Bank",
+  "New York Community Bank",
+  "WebBank",
+  "Axos Bank",
+  "CIT Bank",
+  "American Bank",
+  "SunTrust Bank",
+  "BB&T Bank",
+  "Comerica Bank",
+  "Zions Bank",
+  "Other"
+].sort();
+
 interface UserData {
   id: string;
   username: string;
@@ -536,6 +583,7 @@ export default function UserDashboard() {
     recipientAccountNumber: '',
     beneficiaryName: '',
     beneficiaryAddress: '',
+    beneficiaryAccountType: 'checking',
     amount: '',
     purpose: '',
     reference: '',
@@ -2527,15 +2575,36 @@ export default function UserDashboard() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="recipientBank">Recipient Bank</Label>
-                          <Input
-                            id="recipientBank"
+                          <Label htmlFor="recipientBank">Recipient Bank Name</Label>
+                          <Select
                             value={domesticWireForm.recipientBankName}
-                            onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientBankName: e.target.value})}
-                            placeholder="e.g., Wells Fargo Bank"
-                            data-testid="input-recipient-bank"
+                            onValueChange={(value) => setDomesticWireForm({...domesticWireForm, recipientBankName: value})}
+                          >
+                            <SelectTrigger data-testid="select-recipient-bank">
+                              <SelectValue placeholder="Select bank" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {US_BANKS.map((bank) => (
+                                <SelectItem key={bank} value={bank}>
+                                  {bank}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="recipientBankAddress">Recipient Bank Address</Label>
+                          <Input
+                            id="recipientBankAddress"
+                            value={domesticWireForm.recipientBankAddress}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientBankAddress: e.target.value})}
+                            placeholder="Bank address"
+                            data-testid="input-recipient-bank-address"
                           />
                         </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="routingNumber">Routing Number</Label>
                           <Input
@@ -2546,40 +2615,67 @@ export default function UserDashboard() {
                             data-testid="input-routing-number"
                           />
                         </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="accountNumber">Account Number</Label>
+                          <Label htmlFor="accountNumber">Recipient Account Number</Label>
                           <Input
                             id="accountNumber"
                             value={domesticWireForm.recipientAccountNumber}
                             onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientAccountNumber: e.target.value})}
-                            placeholder="Recipient account number"
+                            placeholder="Account number"
                             data-testid="input-account-number"
                           />
                         </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="beneficiaryName">Beneficiary Name</Label>
                           <Input
                             id="beneficiaryName"
                             value={domesticWireForm.beneficiaryName}
                             onChange={(e) => setDomesticWireForm({...domesticWireForm, beneficiaryName: e.target.value})}
-                            placeholder="Recipient's full name"
+                            placeholder="Full name"
                             data-testid="input-beneficiary-name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="beneficiaryAddress">Beneficiary Address</Label>
+                          <Input
+                            id="beneficiaryAddress"
+                            value={domesticWireForm.beneficiaryAddress}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, beneficiaryAddress: e.target.value})}
+                            placeholder="Full address"
+                            data-testid="input-beneficiary-address"
                           />
                         </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="purpose">Purpose</Label>
-                        <Input
-                          id="purpose"
-                          value={domesticWireForm.purpose}
-                          onChange={(e) => setDomesticWireForm({...domesticWireForm, purpose: e.target.value})}
-                          placeholder="Wire transfer purpose"
-                          data-testid="input-purpose"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="beneficiaryAccountType">Account Type</Label>
+                          <Select
+                            value={domesticWireForm.beneficiaryAccountType}
+                            onValueChange={(value) => setDomesticWireForm({...domesticWireForm, beneficiaryAccountType: value})}
+                          >
+                            <SelectTrigger data-testid="select-beneficiary-account-type">
+                              <SelectValue placeholder="Select account type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="checking">Checking</SelectItem>
+                              <SelectItem value="savings">Savings</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="purpose">Wire Purpose</Label>
+                          <Input
+                            id="purpose"
+                            value={domesticWireForm.purpose}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, purpose: e.target.value})}
+                            placeholder="e.g., Business payment, Real estate"
+                            data-testid="input-purpose"
+                          />
+                        </div>
                       </div>
                       
                       <div className="p-3 bg-amber-50 rounded-lg text-sm border border-amber-200">
@@ -2600,7 +2696,11 @@ export default function UserDashboard() {
                       <Button 
                         className="w-full" 
                         onClick={() => domesticWireMutation.mutate(domesticWireForm)}
-                        disabled={!domesticWireForm.fromAccountId || !domesticWireForm.amount || domesticWireMutation.isPending}
+                        disabled={!domesticWireForm.fromAccountId || !domesticWireForm.amount || !domesticWireForm.recipientBankName || 
+                                 !domesticWireForm.recipientBankAddress || !domesticWireForm.recipientRoutingNumber || 
+                                 !domesticWireForm.recipientAccountNumber || !domesticWireForm.beneficiaryName || 
+                                 !domesticWireForm.beneficiaryAddress || !domesticWireForm.beneficiaryAccountType || 
+                                 !domesticWireForm.purpose || domesticWireMutation.isPending}
                         data-testid="button-send-domestic-wire"
                       >
                         {domesticWireMutation.isPending ? 'Processing...' : `Send Domestic Wire - $${domesticWireForm.amount || '0.00'}`}
