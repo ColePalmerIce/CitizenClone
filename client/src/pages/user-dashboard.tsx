@@ -664,6 +664,12 @@ export default function UserDashboard() {
     ? (allAccounts as BankAccount[]).reduce((sum, account) => sum + parseFloat(account.balance), 0)
     : 0;
 
+  // Get user profile data
+  const { data: userProfile } = useQuery({
+    queryKey: ['/api/user/profile'],
+    enabled: !!user,
+  });
+
   // Get user's transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/user/transactions'],
@@ -1073,19 +1079,31 @@ export default function UserDashboard() {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center p-3 border rounded-lg">
                         <span className="text-sm font-medium text-gray-600">Date of Birth</span>
-                        <span className="text-sm">January 15, 1990</span>
+                        <span className="text-sm">
+                          {userProfile?.profile?.dateOfBirth 
+                            ? new Date(userProfile.profile.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                            : 'Not provided'}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center p-3 border rounded-lg">
                         <span className="text-sm font-medium text-gray-600">Phone Number</span>
-                        <span className="text-sm">(555) 123-4567</span>
+                        <span className="text-sm">{userProfile?.profile?.phoneNumber || 'Not provided'}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 border rounded-lg">
                         <span className="text-sm font-medium text-gray-600">Address</span>
-                        <span className="text-sm">123 Main St, City, ST</span>
+                        <span className="text-sm">
+                          {userProfile?.profile?.address 
+                            ? `${userProfile.profile.address.street}, ${userProfile.profile.address.city}, ${userProfile.profile.address.state}` 
+                            : 'Not provided'}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center p-3 border rounded-lg">
                         <span className="text-sm font-medium text-gray-600">Customer Since</span>
-                        <span className="text-sm">March 2020</span>
+                        <span className="text-sm">
+                          {userProfile?.user?.createdAt 
+                            ? new Date(userProfile.user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                            : 'Not available'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2288,68 +2306,101 @@ export default function UserDashboard() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
+                          <Label htmlFor="wireFromAccount">From Account</Label>
+                          <Select 
+                            value={domesticWireForm.fromAccountId} 
+                            onValueChange={(value) => setDomesticWireForm({...domesticWireForm, fromAccountId: value})}
+                          >
+                            <SelectTrigger data-testid="select-wire-from-account">
+                              <SelectValue placeholder="Select source account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allAccounts && Array.isArray(allAccounts) && 
+                                (allAccounts as BankAccount[]).map((account: BankAccount) => (
+                                  <SelectItem key={account.id} value={account.id}>
+                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                  </SelectItem>
+                                )) as React.ReactNode[]
+                              }
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
                           <Label htmlFor="wireAmount">Amount ($)</Label>
                           <Input
                             id="wireAmount"
                             type="number"
                             step="0.01"
                             className="text-lg"
+                            value={domesticWireForm.amount}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, amount: e.target.value})}
                             placeholder="0.00"
                             data-testid="input-wire-amount"
                           />
                         </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="recipientBank">Recipient Bank</Label>
                           <Input
                             id="recipientBank"
+                            value={domesticWireForm.recipientBankName}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientBankName: e.target.value})}
                             placeholder="e.g., Wells Fargo Bank"
                             data-testid="input-recipient-bank"
                           />
                         </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="routingNumber">Routing Number</Label>
                           <Input
                             id="routingNumber"
+                            value={domesticWireForm.recipientRoutingNumber}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientRoutingNumber: e.target.value})}
                             placeholder="9-digit routing number"
                             data-testid="input-routing-number"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="accountNumber">Account Number</Label>
-                          <Input
-                            id="accountNumber"
-                            placeholder="Recipient account number"
-                            data-testid="input-account-number"
                           />
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
+                          <Label htmlFor="accountNumber">Account Number</Label>
+                          <Input
+                            id="accountNumber"
+                            value={domesticWireForm.recipientAccountNumber}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, recipientAccountNumber: e.target.value})}
+                            placeholder="Recipient account number"
+                            data-testid="input-account-number"
+                          />
+                        </div>
+                        <div>
                           <Label htmlFor="beneficiaryName">Beneficiary Name</Label>
                           <Input
                             id="beneficiaryName"
+                            value={domesticWireForm.beneficiaryName}
+                            onChange={(e) => setDomesticWireForm({...domesticWireForm, beneficiaryName: e.target.value})}
                             placeholder="Recipient's full name"
                             data-testid="input-beneficiary-name"
                           />
                         </div>
-                        <div>
-                          <Label htmlFor="purpose">Purpose</Label>
-                          <Input
-                            id="purpose"
-                            placeholder="Wire transfer purpose"
-                            data-testid="input-purpose"
-                          />
-                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="purpose">Purpose</Label>
+                        <Input
+                          id="purpose"
+                          value={domesticWireForm.purpose}
+                          onChange={(e) => setDomesticWireForm({...domesticWireForm, purpose: e.target.value})}
+                          placeholder="Wire transfer purpose"
+                          data-testid="input-purpose"
+                        />
                       </div>
                       
                       <div className="p-3 bg-amber-50 rounded-lg text-sm border border-amber-200">
                         <div className="flex justify-between text-amber-800">
                           <span>Transfer Amount:</span>
-                          <span className="font-medium">$0.00</span>
+                          <span className="font-medium">${domesticWireForm.amount || '0.00'}</span>
                         </div>
                         <div className="flex justify-between text-amber-800">
                           <span>Wire Fee:</span>
@@ -2357,12 +2408,17 @@ export default function UserDashboard() {
                         </div>
                         <div className="flex justify-between text-amber-900 font-semibold pt-1 border-t border-amber-300 mt-1">
                           <span>Total:</span>
-                          <span>$25.00</span>
+                          <span>${(parseFloat(domesticWireForm.amount || '0') + 25).toFixed(2)}</span>
                         </div>
                       </div>
                       
-                      <Button className="w-full" data-testid="button-send-domestic-wire">
-                        Send Domestic Wire - $0.00
+                      <Button 
+                        className="w-full" 
+                        onClick={() => domesticWireMutation.mutate(domesticWireForm)}
+                        disabled={!domesticWireForm.fromAccountId || !domesticWireForm.amount || domesticWireMutation.isPending}
+                        data-testid="button-send-domestic-wire"
+                      >
+                        {domesticWireMutation.isPending ? 'Processing...' : `Send Domestic Wire - $${domesticWireForm.amount || '0.00'}`}
                       </Button>
                     </TabsContent>
                     
@@ -2374,41 +2430,59 @@ export default function UserDashboard() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
+                          <Label htmlFor="intlFromAccount">From Account</Label>
+                          <Select 
+                            value={internationalWireForm.fromAccountId} 
+                            onValueChange={(value) => setInternationalWireForm({...internationalWireForm, fromAccountId: value})}
+                          >
+                            <SelectTrigger data-testid="select-intl-wire-from-account">
+                              <SelectValue placeholder="Select source account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allAccounts && Array.isArray(allAccounts) && 
+                                (allAccounts as BankAccount[]).map((account: BankAccount) => (
+                                  <SelectItem key={account.id} value={account.id}>
+                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                  </SelectItem>
+                                )) as React.ReactNode[]
+                              }
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
                           <Label htmlFor="intlAmount">Amount ($)</Label>
                           <Input
                             id="intlAmount"
                             type="number"
                             step="0.01"
                             className="text-lg"
+                            value={internationalWireForm.amount}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, amount: e.target.value})}
                             placeholder="0.00"
                             data-testid="input-intl-amount"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="swiftCode">SWIFT Code</Label>
-                          <Input
-                            id="swiftCode"
-                            placeholder="e.g., CHASUS33"
-                            data-testid="input-swift-code"
                           />
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="intlBankName">Bank Name</Label>
+                          <Label htmlFor="swiftCode">SWIFT Code</Label>
                           <Input
-                            id="intlBankName"
-                            placeholder="International bank name"
-                            data-testid="input-intl-bank-name"
+                            id="swiftCode"
+                            value={internationalWireForm.recipientBankSwift}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientBankSwift: e.target.value})}
+                            placeholder="e.g., CHASUS33"
+                            data-testid="input-swift-code"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="bankAddress">Bank Address</Label>
+                          <Label htmlFor="intlBankName">Bank Name</Label>
                           <Input
-                            id="bankAddress"
-                            placeholder="Bank's address"
-                            data-testid="input-bank-address"
+                            id="intlBankName"
+                            value={internationalWireForm.recipientBankName}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientBankName: e.target.value})}
+                            placeholder="International bank name"
+                            data-testid="input-intl-bank-name"
                           />
                         </div>
                       </div>
@@ -2418,6 +2492,8 @@ export default function UserDashboard() {
                           <Label htmlFor="intlAccountNumber">Account Number</Label>
                           <Input
                             id="intlAccountNumber"
+                            value={internationalWireForm.recipientAccountNumber}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientAccountNumber: e.target.value})}
                             placeholder="IBAN or account number"
                             data-testid="input-intl-account-number"
                           />
@@ -2426,6 +2502,8 @@ export default function UserDashboard() {
                           <Label htmlFor="intlBeneficiary">Beneficiary Name</Label>
                           <Input
                             id="intlBeneficiary"
+                            value={internationalWireForm.beneficiaryName}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryName: e.target.value})}
                             placeholder="Recipient's full name"
                             data-testid="input-intl-beneficiary"
                           />
@@ -2437,6 +2515,8 @@ export default function UserDashboard() {
                           <Label htmlFor="beneficiaryAddress">Beneficiary Address</Label>
                           <Input
                             id="beneficiaryAddress"
+                            value={internationalWireForm.beneficiaryAddress}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryAddress: e.target.value})}
                             placeholder="Complete address"
                             data-testid="input-beneficiary-address"
                           />
@@ -2445,6 +2525,8 @@ export default function UserDashboard() {
                           <Label htmlFor="intlPurpose">Purpose</Label>
                           <Input
                             id="intlPurpose"
+                            value={internationalWireForm.purpose}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, purpose: e.target.value})}
                             placeholder="Transfer purpose"
                             data-testid="input-intl-purpose"
                           />
@@ -2454,7 +2536,7 @@ export default function UserDashboard() {
                       <div className="p-3 bg-red-50 rounded-lg text-sm border border-red-200">
                         <div className="flex justify-between text-red-800">
                           <span>Transfer Amount:</span>
-                          <span className="font-medium">$0.00</span>
+                          <span className="font-medium">${internationalWireForm.amount || '0.00'}</span>
                         </div>
                         <div className="flex justify-between text-red-800">
                           <span>Sender Fee:</span>
@@ -2466,12 +2548,17 @@ export default function UserDashboard() {
                         </div>
                         <div className="flex justify-between text-red-900 font-semibold pt-1 border-t border-red-300 mt-1">
                           <span>Total:</span>
-                          <span>$70.00</span>
+                          <span>${(parseFloat(internationalWireForm.amount || '0') + 70).toFixed(2)}</span>
                         </div>
                       </div>
                       
-                      <Button className="w-full" data-testid="button-send-international-wire">
-                        Send International Wire - $0.00
+                      <Button 
+                        className="w-full" 
+                        onClick={() => internationalWireMutation.mutate(internationalWireForm)}
+                        disabled={!internationalWireForm.fromAccountId || !internationalWireForm.amount || internationalWireMutation.isPending}
+                        data-testid="button-send-international-wire"
+                      >
+                        {internationalWireMutation.isPending ? 'Processing...' : `Send International Wire - $${internationalWireForm.amount || '0.00'}`}
                       </Button>
                     </TabsContent>
                   </Tabs>

@@ -335,6 +335,7 @@ export const enhancedCustomerCreationSchema = z.object({
   employmentType: z.enum(['full_time', 'part_time', 'contractor', 'self_employed', 'retired', 'student']).optional(),
   
   // Account creation options
+  accountCreationDate: z.string().optional(), // Optional: Admin can backdate account creation
   createAllAccounts: z.boolean().default(true),
   createCards: z.boolean().default(true),
   initialCheckingBalance: z.string().refine((val) => parseFloat(val) >= 0, "Invalid balance"),

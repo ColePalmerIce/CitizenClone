@@ -1386,6 +1386,7 @@ function CustomersTab({
     ssn: '',
     dateOfBirth: '',
     phoneNumber: '',
+    accountCreationDate: '', // Optional: Admin can backdate account creation
     createAllAccounts: true,
     createCards: true,
     initialCheckingBalance: '1000.00',
@@ -1407,6 +1408,7 @@ function CustomersTab({
           ssn: '',
           dateOfBirth: '',
           phoneNumber: '',
+          accountCreationDate: '',
           createAllAccounts: true,
           createCards: true,
           initialCheckingBalance: '1000.00',
@@ -1506,6 +1508,17 @@ function CustomersTab({
                       required
                       data-testid="input-dob"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="accountCreationDate">Account Creation Date (optional)</Label>
+                    <Input
+                      id="accountCreationDate"
+                      type="datetime-local"
+                      value={newCustomer.accountCreationDate}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, accountCreationDate: e.target.value }))}
+                      data-testid="input-account-creation-date"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave blank to use current date/time. Admin can backdate for legacy accounts.</p>
                   </div>
                 </div>
               </div>

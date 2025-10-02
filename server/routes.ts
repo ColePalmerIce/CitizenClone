@@ -707,6 +707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ssn,
         dateOfBirth,
         phoneNumber,
+        accountCreationDate,
         street,
         city,
         state,
@@ -729,13 +730,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password with secure salt rounds
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      // Create user with validated data
+      // Create user with validated data and optional custom creation date
       const user = await storage.createUser({
         username,
         email, 
         password: hashedPassword,
         firstName,
-        lastName
+        lastName,
+        createdAt: accountCreationDate ? new Date(accountCreationDate) : undefined
       });
 
       // Create comprehensive customer profile with encrypted sensitive data
@@ -1349,6 +1351,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(accounts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch accounts" });
+    }
+  });
+
+  // Get customer profile information
+  app.get("/api/user/profile", requireActiveCustomer, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const profile = await storage.getCustomerProfileByUserId(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Customer profile not found" });
+      }
+
+      // Return profile data with user creation date
+      res.json({
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          username: user.username,
+          createdAt: user.createdAt
+        },
+        profile: {
+          dateOfBirth: profile.dateOfBirth,
+          phoneNumber: profile.phoneNumber,
+          address: profile.address
+        }
+      });
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch profile" });
     }
   });
 
