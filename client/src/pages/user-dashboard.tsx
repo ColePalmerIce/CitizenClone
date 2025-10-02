@@ -235,6 +235,7 @@ export default function UserDashboard() {
   const [accountNumberVisible, setAccountNumberVisible] = useState(false);
   const [copiedAccountNumber, setCopiedAccountNumber] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [accountTransferForm, setAccountTransferForm] = useState({
     fromAccount: '',
     toAccount: '',
@@ -3233,7 +3234,12 @@ export default function UserDashboard() {
                 ) : transactions && (transactions as Transaction[]).length > 0 ? (
                   <div className="space-y-3">
                     {(transactions as Transaction[]).slice(0, 5).map((transaction) => (
-                      <div key={transaction.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div 
+                        key={transaction.id} 
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
+                        onClick={() => setSelectedTransaction(transaction)}
+                        data-testid={`transaction-item-${transaction.id}`}
+                      >
                         <div className="flex items-center space-x-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                             transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
@@ -3261,9 +3267,9 @@ export default function UserDashboard() {
                         <div className={`font-bold text-left sm:text-right ${
                           transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          <div>{transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}</div>
+                          <div>${Math.abs(parseFloat(transaction.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                           <div className="text-xs text-gray-500 font-normal">
-                            ${parseFloat(transaction.balanceAfter).toLocaleString()}
+                            ${Math.abs(parseFloat(transaction.balanceAfter)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         </div>
                       </div>
@@ -4787,6 +4793,149 @@ export default function UserDashboard() {
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Screenshot This Receipt
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Details Modal */}
+      <Dialog open={!!selectedTransaction} onOpenChange={(open) => !open && setSelectedTransaction(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center text-blue-600">
+              Transaction Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTransaction && (
+            <div className="space-y-6 py-4">
+              {/* Success Icon */}
+              <div className="flex justify-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  selectedTransaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                }`}>
+                  {selectedTransaction.type === 'credit' ? 
+                    <ArrowUpRight className="w-10 h-10 text-green-600" /> : 
+                    <ArrowDownRight className="w-10 h-10 text-red-600" />
+                  }
+                </div>
+              </div>
+
+              {/* Transaction Type */}
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {selectedTransaction.type === 'credit' ? 'Money Received' : 'Payment Sent'}
+                </h3>
+                <p className="text-gray-500 text-sm mt-1">{selectedTransaction.description}</p>
+              </div>
+
+              {/* Amount */}
+              <div className={`rounded-lg p-6 text-center ${
+                selectedTransaction.type === 'credit' ? 'bg-green-50' : 'bg-red-50'
+              }`}>
+                <p className="text-sm text-gray-600 mb-2">Transaction Amount</p>
+                <p className={`text-4xl font-bold ${
+                  selectedTransaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  ${Math.abs(parseFloat(selectedTransaction.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              {/* Transaction Details */}
+              <div className="border rounded-lg p-6 space-y-4">
+                <h4 className="font-semibold text-gray-800 border-b pb-2">Transaction Information</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Reference Number</p>
+                    <p className="font-mono text-sm font-medium">{(() => {
+                      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                      const randomRef = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+                      const year = new Date(selectedTransaction.transactionDate).getFullYear();
+                      return `FCB${year}-${randomRef}`;
+                    })()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Transaction Date</p>
+                    <p className="text-sm font-medium">{new Date(selectedTransaction.transactionDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Transaction Type</p>
+                    <Badge className={selectedTransaction.type === 'credit' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}>
+                      {selectedTransaction.type === 'credit' ? 'Credit' : 'Debit'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                      {selectedTransaction.status || 'Completed'}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Balance After</p>
+                    <p className="text-sm font-medium">
+                      ${Math.abs(parseFloat(selectedTransaction.balanceAfter)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  {selectedTransaction.merchantName && (
+                    <div>
+                      <p className="text-xs text-gray-500">Merchant</p>
+                      <p className="text-sm font-medium">{selectedTransaction.merchantName}</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedTransaction.merchantLocation && (
+                  <div>
+                    <p className="text-xs text-gray-500">Location</p>
+                    <p className="text-sm font-medium">{selectedTransaction.merchantLocation}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Note */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600 text-center">
+                  You can screenshot this page for your records. For any questions about this transaction, please contact customer support.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setSelectedTransaction(null)}
+                  data-testid="button-close-transaction-details"
+                >
+                  Close
+                </Button>
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    toast({
+                      title: "Transaction Details",
+                      description: "You can screenshot this page for your records.",
+                    });
+                  }}
+                  data-testid="button-screenshot-transaction"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Screenshot
                 </Button>
               </div>
             </div>
