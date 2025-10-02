@@ -111,3 +111,10 @@ Preferred communication style: Simple, everyday language.
 - **Real-Time Stats Updates**: Dashboard statistics automatically refresh when users are created, approved, blocked, deleted, or unblocked - ensuring always accurate counts
 - **User Restoration**: Only administrators can unblock or restore user accounts to allow login again
 - **Status Tracking**: User status changes tracked with reason, admin ID who made the change, and timestamp for full audit trail
+
+### October 2, 2025 - Backdated Account "Member Since" Date Fix
+- **Correct "Member Since" Display**: Fixed accounts to display the backdated "Member Since" date when admin backdates a customer account during creation
+- **Account Timestamp Propagation**: Modified customer creation logic to capture the backdated `accountCreationDate` and pass it to all account creation calls as both `openDate` and `createdAt`
+- **Schema Update**: Updated `insertBankAccountSchema` to accept optional `createdAt` and `openDate` parameters, allowing accounts to be created with custom timestamps instead of always using `defaultNow()`
+- **Historical Accuracy**: When admin creates a customer with a backdated join date (e.g., January 2024), all associated accounts now correctly display "Opened: 1/15/2024" instead of showing today's date
+- **Consistency**: Both `openDate` and `createdAt` fields on accounts are set to the user's backdated timestamp, ensuring complete historical accuracy across the system
