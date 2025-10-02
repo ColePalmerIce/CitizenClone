@@ -40,3 +40,11 @@ Preferred communication style: Simple, everyday language.
 - **Lucide Icons**: Icon library for consistent visual elements.
 - **Unsplash Images**: Service for stock photography used in the application.
 - **Google Fonts**: Used for typography (Inter, DM Sans, Fira Code, Geist Mono, Architects Daughter).
+
+## Recent Changes
+
+### October 2, 2025 - User Profile Editing & Bug Fixes
+- **Profile Editing Feature**: Users can now edit their profile information including date of birth, phone number, and address (street, city, state, ZIP) through the "My Profile" dialog
+- **Edit Mode UI**: Profile dialog switches between view mode (read-only display) and edit mode (editable inputs) with Save/Cancel buttons for a smooth editing experience
+- **Backend API**: Added PATCH `/api/user/profile` endpoint for updating customer profiles using the correct storage methods (getCustomerProfileByUserId, updateCustomerProfileByUserId)
+- **Customer Creation Bug Fix**: Fixed admin panel error "Failed to create comprehensive customer account" when creating customers with custom account creation dates - now creates user first, then updates createdAt using updateUserCreatedAt method
