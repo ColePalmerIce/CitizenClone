@@ -623,6 +623,11 @@ export default function AdminDashboard() {
                 setCustomerWithdrawDescription={setCustomerWithdrawDescription}
                 customerAddFundsMutation={customerAddFundsMutation}
                 customerWithdrawFundsMutation={customerWithdrawFundsMutation}
+                isEditingCreatedAt={isEditingCreatedAt}
+                setIsEditingCreatedAt={setIsEditingCreatedAt}
+                editCreatedAtValue={editCreatedAtValue}
+                setEditCreatedAtValue={setEditCreatedAtValue}
+                updateUserCreatedAtMutation={updateUserCreatedAtMutation}
               />
             )}
             {selectedTab === "customers" && (
@@ -836,7 +841,12 @@ function OverviewTab({
   customerWithdrawDescription,
   setCustomerWithdrawDescription,
   customerAddFundsMutation,
-  customerWithdrawFundsMutation
+  customerWithdrawFundsMutation,
+  isEditingCreatedAt,
+  setIsEditingCreatedAt,
+  editCreatedAtValue,
+  setEditCreatedAtValue,
+  updateUserCreatedAtMutation
 }: { 
   stats: DashboardStats; 
   statsLoading: boolean; 
@@ -865,6 +875,11 @@ function OverviewTab({
   setCustomerWithdrawDescription: (desc: string) => void;
   customerAddFundsMutation: any;
   customerWithdrawFundsMutation: any;
+  isEditingCreatedAt: boolean;
+  setIsEditingCreatedAt: (editing: boolean) => void;
+  editCreatedAtValue: string;
+  setEditCreatedAtValue: (value: string) => void;
+  updateUserCreatedAtMutation: any;
 }) {
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDetail | null>(null);
   const [showCreditModal, setShowCreditModal] = useState(false);

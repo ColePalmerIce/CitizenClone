@@ -1491,6 +1491,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/limit-increase-requests", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const [creditRequests, debitRequests] = await Promise.all([
         storage.getCreditLimitIncreaseRequestsByUserId(userId),
         storage.getDebitLimitIncreaseRequestsByUserId(userId)
@@ -1509,6 +1512,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/change-password", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { currentPassword, newPassword } = req.body;
       
       if (!currentPassword || !newPassword) {
@@ -1551,7 +1557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User account endpoints
   app.get("/api/user/account", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       if (accounts.length === 0) {
@@ -1567,7 +1573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/accounts", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       res.json(accounts);
@@ -1645,10 +1651,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true,
         message: "Profile updated successfully",
-        profile: {
+        profile: updatedProfile ? {
           ...updatedProfile,
           phoneNumber: updatedProfile.phoneNumber ? decryptPhoneNumber(updatedProfile.phoneNumber) : null
-        }
+        } : null
       });
     } catch (error) {
       console.error('Profile update error:', error);
@@ -1658,7 +1664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/transactions", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       if (accounts.length === 0) {
@@ -1689,7 +1695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/account-transactions/:accountId", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       
       const { accountId } = req.params;
       
@@ -1733,7 +1739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's account statements (3 months)
   app.get("/api/user/statements", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       
       const accounts = await storage.getBankAccountsByUserId(userId);
       const statements = [];
@@ -1827,7 +1833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User transfer endpoint
   app.post("/api/user/transfer", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const { recipient, recipientAccount, amount, description } = req.body;
       
       if (!recipient || !recipientAccount || !amount) {
@@ -1987,7 +1993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User bill pay endpoint
   app.post("/api/user/billpay", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const { payee, accountNumber, amount, description } = req.body;
       
       if (!payee || !amount) {
@@ -2040,7 +2046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User internal transfer endpoint
   app.post("/api/user/internal-transfer", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const { fromAccount, toAccount, amount, description } = req.body;
       
       if (!fromAccount || !toAccount || !amount) {
@@ -2143,7 +2149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // External transfer submission (user side)
   app.post("/api/user/external-transfer", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       const validatedData = insertPendingExternalTransferSchema.parse({
         ...req.body,
         userId
@@ -2208,7 +2214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's pending external transfers
   app.get("/api/user/pending-external-transfers", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
 
       const pendingTransfers = await storage.getPendingExternalTransfersByUserId(userId);
       res.json(pendingTransfers);

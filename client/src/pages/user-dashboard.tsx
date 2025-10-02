@@ -211,6 +211,7 @@ interface Transaction {
   balanceAfter: string;
   transactionDate: string;
   postedDate?: string;
+  status?: string;
 }
 
 export default function UserDashboard() {
@@ -738,7 +739,21 @@ export default function UserDashboard() {
     : 0;
 
   // Get user profile data
-  const { data: userProfile } = useQuery({
+  const { data: userProfile } = useQuery<{
+    profile?: {
+      dateOfBirth?: string;
+      phoneNumber?: string;
+      address?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        zip?: string;
+      };
+    };
+    user?: {
+      createdAt?: string;
+    };
+  }>({
     queryKey: ['/api/user/profile'],
     enabled: !!user,
   });
@@ -2416,13 +2431,13 @@ export default function UserDashboard() {
                               <SelectValue placeholder="Select source account" />
                             </SelectTrigger>
                             <SelectContent>
-                              {allAccounts && Array.isArray(allAccounts) && 
+                              {allAccounts && Array.isArray(allAccounts) ? (
                                 (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
                                     {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </SelectItem>
-                                )) as React.ReactNode[]
-                              }
+                                ))
+                              ) : null}
                             </SelectContent>
                           </Select>
                         </div>
@@ -2596,13 +2611,13 @@ export default function UserDashboard() {
                               <SelectValue placeholder="Select source account" />
                             </SelectTrigger>
                             <SelectContent>
-                              {allAccounts && Array.isArray(allAccounts) && 
+                              {allAccounts && Array.isArray(allAccounts) ? (
                                 (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
                                     {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </SelectItem>
-                                )) as React.ReactNode[]
-                              }
+                                ))
+                              ) : null}
                             </SelectContent>
                           </Select>
                         </div>
@@ -3487,15 +3502,15 @@ export default function UserDashboard() {
                             <SelectValue placeholder="Select destination" />
                           </SelectTrigger>
                           <SelectContent>
-                            {allAccounts && Array.isArray(allAccounts) && 
+                            {allAccounts && Array.isArray(allAccounts) ? (
                               (allAccounts as BankAccount[])
                                 .filter(acc => acc.id !== selectedAccount.id)
                                 .map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
                                     {account.accountType} (****{account.accountNumber.slice(-4)})
                                   </SelectItem>
-                                )) as React.ReactNode[]
-                            }
+                                ))
+                            ) : null}
                             <SelectItem value="external">External Bank Account</SelectItem>
                             <SelectItem value="credit-card">FCB Credit Card (****8492)</SelectItem>
                           </SelectContent>
@@ -3555,13 +3570,13 @@ export default function UserDashboard() {
                             <SelectValue placeholder="Select source account" />
                           </SelectTrigger>
                           <SelectContent>
-                            {allAccounts && Array.isArray(allAccounts) && 
+                            {allAccounts && Array.isArray(allAccounts) ? (
                               (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                 <SelectItem key={account.id} value={account.id}>
                                   {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </SelectItem>
-                              )) as React.ReactNode[]
-                            }
+                              ))
+                            ) : null}
                           </SelectContent>
                         </Select>
                       </div>
@@ -3668,13 +3683,13 @@ export default function UserDashboard() {
                             <SelectValue placeholder="Select source account" />
                           </SelectTrigger>
                           <SelectContent>
-                            {allAccounts && Array.isArray(allAccounts) && 
+                            {allAccounts && Array.isArray(allAccounts) ? (
                               (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                 <SelectItem key={account.id} value={account.id}>
                                   {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </SelectItem>
-                              )) as React.ReactNode[]
-                            }
+                              ))
+                            ) : null}
                           </SelectContent>
                         </Select>
                       </div>
