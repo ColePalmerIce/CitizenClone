@@ -2751,6 +2751,37 @@ export default function UserDashboard() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
+                          <Label htmlFor="intlBankName">Recipient Bank Name</Label>
+                          <Select
+                            value={internationalWireForm.recipientBankName}
+                            onValueChange={(value) => setInternationalWireForm({...internationalWireForm, recipientBankName: value})}
+                          >
+                            <SelectTrigger data-testid="select-intl-bank-name">
+                              <SelectValue placeholder="Select bank" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {US_BANKS.map((bank) => (
+                                <SelectItem key={bank} value={bank}>
+                                  {bank}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="intlBankAddress">Recipient Bank Address</Label>
+                          <Input
+                            id="intlBankAddress"
+                            value={internationalWireForm.recipientBankAddress}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientBankAddress: e.target.value})}
+                            placeholder="Bank address"
+                            data-testid="input-intl-bank-address"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
                           <Label htmlFor="swiftCode">SWIFT Code</Label>
                           <Input
                             id="swiftCode"
@@ -2761,19 +2792,6 @@ export default function UserDashboard() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="intlBankName">Bank Name</Label>
-                          <Input
-                            id="intlBankName"
-                            value={internationalWireForm.recipientBankName}
-                            onChange={(e) => setInternationalWireForm({...internationalWireForm, recipientBankName: e.target.value})}
-                            placeholder="International bank name"
-                            data-testid="input-intl-bank-name"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
                           <Label htmlFor="intlAccountNumber">Account Number</Label>
                           <Input
                             id="intlAccountNumber"
@@ -2783,6 +2801,9 @@ export default function UserDashboard() {
                             data-testid="input-intl-account-number"
                           />
                         </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="intlBeneficiary">Beneficiary Name</Label>
                           <Input
@@ -2793,9 +2814,6 @@ export default function UserDashboard() {
                             data-testid="input-intl-beneficiary"
                           />
                         </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="beneficiaryAddress">Beneficiary Address</Label>
                           <Input
@@ -2803,11 +2821,24 @@ export default function UserDashboard() {
                             value={internationalWireForm.beneficiaryAddress}
                             onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryAddress: e.target.value})}
                             placeholder="Complete address"
-                            data-testid="input-beneficiary-address"
+                            data-testid="input-intl-beneficiary-address"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="beneficiaryCountry">Beneficiary Country</Label>
+                          <Input
+                            id="beneficiaryCountry"
+                            value={internationalWireForm.beneficiaryCountry}
+                            onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryCountry: e.target.value})}
+                            placeholder="Country"
+                            data-testid="input-beneficiary-country"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="intlPurpose">Purpose</Label>
+                          <Label htmlFor="intlPurpose">Wire Purpose</Label>
                           <Input
                             id="intlPurpose"
                             value={internationalWireForm.purpose}
@@ -2840,7 +2871,11 @@ export default function UserDashboard() {
                       <Button 
                         className="w-full" 
                         onClick={() => internationalWireMutation.mutate(internationalWireForm)}
-                        disabled={!internationalWireForm.fromAccountId || !internationalWireForm.amount || internationalWireMutation.isPending}
+                        disabled={!internationalWireForm.fromAccountId || !internationalWireForm.amount || !internationalWireForm.recipientBankName || 
+                                 !internationalWireForm.recipientBankAddress || !internationalWireForm.recipientBankSwift || 
+                                 !internationalWireForm.recipientAccountNumber || !internationalWireForm.beneficiaryName || 
+                                 !internationalWireForm.beneficiaryAddress || !internationalWireForm.beneficiaryCountry || 
+                                 !internationalWireForm.purpose || internationalWireMutation.isPending}
                         data-testid="button-send-international-wire"
                       >
                         {internationalWireMutation.isPending ? 'Processing...' : `Send International Wire - $${internationalWireForm.amount || '0.00'}`}
