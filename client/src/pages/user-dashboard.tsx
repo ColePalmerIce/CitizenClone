@@ -2251,7 +2251,7 @@ export default function UserDashboard() {
                     ) : allAccounts && (allAccounts as BankAccount[]).length > 0 ? (
                       <h2 className="text-3xl font-bold text-gray-900">
                         {balanceVisible 
-                          ? `$${totalBalance.toLocaleString()}`
+                          ? `$${Math.abs(totalBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                           : "••••••"
                         }
                       </h2>
@@ -3691,7 +3691,7 @@ export default function UserDashboard() {
                             {allAccounts && Array.isArray(allAccounts) && 
                               (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                 <SelectItem key={account.id} value={account.id}>
-                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </SelectItem>
                               )) as React.ReactNode[]
                             }
@@ -3804,7 +3804,7 @@ export default function UserDashboard() {
                             {allAccounts && Array.isArray(allAccounts) && 
                               (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                 <SelectItem key={account.id} value={account.id}>
-                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </SelectItem>
                               )) as React.ReactNode[]
                             }
@@ -4297,7 +4297,7 @@ export default function UserDashboard() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-gray-900">
-                              ${parseFloat(transfer.amount).toLocaleString()} to {transfer.recipientName}
+                              ${Math.abs(parseFloat(transfer.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to {transfer.recipientName}
                             </p>
                             <p className="text-sm text-gray-600">
                               {transfer.recipientBankName} • {transfer.transferType}
@@ -4349,7 +4349,7 @@ export default function UserDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-red-600">-$125.99</div>
+                        <div className="font-bold text-red-600">$125.99</div>
                         <div className="text-xs text-gray-500">Balance: $250.00</div>
                       </div>
                     </div>
@@ -4364,7 +4364,7 @@ export default function UserDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-red-600">-$45.20</div>
+                        <div className="font-bold text-red-600">$45.20</div>
                         <div className="text-xs text-gray-500">Balance: $124.01</div>
                       </div>
                     </div>
@@ -4379,7 +4379,7 @@ export default function UserDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-green-600">-$150.00</div>
+                        <div className="font-bold text-green-600">$150.00</div>
                         <div className="text-xs text-gray-500">Balance: $78.81</div>
                       </div>
                     </div>
@@ -4420,10 +4420,10 @@ export default function UserDashboard() {
                           <div className={`font-bold ${
                             transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                            ${Math.abs(parseFloat(transaction.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                           <div className="text-xs text-gray-500">
-                            Balance: ${parseFloat(transaction.balance_after).toLocaleString()}
+                            Balance: ${Math.abs(parseFloat(transaction.balance_after)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         </div>
                       </div>
@@ -4502,25 +4502,25 @@ export default function UserDashboard() {
                               <div className="text-center p-3 bg-gray-50 rounded-lg">
                                 <div className="text-sm text-gray-600">Opening Balance</div>
                                 <div className="text-lg font-bold text-gray-800">
-                                  ${parseFloat(statement.openingBalance).toLocaleString()}
+                                  ${Math.abs(parseFloat(statement.openingBalance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                               </div>
                               <div className="text-center p-3 bg-green-50 rounded-lg">
                                 <div className="text-sm text-gray-600">Total Credits</div>
                                 <div className="text-lg font-bold text-green-600">
-                                  +${parseFloat(statement.totalCredits).toLocaleString()}
+                                  ${Math.abs(parseFloat(statement.totalCredits)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                               </div>
                               <div className="text-center p-3 bg-red-50 rounded-lg">
                                 <div className="text-sm text-gray-600">Total Debits</div>
                                 <div className="text-lg font-bold text-red-600">
-                                  -${parseFloat(statement.totalDebits).toLocaleString()}
+                                  ${Math.abs(parseFloat(statement.totalDebits)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                               </div>
                               <div className="text-center p-3 bg-blue-50 rounded-lg">
                                 <div className="text-sm text-gray-600">Closing Balance</div>
                                 <div className="text-lg font-bold text-blue-600">
-                                  ${parseFloat(statement.closingBalance).toLocaleString()}
+                                  ${Math.abs(parseFloat(statement.closingBalance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                               </div>
                             </div>
@@ -4603,10 +4603,10 @@ export default function UserDashboard() {
                                           <div className={`font-semibold ${
                                             transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                                           }`}>
-                                            {transaction.type === 'credit' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString()}
+                                            ${Math.abs(parseFloat(transaction.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                           </div>
                                           <div className="text-xs text-gray-500">
-                                            Balance: ${parseFloat(transaction.balanceAfter).toLocaleString()}
+                                            Balance: ${Math.abs(parseFloat(transaction.balanceAfter)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                           </div>
                                         </div>
                                       </div>
