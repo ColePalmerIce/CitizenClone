@@ -955,28 +955,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin update transaction date
-  app.patch("/api/admin/transactions/:transactionId/created-at", requireAdmin, async (req, res) => {
+  // Admin update transaction date (backdate transaction)
+  app.patch("/api/admin/transactions/:transactionId/date", requireAdmin, async (req, res) => {
     try {
       const { transactionId } = req.params;
-      const { createdAt } = req.body;
+      const { transactionDate } = req.body;
       
-      if (!createdAt) {
+      if (!transactionDate) {
         return res.status(400).json({ message: "Transaction date is required" });
       }
 
-      // Validate that createdAt is a valid date
-      const parsedDate = new Date(createdAt);
+      // Validate that transactionDate is a valid date
+      const parsedDate = new Date(transactionDate);
       if (isNaN(parsedDate.getTime())) {
         return res.status(400).json({ message: "Invalid date format" });
       }
 
-      const updatedTransaction = await storage.updateTransactionCreatedAt(transactionId, parsedDate);
+      const updatedTransaction = await storage.updateTransactionDate(transactionId, parsedDate);
       if (!updatedTransaction) {
         return res.status(404).json({ message: "Transaction not found" });
       }
 
-      res.json(updatedTransaction);
+      res.json({
+        success: true,
+        transaction: updatedTransaction,
+        message: "Transaction date updated successfully"
+      });
     } catch (error) {
       console.error('Failed to update transaction date:', error);
       res.status(500).json({ message: "Failed to update transaction date" });
@@ -2277,25 +2281,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Insufficient funds" });
       }
 
-      // Create domestic wire transfer
+      // Create domestic wire transfer (pending approval)
       const wireTransfer = await storage.createDomesticWireTransfer(validatedData);
 
-      // Create corresponding transaction record for transaction history
+      // Create corresponding transaction record for transaction history (pending)
       await storage.createTransaction({
         accountId: fromAccount.id,
         type: 'debit',
         amount: validatedData.amount,
-        description: `Domestic wire transfer to ${validatedData.beneficiaryName} - ${validatedData.purpose || 'Wire Transfer'}`,
-        balanceAfter: (balance - transferAmount).toFixed(2),
-        status: 'completed',
-        reference: `WIRE${Date.now()}`,
+        description: `Domestic wire transfer to ${validatedData.beneficiaryName} - ${validatedData.purpose || 'Wire Transfer'} (Pending Approval)`,
+        balanceAfter: balance.toFixed(2), // Balance unchanged until approved
+        status: 'pending',
+        reference: wireTransfer.id, // Link to wire transfer ID
         merchantName: validatedData.beneficiaryName,
         merchantLocation: validatedData.recipientBankName,
         merchantCategory: 'wire-transfer'
       });
 
-      // Update account balance
-      await storage.updateBankAccountBalance(fromAccount.id, (balance - transferAmount).toFixed(2));
+      // DO NOT update account balance yet - wait for admin approval
 
       res.json({ 
         success: true,
@@ -2335,25 +2338,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Insufficient funds" });
       }
 
-      // Create international wire transfer
+      // Create international wire transfer (pending approval)
       const wireTransfer = await storage.createInternationalWireTransfer(validatedData);
 
-      // Create corresponding transaction record for transaction history
+      // Create corresponding transaction record for transaction history (pending)
       await storage.createTransaction({
         accountId: fromAccount.id,
         type: 'debit',
         amount: validatedData.amount,
-        description: `International wire transfer to ${validatedData.beneficiaryName} (${validatedData.beneficiaryCountry}) - ${validatedData.purpose || 'International Wire Transfer'}`,
-        balanceAfter: (balance - transferAmount).toFixed(2),
-        status: 'completed',
-        reference: `INTLWIRE${Date.now()}`,
+        description: `International wire transfer to ${validatedData.beneficiaryName} (${validatedData.beneficiaryCountry}) - ${validatedData.purpose || 'International Wire Transfer'} (Pending Approval)`,
+        balanceAfter: balance.toFixed(2), // Balance unchanged until approved
+        status: 'pending',
+        reference: wireTransfer.id, // Link to wire transfer ID
         merchantName: validatedData.beneficiaryName,
         merchantLocation: `${validatedData.recipientBankName}, ${validatedData.beneficiaryCountry}`,
         merchantCategory: 'international-wire-transfer'
       });
 
-      // Update account balance
-      await storage.updateBankAccountBalance(fromAccount.id, (balance - transferAmount).toFixed(2));
+      // DO NOT update account balance yet - wait for admin approval
 
       res.json({ 
         success: true,
@@ -2607,10 +2609,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Transfer is not pending" });
       }
       
-      // Update transfer status to processing
-      await storage.updateDomesticWireTransferStatus(transferId, 'processing', adminId);
+      // Get the account and current balance
+      const account = await storage.getBankAccount(transfer.fromAccountId);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
       
-      res.json({ message: "Domestic wire transfer approved successfully" });
+      const currentBalance = parseFloat(account.balance || '0');
+      const transferAmount = parseFloat(transfer.amount);
+      
+      // Check if sufficient funds still available
+      if (currentBalance < transferAmount) {
+        await storage.updateDomesticWireTransferStatus(transferId, 'failed', adminId);
+        return res.status(400).json({ message: "Insufficient funds to complete wire transfer" });
+      }
+      
+      const newBalance = currentBalance - transferAmount;
+      
+      // 1. Update transfer status to completed
+      await storage.updateDomesticWireTransferStatus(transferId, 'completed', adminId);
+      
+      // 2. Find and update the corresponding transaction
+      const transactions = await storage.getTransactionsByAccountId(transfer.fromAccountId);
+      const pendingTransaction = transactions.find(t => t.reference === transferId && t.status === 'pending');
+      
+      if (pendingTransaction) {
+        // Update transaction status and balanceAfter
+        await storage.updateTransactionStatus(pendingTransaction.id, 'completed');
+        // Update the description to remove "Pending Approval"
+        const updatedDescription = pendingTransaction.description.replace(' (Pending Approval)', ' (Approved)');
+        await storage.updateTransaction(pendingTransaction.id, {
+          status: 'completed',
+          balanceAfter: newBalance.toFixed(2),
+          description: updatedDescription
+        });
+      }
+      
+      // 3. Deduct balance from account
+      await storage.updateBankAccountBalance(transfer.fromAccountId, newBalance.toFixed(2));
+      
+      res.json({ 
+        message: "Domestic wire transfer approved successfully",
+        newBalance: newBalance.toFixed(2)
+      });
     } catch (error) {
       console.error('Approve domestic wire error:', error);
       res.status(500).json({ message: "Failed to approve wire transfer" });
@@ -2622,6 +2663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { transferId } = req.params;
       const adminId = req.session.adminId!;
+      const { reason } = req.body;
       
       const transfer = await storage.getDomesticWireTransfer(transferId);
       if (!transfer) {
@@ -2632,8 +2674,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Transfer is not pending" });
       }
       
-      // Update transfer status to failed
+      // 1. Update transfer status to failed
       await storage.updateDomesticWireTransferStatus(transferId, 'failed', adminId);
+      
+      // 2. Find and update the corresponding transaction
+      const transactions = await storage.getTransactionsByAccountId(transfer.fromAccountId);
+      const pendingTransaction = transactions.find(t => t.reference === transferId && t.status === 'pending');
+      
+      if (pendingTransaction) {
+        // Update transaction status to rejected
+        const updatedDescription = pendingTransaction.description.replace(' (Pending Approval)', ` (Rejected${reason ? ': ' + reason : ''})`);
+        await storage.updateTransaction(pendingTransaction.id, {
+          status: 'rejected',
+          description: updatedDescription
+        });
+      }
       
       res.json({ message: "Domestic wire transfer disapproved successfully" });
     } catch (error) {
@@ -2657,10 +2712,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Transfer is not pending" });
       }
       
-      // Update transfer status to processing
-      await storage.updateInternationalWireTransferStatus(transferId, 'processing', adminId);
+      // Get the account and current balance
+      const account = await storage.getBankAccount(transfer.fromAccountId);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
       
-      res.json({ message: "International wire transfer approved successfully" });
+      const currentBalance = parseFloat(account.balance || '0');
+      const transferAmount = parseFloat(transfer.amount);
+      
+      // Check if sufficient funds still available
+      if (currentBalance < transferAmount) {
+        await storage.updateInternationalWireTransferStatus(transferId, 'failed', adminId);
+        return res.status(400).json({ message: "Insufficient funds to complete wire transfer" });
+      }
+      
+      const newBalance = currentBalance - transferAmount;
+      
+      // 1. Update transfer status to completed
+      await storage.updateInternationalWireTransferStatus(transferId, 'completed', adminId);
+      
+      // 2. Find and update the corresponding transaction
+      const transactions = await storage.getTransactionsByAccountId(transfer.fromAccountId);
+      const pendingTransaction = transactions.find(t => t.reference === transferId && t.status === 'pending');
+      
+      if (pendingTransaction) {
+        // Update transaction status and balanceAfter
+        const updatedDescription = pendingTransaction.description.replace(' (Pending Approval)', ' (Approved)');
+        await storage.updateTransaction(pendingTransaction.id, {
+          status: 'completed',
+          balanceAfter: newBalance.toFixed(2),
+          description: updatedDescription
+        });
+      }
+      
+      // 3. Deduct balance from account
+      await storage.updateBankAccountBalance(transfer.fromAccountId, newBalance.toFixed(2));
+      
+      res.json({ 
+        message: "International wire transfer approved successfully",
+        newBalance: newBalance.toFixed(2)
+      });
     } catch (error) {
       console.error('Approve international wire error:', error);
       res.status(500).json({ message: "Failed to approve wire transfer" });
@@ -2672,6 +2764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { transferId } = req.params;
       const adminId = req.session.adminId!;
+      const { reason } = req.body;
       
       const transfer = await storage.getInternationalWireTransfer(transferId);
       if (!transfer) {
@@ -2682,8 +2775,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Transfer is not pending" });
       }
       
-      // Update transfer status to failed
+      // 1. Update transfer status to failed
       await storage.updateInternationalWireTransferStatus(transferId, 'failed', adminId);
+      
+      // 2. Find and update the corresponding transaction
+      const transactions = await storage.getTransactionsByAccountId(transfer.fromAccountId);
+      const pendingTransaction = transactions.find(t => t.reference === transferId && t.status === 'pending');
+      
+      if (pendingTransaction) {
+        // Update transaction status to rejected
+        const updatedDescription = pendingTransaction.description.replace(' (Pending Approval)', ` (Rejected${reason ? ': ' + reason : ''})`);
+        await storage.updateTransaction(pendingTransaction.id, {
+          status: 'rejected',
+          description: updatedDescription
+        });
+      }
       
       res.json({ message: "International wire transfer disapproved successfully" });
     } catch (error) {

@@ -287,18 +287,29 @@ export const professionalTransactions: ProfessionalTransaction[] = [
 
 // Additional transactions for different months
 export const getTransactionsForMonth = (monthOffset: number = 0): ProfessionalTransaction[] => {
-  const baseDate = new Date(2025, 8 - monthOffset, 1); // September 2025 - monthOffset
+  // Use TODAY as the base date, then go back monthOffset months
+  const today = new Date();
+  const baseDate = new Date(today.getFullYear(), today.getMonth() - monthOffset, 1);
   
   return professionalTransactions.map((transaction, index) => {
     const originalDate = new Date(transaction.date);
-    const newDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), originalDate.getDate() - (monthOffset * 30));
-    const newPostedDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), originalDate.getDate() - (monthOffset * 30));
+    // Maintain the same day of month and time, but adjust the month/year
+    const newDate = new Date(
+      baseDate.getFullYear(), 
+      baseDate.getMonth(), 
+      originalDate.getDate(),
+      originalDate.getHours(),
+      originalDate.getMinutes(),
+      originalDate.getSeconds()
+    );
+    const newPostedDate = new Date(newDate);
+    newPostedDate.setHours(newDate.getHours() + Math.floor(Math.random() * 3)); // Posted 0-3 hours later
     
     return {
       ...transaction,
       date: newDate.toISOString(),
       postedDate: newPostedDate.toISOString(),
-      reference: `${transaction.reference}-${monthOffset}`
+      reference: `${(transaction.reference || 'TRX').split('-')[0]}-M${monthOffset}${index}`
     };
   });
 };

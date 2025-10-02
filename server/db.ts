@@ -331,23 +331,43 @@ export class PostgreSQLStorage implements IStorage {
     const professionalTransactions = generateComprehensiveTransactionHistory();
     const seededTransactions: Transaction[] = [];
     
-    // Get current account to calculate running balance
+    // Get current account and its current balance
     const account = await this.getBankAccount(accountId);
     if (!account) {
       throw new Error("Account not found");
     }
     
-    let runningBalance = parseFloat(account.balance || '50000') || 50000; // Starting balance
+    const currentBalance = parseFloat(account.balance || '0');
     
-    // Process transactions in chronological order (oldest first)
+    // Delete all existing transactions for this account to start fresh
+    await db.delete(transactions).where(eq(transactions.accountId, accountId));
+    
+    // Sort transactions chronologically (oldest first)
     const sortedTransactions = professionalTransactions.sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     
+    // Calculate the starting balance by working backwards from current balance
+    let totalDebits = 0;
+    let totalCredits = 0;
+    
+    for (const profTransaction of sortedTransactions) {
+      const amount = parseFloat(profTransaction.amount);
+      if (profTransaction.type === 'credit') {
+        totalCredits += amount;
+      } else {
+        totalDebits += amount;
+      }
+    }
+    
+    // Starting balance = Current Balance - Total Credits + Total Debits
+    let runningBalance = currentBalance - totalCredits + totalDebits;
+    
+    // Now create transactions in chronological order with correct balance calculations
     for (const profTransaction of sortedTransactions) {
       const amount = parseFloat(profTransaction.amount);
       
-      // Calculate new balance
+      // Calculate new balance after this transaction
       if (profTransaction.type === 'credit') {
         runningBalance += amount;
       } else {
@@ -373,8 +393,11 @@ export class PostgreSQLStorage implements IStorage {
       seededTransactions.push(transaction);
     }
     
-    // Update final account balance
-    await this.updateBankAccountBalance(accountId, runningBalance.toFixed(2));
+    // Verify final balance matches current balance
+    const finalBalance = parseFloat(seededTransactions[seededTransactions.length - 1].balanceAfter);
+    if (Math.abs(finalBalance - currentBalance) > 0.01) {
+      console.warn(`Balance mismatch: Expected ${currentBalance}, got ${finalBalance}`);
+    }
     
     return seededTransactions;
   }
@@ -388,6 +411,22 @@ export class PostgreSQLStorage implements IStorage {
   async updateTransactionStatus(id: string, status: string): Promise<Transaction | undefined> {
     const result = await db.update(transactions)
       .set({ status })
+      .where(eq(transactions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined> {
+    const result = await db.update(transactions)
+      .set(updates)
+      .where(eq(transactions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateTransactionDate(id: string, transactionDate: Date): Promise<Transaction | undefined> {
+    const result = await db.update(transactions)
+      .set({ transactionDate })
       .where(eq(transactions.id, id))
       .returning();
     return result[0];
