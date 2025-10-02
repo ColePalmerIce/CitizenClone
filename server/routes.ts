@@ -2255,6 +2255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/domestic-wire-transfer", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId!;
+      console.log('Domestic wire request body:', req.body);
       const validatedData = insertDomesticWireTransferSchema.parse({
         ...req.body,
         userId
@@ -2301,9 +2302,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wireTransfer,
         message: `Domestic wire transfer of $${transferAmount.toFixed(2)} initiated successfully`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Domestic wire transfer error:', error);
-      res.status(400).json({ message: "Invalid wire transfer data" });
+      console.error('Validation error details:', error.errors || error.message);
+      res.status(400).json({ message: error.message || "Invalid wire transfer data" });
     }
   });
 
@@ -2311,6 +2313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/international-wire-transfer", requireActiveCustomer, async (req, res) => {
     try {
       const userId = req.session.userId!;
+      console.log('International wire request body:', req.body);
       const validatedData = insertInternationalWireTransferSchema.parse({
         ...req.body,
         userId
@@ -2357,9 +2360,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wireTransfer,
         message: `International wire transfer of $${transferAmount.toFixed(2)} initiated successfully`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('International wire transfer error:', error);
-      res.status(400).json({ message: "Invalid wire transfer data" });
+      console.error('Validation error details:', error.errors || error.message);
+      res.status(400).json({ message: error.message || "Invalid wire transfer data" });
     }
   });
 

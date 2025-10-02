@@ -449,13 +449,26 @@ export default function AdminDashboard() {
           flex flex-col
         `}>
           <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700 flex-shrink-0">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
-                <Building className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="font-bold text-white text-lg">Admin Portal</h2>
-                <p className="text-blue-100 text-sm">First Citizens Bank</p>
+            <div className="flex items-center">
+              <img 
+                src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png"
+                alt="First Citizens Bank"
+                className="h-8 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+              <div className="flex items-center space-x-3" style={{ display: 'none' }}>
+                <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
+                  <Building className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-white text-lg">Admin Portal</h2>
+                  <p className="text-blue-100 text-sm">First Citizens Bank</p>
+                </div>
               </div>
             </div>
           </div>

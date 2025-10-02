@@ -1100,10 +1100,18 @@ export default function UserDashboard() {
           <div className="flex flex-col h-full">
             {/* Logo */}
             <div className="hidden lg:flex items-center px-6 py-4 border-b border-white/10 backdrop-blur-sm">
-              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg">
-                <Building className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-3">
+              <img 
+                src="https://www.firstcitizens.com/content/dam/firstcitizens/images/logos/fcb-logo-horiz-web-2020@2x.png.transform/original/image.20230612.png"
+                alt="First Citizens Bank"
+                className="h-8 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+              <div className="ml-3" style={{ display: 'none' }}>
                 <h1 className="text-lg font-bold text-white tracking-tight">Customer Portal</h1>
                 <p className="text-xs text-blue-200/90 font-medium">First Citizens Bank</p>
               </div>
