@@ -45,8 +45,6 @@ export default function CustomerService({ onAccountClick }: CustomerServiceProps
       case "call_us":
         window.open("https://www.firstcitizens.com/support/call-us", "_blank");
         break;
-      default:
-        console.log("Unknown action:", action);
     }
   };
 
