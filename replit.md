@@ -55,3 +55,8 @@ Preferred communication style: Simple, everyday language.
 - **Edit Mode UI**: Profile dialog switches between view mode (read-only display) and edit mode (editable inputs) with Save/Cancel buttons for a smooth editing experience
 - **Backend API**: Added PATCH `/api/user/profile` endpoint for updating customer profiles using the correct storage methods (getCustomerProfileByUserId, updateCustomerProfileByUserId)
 - **Customer Creation Bug Fix**: Fixed admin panel error "Failed to create comprehensive customer account" when creating customers with custom account creation dates - now creates user first, then updates createdAt using updateUserCreatedAt method
+
+### October 2, 2025 - Critical Bug Fixes (Wire Transfers, Profile, Balance Display)
+- **Wire Transfer Tables Created**: Created domestic_wire_transfers and international_wire_transfers database tables via SQL to enable wire transfer functionality
+- **Profile API Fixed**: Corrected profile endpoints to use proper storage method names (getUser instead of getUserById, getCustomerProfile instead of getCustomerProfileByUserId) - profile editing now saves correctly
+- **Balance Display Fixed**: Updated account balance rendering to always display as positive values using Math.abs() with proper 2-decimal formatting ($46,000.00 instead of potential negative values)
