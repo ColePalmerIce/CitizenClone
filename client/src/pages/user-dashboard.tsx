@@ -2561,7 +2561,7 @@ export default function UserDashboard() {
                               {allAccounts && Array.isArray(allAccounts) && 
                                 (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
-                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </SelectItem>
                                 )) as React.ReactNode[]
                               }
@@ -2740,7 +2740,7 @@ export default function UserDashboard() {
                               {allAccounts && Array.isArray(allAccounts) && 
                                 (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
-                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </SelectItem>
                                 )) as React.ReactNode[]
                               }
@@ -3691,7 +3691,7 @@ export default function UserDashboard() {
                             {allAccounts && Array.isArray(allAccounts) && 
                               (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                 <SelectItem key={account.id} value={account.id}>
-                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </SelectItem>
                               )) as React.ReactNode[]
                             }
@@ -3804,7 +3804,7 @@ export default function UserDashboard() {
                             {allAccounts && Array.isArray(allAccounts) && 
                               (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                 <SelectItem key={account.id} value={account.id}>
-                                  {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  {account.accountType} (****{account.accountNumber.slice(-4)}) ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </SelectItem>
                               )) as React.ReactNode[]
                             }
