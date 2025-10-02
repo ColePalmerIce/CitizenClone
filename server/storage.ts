@@ -91,7 +91,7 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransaction(id: string): Promise<Transaction | undefined>;
   getTransactionsByAccountId(accountId: string, limit?: number): Promise<Transaction[]>;
-  seedAccountWithProfessionalTransactions(accountId: string, accountType?: 'checking' | 'savings' | 'business'): Promise<Transaction[]>;
+  seedAccountWithProfessionalTransactions(accountId: string, accountType?: 'checking' | 'savings' | 'business', referenceDate?: Date): Promise<Transaction[]>;
   getAllTransactions(limit?: number): Promise<Transaction[]>;
   updateTransactionStatus(id: string, status: string): Promise<Transaction | undefined>;
   updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined>;
@@ -522,7 +522,7 @@ export class MemStorage implements IStorage {
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> { throw new Error("Not implemented in MemStorage"); }
   async getTransaction(id: string): Promise<Transaction | undefined> { return undefined; }
   async getTransactionsByAccountId(accountId: string, limit?: number): Promise<Transaction[]> { return []; }
-  async seedAccountWithProfessionalTransactions(accountId: string, accountType?: 'checking' | 'savings' | 'business'): Promise<Transaction[]> { return []; }
+  async seedAccountWithProfessionalTransactions(accountId: string, accountType?: 'checking' | 'savings' | 'business', referenceDate?: Date): Promise<Transaction[]> { return []; }
   async getAllTransactions(limit?: number): Promise<Transaction[]> { return []; }
   async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> { throw new Error("Not implemented in MemStorage"); }
   async getCustomerProfile(userId: string): Promise<CustomerProfile | undefined> { return undefined; }

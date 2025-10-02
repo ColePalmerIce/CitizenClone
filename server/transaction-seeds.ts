@@ -499,7 +499,10 @@ export const businessTransactions: ProfessionalTransaction[] = [
 ];
 
 // Generate comprehensive transaction history for 3 months
-export const generateComprehensiveTransactionHistory = (accountType: 'checking' | 'savings' | 'business' = 'checking'): ProfessionalTransaction[] => {
+export const generateComprehensiveTransactionHistory = (
+  accountType: 'checking' | 'savings' | 'business' = 'checking',
+  referenceDate?: Date
+): ProfessionalTransaction[] => {
   const allTransactions: ProfessionalTransaction[] = [];
   
   // Select appropriate transactions based on account type
@@ -512,11 +515,14 @@ export const generateComprehensiveTransactionHistory = (accountType: 'checking' 
     baseTransactions = professionalTransactions;
   }
   
-  // Generate for current month and previous 2 months
+  // Use provided reference date or default to today
+  const baseReferenceDate = referenceDate || new Date();
+  
+  // Generate for current month and previous 2 months (3 months total)
   for (let i = 0; i < 3; i++) {
     const monthTransactions = baseTransactions.map((transaction, index) => {
-      const today = new Date();
-      const baseDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      // Calculate the month based on reference date, going back i months
+      const baseDate = new Date(baseReferenceDate.getFullYear(), baseReferenceDate.getMonth() - i, 1);
       const originalDate = new Date(transaction.date);
       
       const newDate = new Date(
