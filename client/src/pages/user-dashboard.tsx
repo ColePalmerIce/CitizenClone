@@ -156,6 +156,117 @@ const US_BANKS = [
   "Other"
 ].sort();
 
+// Comprehensive country list for international wire transfers
+const COUNTRIES = [
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Italy",
+  "Spain",
+  "Netherlands",
+  "Belgium",
+  "Switzerland",
+  "Austria",
+  "Sweden",
+  "Norway",
+  "Denmark",
+  "Finland",
+  "Ireland",
+  "Portugal",
+  "Greece",
+  "Poland",
+  "Czech Republic",
+  "Hungary",
+  "Romania",
+  "Bulgaria",
+  "Croatia",
+  "Slovenia",
+  "Slovakia",
+  "Estonia",
+  "Latvia",
+  "Lithuania",
+  "Luxembourg",
+  "Malta",
+  "Cyprus",
+  "Iceland",
+  "Japan",
+  "China",
+  "South Korea",
+  "Singapore",
+  "Hong Kong",
+  "Taiwan",
+  "India",
+  "Indonesia",
+  "Malaysia",
+  "Thailand",
+  "Vietnam",
+  "Philippines",
+  "New Zealand",
+  "Mexico",
+  "Brazil",
+  "Argentina",
+  "Chile",
+  "Colombia",
+  "Peru",
+  "Venezuela",
+  "Ecuador",
+  "Uruguay",
+  "Paraguay",
+  "Bolivia",
+  "Costa Rica",
+  "Panama",
+  "Guatemala",
+  "Honduras",
+  "El Salvador",
+  "Nicaragua",
+  "Dominican Republic",
+  "Puerto Rico",
+  "Jamaica",
+  "Trinidad and Tobago",
+  "Bahamas",
+  "Barbados",
+  "South Africa",
+  "Nigeria",
+  "Kenya",
+  "Egypt",
+  "Morocco",
+  "Tunisia",
+  "Algeria",
+  "Ghana",
+  "Tanzania",
+  "Uganda",
+  "Ethiopia",
+  "Israel",
+  "United Arab Emirates",
+  "Saudi Arabia",
+  "Qatar",
+  "Kuwait",
+  "Bahrain",
+  "Oman",
+  "Jordan",
+  "Lebanon",
+  "Turkey",
+  "Russia",
+  "Ukraine",
+  "Belarus",
+  "Kazakhstan",
+  "Georgia",
+  "Armenia",
+  "Azerbaijan",
+  "Pakistan",
+  "Bangladesh",
+  "Sri Lanka",
+  "Nepal",
+  "Myanmar",
+  "Cambodia",
+  "Laos",
+  "Mongolia",
+  "Brunei"
+].sort();
+
 interface UserData {
   id: string;
   username: string;
@@ -2842,13 +2953,21 @@ export default function UserDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="beneficiaryCountry">Beneficiary Country</Label>
-                          <Input
-                            id="beneficiaryCountry"
+                          <Select
                             value={internationalWireForm.beneficiaryCountry}
-                            onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryCountry: e.target.value})}
-                            placeholder="Country"
-                            data-testid="input-beneficiary-country"
-                          />
+                            onValueChange={(value) => setInternationalWireForm({...internationalWireForm, beneficiaryCountry: value})}
+                          >
+                            <SelectTrigger data-testid="select-beneficiary-country">
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                              {COUNTRIES.map((country) => (
+                                <SelectItem key={country} value={country}>
+                                  {country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label htmlFor="intlPurpose">Wire Purpose</Label>
@@ -3885,13 +4004,21 @@ export default function UserDashboard() {
                       </div>
                       <div>
                         <Label htmlFor="intlBeneficiaryCountry">Beneficiary Country</Label>
-                        <Input
-                          id="intlBeneficiaryCountry"
+                        <Select
                           value={internationalWireForm.beneficiaryCountry}
-                          onChange={(e) => setInternationalWireForm({...internationalWireForm, beneficiaryCountry: e.target.value})}
-                          placeholder="Country"
-                          data-testid="input-intl-beneficiary-country"
-                        />
+                          onValueChange={(value) => setInternationalWireForm({...internationalWireForm, beneficiaryCountry: value})}
+                        >
+                          <SelectTrigger data-testid="select-intl-beneficiary-country">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {COUNTRIES.map((country) => (
+                              <SelectItem key={country} value={country}>
+                                {country}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     
