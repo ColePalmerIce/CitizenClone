@@ -71,6 +71,36 @@ function decryptSSN(encryptedSSN: string): string {
   }
 }
 
+function encryptPhoneNumber(phone: string): string {
+  try {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    let encrypted = cipher.update(phone, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  } catch (error) {
+    console.error('Phone number encryption error:', error);
+    throw new Error('Failed to encrypt phone number');
+  }
+}
+
+function decryptPhoneNumber(encryptedPhone: string): string {
+  try {
+    if (!encryptedPhone || !encryptedPhone.includes(':')) {
+      return 'Not provided';
+    }
+    const [ivHex, encryptedHex] = encryptedPhone.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    console.error('Phone number decryption error:', error);
+    return 'Not available';
+  }
+}
+
 function hashSensitiveData(data: string): string {
   try {
     // Generate cryptographically random salt per record for banking compliance
@@ -750,7 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: user.id,
         ssn: encryptSSN(formattedSSN), // Encrypt formatted SSN before storage
         dateOfBirth: new Date(dateOfBirth),
-        phoneNumber: hashSensitiveData(formattedPhoneNumber), // Hash formatted phone number
+        phoneNumber: encryptPhoneNumber(formattedPhoneNumber), // Encrypt formatted phone number
         address: (street && city && state && zipCode) ? {
           street,
           city,
@@ -1433,7 +1463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Customer profile not found" });
       }
 
-      // Return profile data with user creation date
+      // Return profile data with user creation date and decrypted sensitive fields
       res.json({
         user: {
           firstName: user.firstName,
@@ -1444,7 +1474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         profile: {
           dateOfBirth: profile.dateOfBirth,
-          phoneNumber: profile.phoneNumber,
+          phoneNumber: profile.phoneNumber ? decryptPhoneNumber(profile.phoneNumber) : null,
           address: profile.address
         }
       });
@@ -1466,17 +1496,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Profile not found" });
       }
 
+      // Prepare phone number - encrypt if new value provided
+      let encryptedPhoneNumber = profile.phoneNumber;
+      if (phoneNumber && phoneNumber !== profile.phoneNumber) {
+        try {
+          const formattedPhone = formatPhoneNumber(phoneNumber);
+          encryptedPhoneNumber = encryptPhoneNumber(formattedPhone);
+        } catch (error) {
+          return res.status(400).json({ message: "Invalid phone number format" });
+        }
+      }
+
       // Update profile with new data
       const updatedProfile = await storage.updateCustomerProfile(userId, {
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : profile.dateOfBirth,
-        phoneNumber: phoneNumber || profile.phoneNumber,
+        phoneNumber: encryptedPhoneNumber,
         address: address || profile.address
       });
 
       res.json({ 
         success: true,
         message: "Profile updated successfully",
-        profile: updatedProfile
+        profile: {
+          ...updatedProfile,
+          phoneNumber: updatedProfile.phoneNumber ? decryptPhoneNumber(updatedProfile.phoneNumber) : null
+        }
       });
     } catch (error) {
       console.error('Profile update error:', error);
