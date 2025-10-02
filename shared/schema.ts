@@ -258,7 +258,6 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
 
 export const insertBankAccountSchema = createInsertSchema(bankAccounts).omit({
   id: true,
-  createdAt: true,
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({

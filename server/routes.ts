@@ -866,8 +866,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Update creation date if provided (after user is created)
+      let accountTimestamp = user.createdAt; // Default to original user creation time
       if (accountCreationDate) {
-        await storage.updateUserCreatedAt(user.id, new Date(accountCreationDate));
+        const backdatedDate = new Date(accountCreationDate);
+        await storage.updateUserCreatedAt(user.id, backdatedDate);
+        accountTimestamp = backdatedDate; // Use backdated timestamp for accounts
       }
 
       // Create comprehensive customer profile with encrypted sensitive data
@@ -922,7 +925,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             accountNumber,
             routingNumber,
             accountType: accountInfo.type,
-            balance: accountInfo.balance
+            balance: accountInfo.balance,
+            openDate: accountTimestamp,
+            createdAt: accountTimestamp
           });
           
           accounts.push(account);
@@ -960,7 +965,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           accountNumber: accountNumber.toString(),
           routingNumber: '053100300',
           accountType: 'checking',
-          balance: initialCheckingBalance
+          balance: initialCheckingBalance,
+          openDate: accountTimestamp,
+          createdAt: accountTimestamp
         });
         accounts.push(account);
 
