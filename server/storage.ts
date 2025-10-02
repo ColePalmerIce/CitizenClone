@@ -144,6 +144,12 @@ export interface IStorage {
   getTotalCustomers(): Promise<number>;
   getTotalAccountBalance(): Promise<string>;
   getRecentTransactions(limit?: number): Promise<Transaction[]>;
+
+  // User management
+  deleteAccountApplication(id: string): Promise<void>;
+  blockUser(userId: string, reason: string, adminId: string): Promise<User | undefined>;
+  unblockUser(userId: string, adminId: string): Promise<User | undefined>;
+  deleteUser(userId: string, reason: string, adminId: string): Promise<User | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -789,6 +795,34 @@ export class MemStorage implements IStorage {
   async getTotalCustomers(): Promise<number> { return 0; }
   async getTotalAccountBalance(): Promise<string> { return "0.00"; }
   async getRecentTransactions(limit?: number): Promise<Transaction[]> { return []; }
+
+  async deleteAccountApplication(id: string): Promise<void> {
+    this.accountApplications.delete(id);
+  }
+
+  async blockUser(userId: string, reason: string, adminId: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    const updated = { ...user, status: 'blocked' as const, statusReason: reason };
+    this.users.set(userId, updated);
+    return updated;
+  }
+
+  async unblockUser(userId: string, adminId: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    const updated = { ...user, status: 'active' as const, statusReason: null };
+    this.users.set(userId, updated);
+    return updated;
+  }
+
+  async deleteUser(userId: string, reason: string, adminId: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    const updated = { ...user, status: 'deleted' as const, statusReason: reason };
+    this.users.set(userId, updated);
+    return updated;
+  }
 }
 
 // Import PostgreSQL storage from db.ts

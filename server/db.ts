@@ -515,7 +515,8 @@ export class PostgreSQLStorage implements IStorage {
 
   // Admin dashboard utilities
   async getTotalCustomers(): Promise<number> {
-    const result = await db.select().from(users);
+    const result = await db.select().from(users)
+      .where(eq(users.status, 'active'));
     return result.length;
   }
 
@@ -689,6 +690,50 @@ export class PostgreSQLStorage implements IStorage {
     const result = await db.update(internationalWireTransfers)
       .set(updateData)
       .where(eq(internationalWireTransfers.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteAccountApplication(id: string): Promise<void> {
+    await db.delete(accountApplications)
+      .where(eq(accountApplications.id, id));
+  }
+
+  async blockUser(userId: string, reason: string, adminId: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({
+        status: 'blocked',
+        statusReason: reason,
+        statusUpdatedBy: adminId,
+        statusUpdatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
+  async unblockUser(userId: string, adminId: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({
+        status: 'active',
+        statusReason: null,
+        statusUpdatedBy: adminId,
+        statusUpdatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
+  async deleteUser(userId: string, reason: string, adminId: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({
+        status: 'deleted',
+        statusReason: reason,
+        statusUpdatedBy: adminId,
+        statusUpdatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
       .returning();
     return result[0];
   }

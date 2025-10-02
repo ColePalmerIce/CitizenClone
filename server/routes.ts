@@ -414,6 +414,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/admin/delete-account-application/:applicationId", requireAdmin, async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      
+      // Get the application to ensure it exists
+      const application = await storage.getAccountApplication(applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Delete the application
+      await storage.deleteAccountApplication(applicationId);
+
+      res.json({ 
+        success: true, 
+        message: "Account application deleted successfully"
+      });
+    } catch (error) {
+      console.error('Delete application error:', error);
+      res.status(500).json({ message: "Failed to delete application" });
+    }
+  });
+
+  app.post("/api/admin/block-user/:userId", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const adminId = req.session.adminId;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "Reason for blocking is required" });
+      }
+
+      const user = await storage.blockUser(userId, reason, adminId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "User blocked successfully",
+        user
+      });
+    } catch (error) {
+      console.error('Block user error:', error);
+      res.status(500).json({ message: "Failed to block user" });
+    }
+  });
+
+  app.post("/api/admin/unblock-user/:userId", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const adminId = req.session.adminId;
+
+      const user = await storage.unblockUser(userId, adminId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "User unblocked successfully",
+        user
+      });
+    } catch (error) {
+      console.error('Unblock user error:', error);
+      res.status(500).json({ message: "Failed to unblock user" });
+    }
+  });
+
+  app.delete("/api/admin/delete-user/:userId", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const adminId = req.session.adminId;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "Reason for deletion is required" });
+      }
+
+      const user = await storage.deleteUser(userId, reason, adminId!);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "User deleted successfully",
+        user
+      });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   // Contact inquiries
   app.post("/api/contact", async (req, res) => {
     try {
@@ -1277,6 +1373,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUserByUsername(username);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Check if user is blocked or deleted
+      if (user.status === 'blocked') {
+        return res.status(403).json({ 
+          message: "Your account has been blocked. Please contact support for assistance.",
+          reason: user.statusReason || "Account blocked by administrator"
+        });
+      }
+
+      if (user.status === 'deleted') {
+        return res.status(403).json({ 
+          message: "This account has been deleted and cannot be accessed.",
+          reason: user.statusReason || "Account deleted"
+        });
       }
       
       // Verify password
