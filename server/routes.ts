@@ -1417,14 +1417,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get customer profile information
   app.get("/api/user/profile", requireActiveCustomer, async (req, res) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.userId!;
       
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const profile = await storage.getCustomerProfileByUserId(userId);
+      const profile = await storage.getCustomerProfile(userId);
       if (!profile) {
         return res.status(404).json({ message: "Customer profile not found" });
       }

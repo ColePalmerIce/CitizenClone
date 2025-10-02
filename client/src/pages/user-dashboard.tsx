@@ -3130,7 +3130,7 @@ export default function UserDashboard() {
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold text-gray-900">
-                              ${parseFloat(account.balance).toLocaleString()}
+                              ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                             <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
                               {account.status}
