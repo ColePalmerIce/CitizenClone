@@ -43,6 +43,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserPassword(userId: string, hashedPassword: string): Promise<User | undefined>;
   updateUserStatus(userId: string, status: string, reason?: string, updatedBy?: string): Promise<User | undefined>;
+  updateUserCreatedAt(userId: string, createdAt: Date): Promise<User | undefined>;
 
   // Search queries
   saveSearchQuery(query: InsertSearchQuery): Promise<SearchQuery>;
@@ -224,6 +225,16 @@ export class MemStorage implements IStorage {
       statusUpdatedBy: updatedBy || null, 
       statusUpdatedAt: new Date() 
     };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async updateUserCreatedAt(userId: string, createdAt: Date): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) {
+      return undefined;
+    }
+    const updatedUser = { ...user, createdAt };
     this.users.set(userId, updatedUser);
     return updatedUser;
   }

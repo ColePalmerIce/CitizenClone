@@ -923,6 +923,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin update user creation date
+  app.patch("/api/admin/customers/:userId/created-at", requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { createdAt } = req.body;
+      
+      if (!createdAt) {
+        return res.status(400).json({ message: "Creation date is required" });
+      }
+
+      // Validate that createdAt is a valid date
+      const parsedDate = new Date(createdAt);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+
+      const updatedUser = await storage.updateUserCreatedAt(userId, parsedDate);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Failed to update user creation date:', error);
+      res.status(500).json({ message: "Failed to update creation date" });
+    }
+  });
+
   // Admin customer fund management endpoints
   app.post("/api/admin/customer/add-funds", requireAdmin, async (req, res) => {
     try {

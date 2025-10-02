@@ -45,7 +45,8 @@ import {
   Lock,
   Unlock,
   CheckCircle,
-  Info
+  Info,
+  Edit
 } from "lucide-react";
 
 interface DashboardStats {
@@ -99,6 +100,8 @@ export default function AdminDashboard() {
   const [customerFundDescription, setCustomerFundDescription] = useState("");
   const [customerWithdrawAmount, setCustomerWithdrawAmount] = useState<string>("");
   const [customerWithdrawDescription, setCustomerWithdrawDescription] = useState<string>("");
+  const [isEditingCreatedAt, setIsEditingCreatedAt] = useState(false);
+  const [editCreatedAtValue, setEditCreatedAtValue] = useState("");
   const [pendingTransactions, setPendingTransactions] = useState<any[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -127,6 +130,12 @@ export default function AdminDashboard() {
     };
     checkSession();
   }, [setLocation]);
+
+  // Reset edit state when selectedCustomer changes
+  useEffect(() => {
+    setIsEditingCreatedAt(false);
+    setEditCreatedAtValue("");
+  }, [selectedCustomer?.id]);
 
   // Dashboard stats query
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
@@ -312,6 +321,35 @@ export default function AdminDashboard() {
       toast({
         title: "Error",
         description: "Failed to withdraw funds from customer account.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateUserCreatedAtMutation = useMutation({
+    mutationFn: async (data: { userId: string; createdAt: string }) => {
+      const response = await apiRequest('PATCH', `/api/admin/customers/${data.userId}/created-at`, { createdAt: data.createdAt });
+      if (!response.ok) throw new Error('Failed to update creation date');
+      return response.json();
+    },
+    onSuccess: (updatedUser) => {
+      // Update selectedCustomer state immediately so modal shows new date
+      if (selectedCustomer) {
+        setSelectedCustomer({ ...selectedCustomer, createdAt: updatedUser.createdAt });
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      toast({
+        title: "Creation Date Updated",
+        description: "Account creation date has been updated successfully.",
+      });
+      setIsEditingCreatedAt(false);
+      setEditCreatedAtValue("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update account creation date.",
         variant: "destructive",
       });
     },
@@ -1266,8 +1304,67 @@ function OverviewTab({
                 </Dialog>
               </div>
               
-              <div className="text-sm text-gray-500 text-center">
-                Account opened: {selectedCustomer.createdAt ? new Date(selectedCustomer.createdAt).toLocaleDateString() : 'N/A'}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Account Created:</span>
+                  {!isEditingCreatedAt ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {selectedCustomer.createdAt ? new Date(selectedCustomer.createdAt).toLocaleString() : 'N/A'}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setIsEditingCreatedAt(true);
+                          const dateValue = selectedCustomer.createdAt 
+                            ? new Date(selectedCustomer.createdAt).toISOString().slice(0, 16)
+                            : new Date().toISOString().slice(0, 16);
+                          setEditCreatedAtValue(dateValue);
+                        }}
+                        data-testid="button-edit-created-at"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="datetime-local"
+                        value={editCreatedAtValue}
+                        onChange={(e) => setEditCreatedAtValue(e.target.value)}
+                        className="text-sm h-8"
+                        data-testid="input-edit-created-at"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (selectedCustomer && editCreatedAtValue) {
+                            updateUserCreatedAtMutation.mutate({
+                              userId: selectedCustomer.userId,
+                              createdAt: editCreatedAtValue
+                            });
+                          }
+                        }}
+                        disabled={updateUserCreatedAtMutation.isPending}
+                        data-testid="button-save-created-at"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setIsEditingCreatedAt(false);
+                          setEditCreatedAtValue("");
+                        }}
+                        data-testid="button-cancel-edit-created-at"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
