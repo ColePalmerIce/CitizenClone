@@ -83,3 +83,10 @@ Preferred communication style: Simple, everyday language.
 - **Admin Customer Creation**: Changed from `hashSensitiveData()` to `encryptPhoneNumber()` when creating customers - all new customers get encrypted (not hashed) phone numbers
 - **Backward Compatibility**: Decryption function gracefully handles old hashed phone numbers by returning "Not available" if decryption fails
 - **User Experience**: Users can now view and edit their phone numbers correctly in the "My Profile" dialog, seeing formatted numbers like "(555) 123-4567" instead of encrypted strings
+
+### October 2, 2025 - User Profile Access Control & Balance Calculation Verification
+- **Profile View-Only for Users**: Removed user ability to edit their own profiles - users can only view their profile information, all editing restricted to admin panel
+- **Admin-Only Editing**: Only administrators can edit customer profiles through the admin dashboard customer management interface
+- **Wire Transfer Balance Verification**: Verified all wire transfer approval logic is mathematically accurate: `newBalance = currentBalance - transferAmount` with proper account updates
+- **Transaction Seeding Accuracy**: Confirmed transaction history generation uses correct backwards calculation: `Starting Balance = Current Balance - Total Credits + Total Debits`, ensuring perfect balance accuracy
+- **Balance Calculation Audit**: All financial calculations verified to be mathematically sound with proper debit/credit logic throughout the application
