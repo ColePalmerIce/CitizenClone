@@ -188,10 +188,12 @@ export default function AdminDashboard() {
         description: "Customer account created successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Customer creation error:", error);
+      const errorMessage = error?.message || "Failed to create customer account.";
       toast({
         title: "Error",
-        description: "Failed to create customer account.",
+        description: errorMessage,
         variant: "destructive",
       });
     },

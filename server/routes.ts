@@ -24,6 +24,7 @@ import {
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import session from "express-session";
+import { ZodError } from "zod";
 
 // Extend express-session
 declare module 'express-session' {
@@ -821,6 +822,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(summary);
     } catch (error) {
       console.error('Enhanced customer creation error:', error);
+      
+      // Handle Zod validation errors with detailed messages
+      if (error instanceof ZodError) {
+        const fieldErrors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        return res.status(400).json({ 
+          message: `Validation error: ${fieldErrors}`
+        });
+      }
+      
+      // Handle other errors
       res.status(500).json({ 
         message: "Failed to create comprehensive customer account",
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
