@@ -67,3 +67,10 @@ Preferred communication style: Simple, everyday language.
 - **Wire Transfer Tables Created**: Created domestic_wire_transfers and international_wire_transfers database tables via SQL to enable wire transfer functionality
 - **Profile API Fixed**: Corrected profile endpoints to use proper storage method names (getUser instead of getUserById, getCustomerProfile instead of getCustomerProfileByUserId) - profile editing now saves correctly
 - **Balance Display Fixed**: Updated account balance rendering to always display as positive values using Math.abs() with proper 2-decimal formatting ($46,000.00 instead of potential negative values)
+
+### October 2, 2025 - Transaction History Generation with Current Dates
+- **Dynamic Date Generation**: Fixed transaction history to generate dates from 3 months ago until today (instead of hardcoded September 2025)
+- **Accurate Balance Calculation**: Updated seeding to work backwards from current account balance, ensuring perfect balance accuracy
+- **Transaction Date Logic**: Modified getTransactionsForMonth() to use `new Date()` as base and subtract monthOffset months dynamically
+- **Balance Verification**: Added verification to ensure final transaction balance matches current account balance within 1 cent tolerance
+- **Clean Transaction History**: Seeding now deletes existing transactions first to prevent duplicates and ensure consistent data
