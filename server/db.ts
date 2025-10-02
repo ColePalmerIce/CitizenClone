@@ -327,15 +327,17 @@ export class PostgreSQLStorage implements IStorage {
       .limit(limit);
   }
 
-  async seedAccountWithProfessionalTransactions(accountId: string): Promise<Transaction[]> {
-    const professionalTransactions = generateComprehensiveTransactionHistory();
-    const seededTransactions: Transaction[] = [];
-    
+  async seedAccountWithProfessionalTransactions(accountId: string, accountType?: 'checking' | 'savings' | 'business'): Promise<Transaction[]> {
     // Get current account and its current balance
     const account = await this.getBankAccount(accountId);
     if (!account) {
       throw new Error("Account not found");
     }
+    
+    // Use account type from parameter or from account record
+    const type = accountType || account.accountType as 'checking' | 'savings' | 'business' || 'checking';
+    const professionalTransactions = generateComprehensiveTransactionHistory(type);
+    const seededTransactions: Transaction[] = [];
     
     const currentBalance = parseFloat(account.balance || '0');
     

@@ -844,6 +844,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               balanceAfter: accountInfo.balance,
               status: 'completed'
             });
+            
+            // Automatically seed transaction history for all accounts with sufficient balance
+            // This generates 3 months of professional transaction history based on account type
+            try {
+              await storage.seedAccountWithProfessionalTransactions(account.id, accountInfo.type);
+              console.log(`✓ Seeded ${accountInfo.type} account ${account.id} with transaction history`);
+            } catch (seedError) {
+              console.error(`Failed to seed ${accountInfo.type} account transactions:`, seedError);
+              // Continue even if seeding fails - account creation is still successful
+            }
           }
         }
       } else {

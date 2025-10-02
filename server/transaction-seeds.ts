@@ -314,13 +314,231 @@ export const getTransactionsForMonth = (monthOffset: number = 0): ProfessionalTr
   });
 };
 
+// Savings account transactions
+export const savingsTransactions: ProfessionalTransaction[] = [
+  {
+    type: 'credit',
+    amount: '1500.00',
+    description: 'Transfer from Checking',
+    merchantName: 'First Citizens Bank',
+    merchantLocation: 'Raleigh, NC',
+    merchantCategory: 'Transfer',
+    date: '2025-09-01T15:00:00Z',
+    postedDate: '2025-09-01T15:00:00Z',
+    reference: 'TFR8473921'
+  },
+  {
+    type: 'credit',
+    amount: '12.50',
+    description: 'Monthly Interest Payment',
+    merchantName: 'First Citizens Bank',
+    merchantLocation: 'Raleigh, NC',
+    merchantCategory: 'Interest',
+    date: '2025-09-30T23:59:00Z',
+    postedDate: '2025-09-30T23:59:00Z',
+    reference: 'INT9284710'
+  },
+  {
+    type: 'credit',
+    amount: '500.00',
+    description: 'Direct Deposit',
+    merchantName: 'Bonus Payment',
+    merchantLocation: 'New York, NY',
+    merchantCategory: 'Deposit',
+    date: '2025-09-15T08:00:00Z',
+    postedDate: '2025-09-15T08:00:00Z',
+    reference: 'DD8291047'
+  },
+  {
+    type: 'debit',
+    amount: '200.00',
+    description: 'ATM Withdrawal',
+    merchantName: 'First Citizens Bank ATM',
+    merchantLocation: 'Charlotte, NC',
+    merchantCategory: 'ATM',
+    date: '2025-09-10T14:30:00Z',
+    postedDate: '2025-09-10T14:30:00Z',
+    reference: 'ATM7392810'
+  },
+  {
+    type: 'debit',
+    amount: '300.00',
+    description: 'Transfer to Checking',
+    merchantName: 'First Citizens Bank',
+    merchantLocation: 'Raleigh, NC',
+    merchantCategory: 'Transfer',
+    date: '2025-09-20T10:00:00Z',
+    postedDate: '2025-09-20T10:00:00Z',
+    reference: 'TFR9284701'
+  }
+];
+
+// Business account transactions
+export const businessTransactions: ProfessionalTransaction[] = [
+  {
+    type: 'credit',
+    amount: '8500.00',
+    description: 'Client Payment - Invoice #1024',
+    merchantName: 'ABC Corporation',
+    merchantLocation: 'New York, NY',
+    merchantCategory: 'Business Revenue',
+    date: '2025-09-15T10:00:00Z',
+    postedDate: '2025-09-15T10:00:00Z',
+    reference: 'ACH8291047'
+  },
+  {
+    type: 'credit',
+    amount: '12500.00',
+    description: 'Client Payment - Invoice #1025',
+    merchantName: 'XYZ Industries LLC',
+    merchantLocation: 'Chicago, IL',
+    merchantCategory: 'Business Revenue',
+    date: '2025-09-20T14:30:00Z',
+    postedDate: '2025-09-20T14:30:00Z',
+    reference: 'ACH9384720'
+  },
+  {
+    type: 'credit',
+    amount: '6750.00',
+    description: 'Client Payment - Invoice #1023',
+    merchantName: 'Tech Solutions Inc',
+    merchantLocation: 'San Francisco, CA',
+    merchantCategory: 'Business Revenue',
+    date: '2025-09-10T09:15:00Z',
+    postedDate: '2025-09-10T09:15:00Z',
+    reference: 'ACH7291048'
+  },
+  {
+    type: 'debit',
+    amount: '4200.00',
+    description: 'Payroll Processing',
+    merchantName: 'ADP Payroll Services',
+    merchantLocation: 'Roseland, NJ',
+    merchantCategory: 'Payroll',
+    date: '2025-09-01T08:00:00Z',
+    postedDate: '2025-09-01T08:00:00Z',
+    reference: 'PAYROLL8392'
+  },
+  {
+    type: 'debit',
+    amount: '4200.00',
+    description: 'Payroll Processing',
+    merchantName: 'ADP Payroll Services',
+    merchantLocation: 'Roseland, NJ',
+    merchantCategory: 'Payroll',
+    date: '2025-09-15T08:00:00Z',
+    postedDate: '2025-09-15T08:00:00Z',
+    reference: 'PAYROLL8393'
+  },
+  {
+    type: 'debit',
+    amount: '1250.00',
+    description: 'Office Rent Payment',
+    merchantName: 'Commercial Properties LLC',
+    merchantLocation: 'Boston, MA',
+    merchantCategory: 'Rent',
+    date: '2025-09-01T09:00:00Z',
+    postedDate: '2025-09-01T09:00:00Z',
+    reference: 'RENT7392841'
+  },
+  {
+    type: 'debit',
+    amount: '875.50',
+    description: 'Office Supplies',
+    merchantName: 'Staples Business Advantage',
+    merchantLocation: 'Framingham, MA',
+    merchantCategory: 'Office Supplies',
+    date: '2025-09-12T11:30:00Z',
+    postedDate: '2025-09-12T11:30:00Z',
+    reference: 'POS8472916'
+  },
+  {
+    type: 'debit',
+    amount: '425.00',
+    description: 'Internet & Phone Service',
+    merchantName: 'Verizon Business',
+    merchantLocation: 'New York, NY',
+    merchantCategory: 'Utilities',
+    date: '2025-09-05T10:00:00Z',
+    postedDate: '2025-09-05T10:00:00Z',
+    reference: 'UTIL9284701'
+  },
+  {
+    type: 'debit',
+    amount: '650.00',
+    description: 'Business Insurance Premium',
+    merchantName: 'Hartford Business Insurance',
+    merchantLocation: 'Hartford, CT',
+    merchantCategory: 'Insurance',
+    date: '2025-09-01T12:00:00Z',
+    postedDate: '2025-09-01T12:00:00Z',
+    reference: 'INS8392047'
+  },
+  {
+    type: 'debit',
+    amount: '1500.00',
+    description: 'Vendor Payment - Software License',
+    merchantName: 'Microsoft Business',
+    merchantLocation: 'Redmond, WA',
+    merchantCategory: 'Software',
+    date: '2025-09-08T15:00:00Z',
+    postedDate: '2025-09-08T15:00:00Z',
+    reference: 'INV7291048'
+  },
+  {
+    type: 'debit',
+    amount: '350.00',
+    description: 'Marketing Services',
+    merchantName: 'Digital Ad Solutions',
+    merchantLocation: 'Austin, TX',
+    merchantCategory: 'Marketing',
+    date: '2025-09-18T13:45:00Z',
+    postedDate: '2025-09-18T13:45:00Z',
+    reference: 'INV8392047'
+  }
+];
+
 // Generate comprehensive transaction history for 3 months
-export const generateComprehensiveTransactionHistory = (): ProfessionalTransaction[] => {
+export const generateComprehensiveTransactionHistory = (accountType: 'checking' | 'savings' | 'business' = 'checking'): ProfessionalTransaction[] => {
   const allTransactions: ProfessionalTransaction[] = [];
+  
+  // Select appropriate transactions based on account type
+  let baseTransactions: ProfessionalTransaction[];
+  if (accountType === 'savings') {
+    baseTransactions = savingsTransactions;
+  } else if (accountType === 'business') {
+    baseTransactions = businessTransactions;
+  } else {
+    baseTransactions = professionalTransactions;
+  }
   
   // Generate for current month and previous 2 months
   for (let i = 0; i < 3; i++) {
-    allTransactions.push(...getTransactionsForMonth(i));
+    const monthTransactions = baseTransactions.map((transaction, index) => {
+      const today = new Date();
+      const baseDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const originalDate = new Date(transaction.date);
+      
+      const newDate = new Date(
+        baseDate.getFullYear(), 
+        baseDate.getMonth(), 
+        originalDate.getDate(),
+        originalDate.getHours(),
+        originalDate.getMinutes(),
+        originalDate.getSeconds()
+      );
+      const newPostedDate = new Date(newDate);
+      newPostedDate.setHours(newDate.getHours() + Math.floor(Math.random() * 3));
+      
+      return {
+        ...transaction,
+        date: newDate.toISOString(),
+        postedDate: newPostedDate.toISOString(),
+        reference: `${(transaction.reference || 'TRX').split('-')[0]}-M${i}${index}`
+      };
+    });
+    
+    allTransactions.push(...monthTransactions);
   }
   
   return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
