@@ -2992,8 +2992,9 @@ function AccountApplicationsTab() {
                           </p>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-700 dark:text-gray-300">Username</p>
+                          <p className="font-medium text-gray-700 dark:text-gray-300">Login Credentials</p>
                           <p className="font-mono">{application.username}</p>
+                          <p className="text-xs text-gray-500 mt-1">Password: Securely hashed ✓</p>
                         </div>
                       </div>
 
@@ -3032,19 +3033,36 @@ function AccountApplicationsTab() {
                         </div>
                       )}
 
-                      {application.phoneNumber && (
-                        <div className="mt-2 text-sm">
-                          <p className="font-medium text-gray-700 dark:text-gray-300">Phone</p>
-                          <p>{application.phoneNumber}</p>
+                      {/* Personal Information */}
+                      <div className="mt-4 border-t pt-4">
+                        <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">Personal Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          {application.dateOfBirth && (
+                            <div>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">Date of Birth</p>
+                              <p>{new Date(application.dateOfBirth).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                          {application.ssn && (
+                            <div>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">SSN</p>
+                              <p className="font-mono">{application.ssn.replace(/(\d{3})(\d{2})(\d{4})/, '$1-$2-$3')}</p>
+                            </div>
+                          )}
+                          {application.phoneNumber && (
+                            <div>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">Phone</p>
+                              <p>{application.phoneNumber}</p>
+                            </div>
+                          )}
+                          {(application.street || application.city) && (
+                            <div>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">Address</p>
+                              <p>{application.street}, {application.city}, {application.state} {application.zipCode}</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-
-                      {(application.street || application.city) && (
-                        <div className="mt-2 text-sm">
-                          <p className="font-medium text-gray-700 dark:text-gray-300">Address</p>
-                          <p>{application.street}, {application.city}, {application.state} {application.zipCode}</p>
-                        </div>
-                      )}
+                      </div>
                     </div>
 
                     <div className="flex flex-col space-y-2 lg:w-48">
