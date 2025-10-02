@@ -43,6 +43,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 2, 2025 - Wire Transfer Fixes & Bank Dropdown Enhancements
+- **Wire Transfer Forms Fixed**: Added all required fields for domestic and international wire transfers including recipientBankAddress, beneficiaryAddress, beneficiaryAccountType (for domestic), and beneficiaryCountry (for international)
+- **Bank Dropdown Selector**: Replaced text inputs with dropdown selectors for recipient bank selection featuring comprehensive list of 40+ major US banks (Bank of America, Wells Fargo, Chase, Citibank, etc.)
+- **Form Validation**: Enhanced submit button validation to require ALL mandatory fields before enabling wire transfer submission
+- **Mobile Responsive**: Wire transfer forms use responsive grid layouts (single column on mobile, two columns on desktop) for optimal mobile experience
+- **Bank Logo**: Verified First Citizens Bank logo displays correctly on both admin and user dashboards
+
 ### October 2, 2025 - User Profile Editing & Bug Fixes
 - **Profile Editing Feature**: Users can now edit their profile information including date of birth, phone number, and address (street, city, state, ZIP) through the "My Profile" dialog
 - **Edit Mode UI**: Profile dialog switches between view mode (read-only display) and edit mode (editable inputs) with Save/Cancel buttons for a smooth editing experience
