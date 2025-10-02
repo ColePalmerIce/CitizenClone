@@ -46,6 +46,15 @@ The architecture follows a monorepo structure with shared TypeScript types and s
 
 ## Recent Changes
 
+### October 2, 2025 - Professional UX Improvements: Case-Insensitive Login & Flexible Input Formatting Complete
+- **Case-Insensitive Authentication**: All login methods (admin email, customer username, customer email) now work regardless of capitalization - users can type `Alex@admin.com`, `alex@admin.com`, or `ALEX@ADMIN.COM` and all work seamlessly
+- **Flexible Phone Number Input**: Users can enter phone numbers in any format - `5551234567`, `555-123-4567`, `(555) 123-4567` all accepted and auto-formatted to standard format `(555) 123-4567` on backend
+- **Flexible SSN Input**: SSN accepts any digit format - `123456789`, `123-45-6789`, `123 45 6789` all accepted and auto-formatted to standard format `XXX-XX-XXXX` before encryption
+- **Implementation Approach**: Uses JavaScript-based filtering after database fetch to ensure compatibility with Neon PostgreSQL driver while maintaining security and data integrity
+- **Professional Form Experience**: Updated form placeholders to clearly communicate flexible input requirements ("Enter 10 digits (any format)", "Enter 9 digits (any format)")
+- **Enhanced User Experience**: Eliminates common login failures due to capitalization and removes confusing format requirements that frustrated users
+- **Maintained Security**: All encryption and hashing functions unchanged - normalization happens before secure storage, maintaining banking-grade data protection
+
 ### September 30, 2025 - Public Access Codes Page with Auto-Generation System Complete
 - **Public Access Codes Page**: Created dedicated `/access-codes` page showing all active access codes without requiring admin login
 - **Auto-Generation System**: Backend automatically generates 10 new generic access codes every 5 minutes (valid for 24 hours each)

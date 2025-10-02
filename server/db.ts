@@ -69,15 +69,15 @@ export class PostgreSQLStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    // Case-insensitive username search for better UX
-    const result = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`).limit(1);
-    return result[0];
+    // Case-insensitive username search - get all users and filter manually for case-insensitivity
+    const allUsers = await db.select().from(users);
+    return allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    // Case-insensitive email search for better UX
-    const result = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`).limit(1);
-    return result[0];
+    // Case-insensitive email search - get all users and filter manually for case-insensitivity
+    const allUsers = await db.select().from(users);
+    return allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
   }
 
   async createUser(user: InsertUser): Promise<User> {
@@ -194,9 +194,9 @@ export class PostgreSQLStorage implements IStorage {
 
   // Admin users
   async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
-    // Case-insensitive email search for better UX
-    const result = await db.select().from(adminUsers).where(sql`LOWER(${adminUsers.email}) = LOWER(${email})`).limit(1);
-    return result[0];
+    // Case-insensitive email search - get all admins and filter manually for case-insensitivity
+    const allAdmins = await db.select().from(adminUsers);
+    return allAdmins.find(a => a.email.toLowerCase() === email.toLowerCase());
   }
 
   async createAdmin(admin: InsertAdminUser): Promise<AdminUser> {

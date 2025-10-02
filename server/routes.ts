@@ -518,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      // Find admin user
+      // Find admin user (case-insensitive)
       const admin = await storage.getAdminByEmail(email);
       if (!admin) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -562,6 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
     } catch (error) {
+      console.error('Admin login error:', error);
       res.status(500).json({ message: "Login failed" });
     }
   });
