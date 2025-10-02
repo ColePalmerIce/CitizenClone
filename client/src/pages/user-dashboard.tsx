@@ -943,6 +943,7 @@ export default function UserDashboard() {
         recipientAccountNumber: '',
         beneficiaryName: '',
         beneficiaryAddress: '',
+        beneficiaryAccountType: 'checking',
         amount: '',
         purpose: '',
         reference: '',

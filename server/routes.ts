@@ -3003,21 +3003,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate 10 generic codes (no userId) that any user can use
       const codesPerBatch = 10;
       const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      let successfullyGenerated = 0;
       
       for (let i = 0; i < codesPerBatch; i++) {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        // Retry up to 5 times if we hit a duplicate
+        let attempts = 0;
+        const maxAttempts = 5;
+        let codeCreated = false;
         
-        await storage.createAccessCode({
-          code,
-          userId: null, // Generic code - any user can use
-          expiresAt: expirationTime,
-          isUsed: false,
-          generatedBy: 'system',
-          usedBy: null,
-        });
+        while (attempts < maxAttempts && !codeCreated) {
+          try {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            await storage.createAccessCode({
+              code,
+              userId: null, // Generic code - any user can use
+              expiresAt: expirationTime,
+              isUsed: false,
+              generatedBy: 'system',
+              usedBy: null,
+            });
+            
+            codeCreated = true;
+            successfullyGenerated++;
+          } catch (error: any) {
+            attempts++;
+            // If it's a duplicate key error, retry with a new code
+            if (error.code === '23505' && attempts < maxAttempts) {
+              continue;
+            }
+            // If it's not a duplicate or we've exhausted retries, log and break
+            if (attempts >= maxAttempts) {
+              console.error(`Failed to generate unique code after ${maxAttempts} attempts`);
+            }
+            break;
+          }
+        }
       }
       
-      console.log(`✓ Generated ${codesPerBatch} new access codes (valid for 10 minutes)`);
+      console.log(`✓ Generated ${successfullyGenerated} new access codes (valid for 10 minutes)`);
     } catch (error) {
       console.error('❌ Auto-generate access codes error:', error);
     }
