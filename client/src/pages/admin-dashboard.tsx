@@ -1494,7 +1494,7 @@ function CustomersTab({
                     <Input
                       id="phoneNumber"
                       type="tel"
-                      placeholder="(555) 123-4567"
+                      placeholder="Enter 10 digits (any format)"
                       value={newCustomer.phoneNumber}
                       onChange={(e) => setNewCustomer(prev => ({ ...prev, phoneNumber: e.target.value }))}
                       required
@@ -1505,7 +1505,7 @@ function CustomersTab({
                     <Label htmlFor="ssn">Social Security Number *</Label>
                     <Input
                       id="ssn"
-                      placeholder="XXX-XX-XXXX"
+                      placeholder="Enter 9 digits (any format)"
                       value={newCustomer.ssn}
                       onChange={(e) => setNewCustomer(prev => ({ ...prev, ssn: e.target.value }))}
                       required
