@@ -43,6 +43,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 2, 2025 - Wire Transfer Business Account & Comprehensive Country List
+- **Business Account Type Support**: Added "business" as a valid account type option in both domestic and international wire transfer forms, alongside checking and savings accounts
+- **Zod Validation Updated**: Updated `enhancedTransferSchema` to include "business" in account type enum validation to ensure forms accept and submit business account transfers
+- **Comprehensive ISO 3166-1 Country List**: Replaced limited country dropdown with complete ISO 3166-1 list containing all 249 countries, sorted alphabetically for international wire transfers
+- **Database Schema Compatibility**: Verified database schemas (domesticWireTransfers, internationalWireTransfers) use text fields that accept all account type values including "business"
+- **Application Stability**: Fixed file structure issues and ensured no syntax errors or runtime issues after implementation
+
 ### October 2, 2025 - Wire Transfer Fixes & Bank Dropdown Enhancements
 - **Wire Transfer Forms Fixed**: Added all required fields for domestic and international wire transfers including recipientBankAddress, beneficiaryAddress, beneficiaryAccountType (for domestic), and beneficiaryCountry (for international)
 - **Bank Dropdown Selector**: Replaced text inputs with dropdown selectors for recipient bank selection featuring comprehensive list of 40+ major US banks (Bank of America, Wells Fargo, Chase, Citibank, etc.)
