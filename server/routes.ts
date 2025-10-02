@@ -133,10 +133,17 @@ function generateAccountNumber(accountType: 'checking' | 'savings' | 'business')
 export async function registerRoutes(app: Express): Promise<Server> {
   // Admin middleware - must be defined before use
   const requireAdmin = (req: any, res: any, next: any) => {
+    console.log('🔐 RequireAdmin check:', {
+      hasSession: !!req.session,
+      adminId: req.session?.adminId,
+      sessionData: req.session
+    });
     const adminId = req.session?.adminId;
     if (!adminId) {
+      console.log('❌ No admin session found!');
       return res.status(401).json({ message: "Admin authentication required" });
     }
+    console.log('✅ Admin authenticated:', adminId);
     next();
   };
 
@@ -684,11 +691,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced User/Customer Management Routes
   app.post("/api/admin/customers", requireAdmin, async (req, res) => {
     try {
-      console.log('Received customer creation request:', JSON.stringify(req.body, null, 2));
+      console.log('🔧 Received customer creation request:', JSON.stringify(req.body, null, 2));
       
       // Validate request body with comprehensive Zod schema
+      console.log('🔧 Starting validation...');
       const validatedData = enhancedCustomerCreationSchema.parse(req.body);
-      console.log('Validation successful');
+      console.log('✅ Validation successful');
       
       const {
         username, 
@@ -855,11 +863,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(summary);
     } catch (error) {
-      console.error('Enhanced customer creation error:', error);
+      console.error('❌ Enhanced customer creation error:', error);
+      console.error('❌ Error stack:', (error as Error)?.stack);
       
       // Handle Zod validation errors with detailed messages
       if (error instanceof ZodError) {
         const fieldErrors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        console.error('❌ Validation errors:', fieldErrors);
         return res.status(400).json({ 
           message: `Validation error: ${fieldErrors}`
         });
@@ -868,7 +878,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle other errors
       res.status(500).json({ 
         message: "Failed to create comprehensive customer account",
-        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+        details: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined
       });
     }
   });

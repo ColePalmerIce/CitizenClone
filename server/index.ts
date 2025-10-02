@@ -7,15 +7,16 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration for admin authentication - Secret rotated for security
+// Session configuration for admin authentication
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'new-secure-banking-secret-' + Date.now(),
+  secret: process.env.SESSION_SECRET || 'stable-banking-secret-for-development-only-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: false, // Set to true in production with HTTPS
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax' // Helps with CSRF protection while allowing normal navigation
   }
 }));
 
