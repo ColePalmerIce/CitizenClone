@@ -101,3 +101,13 @@ Preferred communication style: Simple, everyday language.
 - **Automatic Seeding**: Transaction history automatically seeds during customer creation for all accounts with positive initial balances - no manual seeding required
 - **Balance Accuracy**: All account types use the same backwards calculation method ensuring perfect mathematical accuracy for transaction history across all account types
 - **Reference Date Integration**: Transaction seeding uses user's createdAt timestamp as reference date, ensuring historical accuracy for backdated accounts
+
+### October 2, 2025 - Real-Time Statistics & Account Application Management  
+- **Accurate Customer Count**: Fixed customer statistics to only count active users (status='active'), excluding blocked and deleted accounts - customer count now updates in real-time
+- **Account Application Delete**: Added delete functionality for account applications with confirmation dialogs - applications can be deleted from both pending and processed sections
+- **User Blocking System**: Implemented user blocking with login prevention - blocked users receive clear error message "Your account has been blocked. Please contact support for assistance."
+- **User Deletion Protection**: Deleted users cannot access their accounts - login attempt shows "This account has been deleted and cannot be accessed."
+- **Admin User Management**: Added backend routes for blocking (`POST /api/admin/block-user/:userId`), unblocking (`POST /api/admin/unblock-user/:userId`), and deleting users (`DELETE /api/admin/delete-user/:userId`)
+- **Real-Time Stats Updates**: Dashboard statistics automatically refresh when users are created, approved, blocked, deleted, or unblocked - ensuring always accurate counts
+- **User Restoration**: Only administrators can unblock or restore user accounts to allow login again
+- **Status Tracking**: User status changes tracked with reason, admin ID who made the change, and timestamp for full audit trail
