@@ -722,7 +722,7 @@ export default function UserDashboard() {
 
   // Calculate total balance from all accounts
   const totalBalance = allAccounts && (allAccounts as BankAccount[]).length > 0 
-    ? (allAccounts as BankAccount[]).reduce((sum, account) => sum + parseFloat(account.balance), 0)
+    ? (allAccounts as BankAccount[]).reduce((sum, account) => sum + Math.abs(parseFloat(account.balance)), 0)
     : 0;
 
   // Get user profile data
@@ -2559,7 +2559,7 @@ export default function UserDashboard() {
                               {allAccounts && Array.isArray(allAccounts) && 
                                 (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
-                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </SelectItem>
                                 )) as React.ReactNode[]
                               }
@@ -2738,7 +2738,7 @@ export default function UserDashboard() {
                               {allAccounts && Array.isArray(allAccounts) && 
                                 (allAccounts as BankAccount[]).map((account: BankAccount) => (
                                   <SelectItem key={account.id} value={account.id}>
-                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${parseFloat(account.balance).toLocaleString()}
+                                    {account.accountType} (****{account.accountNumber.slice(-4)}) - ${Math.abs(parseFloat(account.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </SelectItem>
                                 )) as React.ReactNode[]
                               }
@@ -3561,7 +3561,7 @@ export default function UserDashboard() {
                         <span className="font-bold text-2xl text-green-600">
                           {selectedAccount.id === 'credit-card' 
                             ? '$4,750' 
-                            : `$${parseFloat(selectedAccount.balance).toLocaleString()}`
+                            : `$${Math.abs(parseFloat(selectedAccount.balance)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                           }
                         </span>
                       </div>
@@ -3970,7 +3970,7 @@ export default function UserDashboard() {
                                   </div>
                                   <div className="text-right">
                                     <div className="font-semibold text-green-600">
-                                      ${parseFloat(account.balance || '0').toLocaleString()}
+                                      ${Math.abs(parseFloat(account.balance || '0')).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
                                     <div className="text-xs text-gray-500">Available</div>
                                   </div>
