@@ -2703,7 +2703,10 @@ export default function UserDashboard() {
                       
                       <Button 
                         className="w-full" 
-                        onClick={() => domesticWireMutation.mutate(domesticWireForm)}
+                        onClick={() => {
+                          const { senderFee, estimatedCompletionDate, ...wireData } = domesticWireForm;
+                          domesticWireMutation.mutate(wireData);
+                        }}
                         disabled={!domesticWireForm.fromAccountId || !domesticWireForm.amount || !domesticWireForm.recipientBankName || 
                                  !domesticWireForm.recipientBankAddress || !domesticWireForm.recipientRoutingNumber || 
                                  !domesticWireForm.recipientAccountNumber || !domesticWireForm.beneficiaryName || 
@@ -3926,7 +3929,8 @@ export default function UserDashboard() {
                                !internationalWireForm.beneficiaryName || !internationalWireForm.beneficiaryCountry || 
                                internationalWireMutation.isPending}
                       onClick={() => {
-                        internationalWireMutation.mutate(internationalWireForm);
+                        const { senderFee, estimatedCompletionDate, recipientRoutingNumber, ...wireData } = internationalWireForm;
+                        internationalWireMutation.mutate(wireData);
                       }}
                     >
                       {internationalWireMutation.isPending ? 'Processing...' : `Send International Wire - $${internationalWireForm.amount || '0'}`}

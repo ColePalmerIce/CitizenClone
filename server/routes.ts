@@ -1457,13 +1457,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { dateOfBirth, phoneNumber, address } = req.body;
 
       // Get existing profile
-      const profile = await storage.getCustomerProfileByUserId(userId);
+      const profile = await storage.getCustomerProfile(userId);
       if (!profile) {
         return res.status(404).json({ message: "Profile not found" });
       }
 
       // Update profile with new data
-      const updatedProfile = await storage.updateCustomerProfileByUserId(userId, {
+      const updatedProfile = await storage.updateCustomerProfile(userId, {
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : profile.dateOfBirth,
         phoneNumber: phoneNumber || profile.phoneNumber,
         address: address || profile.address
