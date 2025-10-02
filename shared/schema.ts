@@ -302,15 +302,21 @@ export const enhancedCustomerCreationSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   password: z.string().min(8, "Password must be at least 8 characters"),
   
-  // Personal details
-  ssn: z.string().regex(/^\d{3}-\d{2}-\d{4}$/, "SSN must be in format XXX-XX-XXXX"),
+  // Personal details - flexible formats for better UX
+  ssn: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 9;
+  }, "SSN must be 9 digits"),
   dateOfBirth: z.string().refine((date) => {
     const dob = new Date(date);
     const today = new Date();
     const age = today.getFullYear() - dob.getFullYear();
     return age >= 18 && age <= 120;
   }, "Must be 18 years or older"),
-  phoneNumber: z.string().regex(/^\(\d{3}\) \d{3}-\d{4}$/, "Phone must be in format (XXX) XXX-XXXX"),
+  phoneNumber: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 10;
+  }, "Phone number must be 10 digits"),
   
   // Address
   street: z.string().min(5, "Street address is required").max(100),

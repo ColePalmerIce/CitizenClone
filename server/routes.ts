@@ -96,6 +96,24 @@ function verifySensitiveData(data: string, storedHash: string): boolean {
   }
 }
 
+// Format SSN to XXX-XX-XXXX format (accepts any input with 9 digits)
+function formatSSN(ssn: string): string {
+  const digits = ssn.replace(/\D/g, '');
+  if (digits.length !== 9) {
+    throw new Error('SSN must contain exactly 9 digits');
+  }
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+}
+
+// Format phone number to (XXX) XXX-XXXX format (accepts any input with 10 digits)
+function formatPhoneNumber(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length !== 10) {
+    throw new Error('Phone number must contain exactly 10 digits');
+  }
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 // Generate account numbers with different routing numbers per account type
 function generateAccountNumber(accountType: 'checking' | 'savings' | 'business'): { accountNumber: string, routingNumber: string } {
   const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
@@ -695,6 +713,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         initialBusinessBalance
       } = validatedData;
 
+      // Format SSN and phone number to standard formats (accepts any digit input)
+      const formattedSSN = formatSSN(ssn);
+      const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
+
       // Hash password with secure salt rounds
       const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -710,9 +732,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create comprehensive customer profile with encrypted sensitive data
       const profile = await storage.createCustomerProfile({
         userId: user.id,
-        ssn: encryptSSN(ssn), // Encrypt SSN before storage
+        ssn: encryptSSN(formattedSSN), // Encrypt formatted SSN before storage
         dateOfBirth: new Date(dateOfBirth),
-        phoneNumber: hashSensitiveData(phoneNumber), // Hash phone number
+        phoneNumber: hashSensitiveData(formattedPhoneNumber), // Hash formatted phone number
         address: {
           street,
           city,
