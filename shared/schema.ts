@@ -293,7 +293,7 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type CustomerProfile = typeof customerProfiles.$inferSelect;
 export type InsertCustomerProfile = z.infer<typeof insertCustomerProfileSchema>;
 
-// Enhanced customer creation schema with comprehensive validation
+// Enhanced customer creation schema with simplified validation
 export const enhancedCustomerCreationSchema = z.object({
   // Basic user info
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
@@ -318,20 +318,21 @@ export const enhancedCustomerCreationSchema = z.object({
     return digits.length === 10;
   }, "Phone number must be 10 digits"),
   
-  // Address
-  street: z.string().min(5, "Street address is required").max(100),
-  city: z.string().min(2, "City is required").max(50),
-  state: z.string().length(2, "State must be 2 characters"),
-  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
+  // Address - OPTIONAL for simplified customer creation
+  street: z.string().min(5).max(100).optional(),
+  city: z.string().min(2).max(50).optional(),
+  state: z.string().length(2).optional(),
+  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/).optional(),
   
-  // Employment
-  employer: z.string().min(2, "Employer is required").max(100),
-  jobTitle: z.string().min(2, "Job title is required").max(100),
+  // Employment - OPTIONAL for simplified customer creation
+  employer: z.string().min(2).max(100).optional(),
+  jobTitle: z.string().min(2).max(100).optional(),
   annualIncome: z.string().refine((val) => {
+    if (!val) return true; // Allow empty
     const income = parseInt(val);
     return income >= 0 && income <= 10000000;
-  }, "Invalid annual income"),
-  employmentType: z.enum(['full_time', 'part_time', 'contractor', 'self_employed', 'retired', 'student']),
+  }).optional(),
+  employmentType: z.enum(['full_time', 'part_time', 'contractor', 'self_employed', 'retired', 'student']).optional(),
   
   // Account creation options
   createAllAccounts: z.boolean().default(true),

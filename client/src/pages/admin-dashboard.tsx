@@ -1386,14 +1386,6 @@ function CustomersTab({
     ssn: '',
     dateOfBirth: '',
     phoneNumber: '',
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    employer: '',
-    jobTitle: '',
-    annualIncome: '',
-    employmentType: 'full_time',
     createAllAccounts: true,
     createCards: true,
     initialCheckingBalance: '1000.00',
@@ -1415,14 +1407,6 @@ function CustomersTab({
           ssn: '',
           dateOfBirth: '',
           phoneNumber: '',
-          street: '',
-          city: '',
-          state: '',
-          zipCode: '',
-          employer: '',
-          jobTitle: '',
-          annualIncome: '',
-          employmentType: 'full_time',
           createAllAccounts: true,
           createCards: true,
           initialCheckingBalance: '1000.00',
@@ -1522,125 +1506,6 @@ function CustomersTab({
                       required
                       data-testid="input-dob"
                     />
-                  </div>
-                </div>
-              </div>
-
-              {/* Address Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
-                  Address Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <Label htmlFor="street">Street Address *</Label>
-                    <Input
-                      id="street"
-                      placeholder="123 Main Street"
-                      value={newCustomer.street}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, street: e.target.value }))}
-                      required
-                      data-testid="input-street"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="city">City *</Label>
-                    <Input
-                      id="city"
-                      placeholder="New York"
-                      value={newCustomer.city}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, city: e.target.value }))}
-                      required
-                      data-testid="input-city"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State *</Label>
-                    <Input
-                      id="state"
-                      placeholder="NY"
-                      value={newCustomer.state}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, state: e.target.value }))}
-                      required
-                      data-testid="input-state"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">ZIP Code *</Label>
-                    <Input
-                      id="zipCode"
-                      placeholder="10001"
-                      value={newCustomer.zipCode}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, zipCode: e.target.value }))}
-                      required
-                      data-testid="input-zip"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Employment Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 border-b pb-2">
-                  Employment Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="employer">Employer *</Label>
-                    <Input
-                      id="employer"
-                      placeholder="ABC Corporation"
-                      value={newCustomer.employer}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, employer: e.target.value }))}
-                      required
-                      data-testid="input-employer"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="jobTitle">Job Title *</Label>
-                    <Input
-                      id="jobTitle"
-                      placeholder="Software Engineer"
-                      value={newCustomer.jobTitle}
-                      onChange={(e) => setNewCustomer(prev => ({ ...prev, jobTitle: e.target.value }))}
-                      required
-                      data-testid="input-job-title"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="annualIncome">Annual Income *</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                      <Input
-                        id="annualIncome"
-                        type="number"
-                        placeholder="75,000"
-                        value={newCustomer.annualIncome}
-                        onChange={(e) => setNewCustomer(prev => ({ ...prev, annualIncome: e.target.value }))}
-                        required
-                        className="pl-8"
-                        data-testid="input-income"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="employmentType">Employment Type *</Label>
-                    <Select 
-                      value={newCustomer.employmentType} 
-                      onValueChange={(value) => setNewCustomer(prev => ({ ...prev, employmentType: value }))}
-                    >
-                      <SelectTrigger data-testid="select-employment-type">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="full_time">Full Time</SelectItem>
-                        <SelectItem value="part_time">Part Time</SelectItem>
-                        <SelectItem value="contractor">Contractor</SelectItem>
-                        <SelectItem value="self_employed">Self Employed</SelectItem>
-                        <SelectItem value="retired">Retired</SelectItem>
-                        <SelectItem value="student">Student</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </div>

@@ -739,22 +739,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Create comprehensive customer profile with encrypted sensitive data
+      // Handle optional address and employment fields
       const profile = await storage.createCustomerProfile({
         userId: user.id,
         ssn: encryptSSN(formattedSSN), // Encrypt formatted SSN before storage
         dateOfBirth: new Date(dateOfBirth),
         phoneNumber: hashSensitiveData(formattedPhoneNumber), // Hash formatted phone number
-        address: {
+        address: (street && city && state && zipCode) ? {
           street,
           city,
           state,
           zip: zipCode
+        } : {
+          street: 'Not provided',
+          city: 'Not provided',
+          state: 'NA',
+          zip: '00000'
         },
-        employmentInfo: {
+        employmentInfo: (employer && jobTitle && employmentType) ? {
           employer,
           jobTitle,
-          annualIncome: parseInt(annualIncome),
+          annualIncome: annualIncome ? parseInt(annualIncome) : 0,
           employmentType
+        } : {
+          employer: 'Not provided',
+          jobTitle: 'Not provided',
+          annualIncome: 0,
+          employmentType: 'other'
         },
         kycStatus: "approved"
       });
