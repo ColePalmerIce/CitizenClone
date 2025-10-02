@@ -104,7 +104,8 @@ import {
   Copy,
   Check,
   Mail,
-  Download
+  Download,
+  CheckCircle
 } from "lucide-react";
 import { SiVisa, SiMastercard } from 'react-icons/si';
 
