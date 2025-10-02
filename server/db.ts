@@ -50,7 +50,7 @@ import {
   type AccessCode,
   type InsertAccessCode,
 } from "@shared/schema";
-import { eq, desc, and, gt, lt } from "drizzle-orm";
+import { eq, desc, and, gt, lt, sql } from "drizzle-orm";
 import type { IStorage } from "./storage";
 import { generateComprehensiveTransactionHistory } from "./transaction-seeds";
 
@@ -69,7 +69,8 @@ export class PostgreSQLStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    // Case-insensitive username search for better UX
+    const result = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`).limit(1);
     return result[0];
   }
 
@@ -192,7 +193,8 @@ export class PostgreSQLStorage implements IStorage {
 
   // Admin users
   async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
-    const result = await db.select().from(adminUsers).where(eq(adminUsers.email, email)).limit(1);
+    // Case-insensitive email search for better UX
+    const result = await db.select().from(adminUsers).where(sql`LOWER(${adminUsers.email}) = LOWER(${email})`).limit(1);
     return result[0];
   }
 
