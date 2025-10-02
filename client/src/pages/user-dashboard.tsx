@@ -186,6 +186,8 @@ export default function UserDashboard() {
   const [expandedStatements, setExpandedStatements] = useState<Set<string>>(new Set());
   const [isCreditLimitIncreaseOpen, setIsCreditLimitIncreaseOpen] = useState(false);
   const [isDebitLimitIncreaseOpen, setIsDebitLimitIncreaseOpen] = useState(false);
+  const [isTransferReceiptOpen, setIsTransferReceiptOpen] = useState(false);
+  const [transferReceiptData, setTransferReceiptData] = useState<any>(null);
 
   // Create extended schemas with validation and coercion
   const creditLimitFormSchema = insertCreditLimitIncreaseRequestSchema.extend({
@@ -800,10 +802,15 @@ export default function UserDashboard() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/pending-external-transfers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/transactions'] });
-      toast({
-        title: "Transfer Request Submitted",
-        description: data.message || "Your external transfer request is pending administrative approval.",
+      
+      // Show transfer receipt
+      setTransferReceiptData({
+        ...data,
+        transferType: 'ACH',
+        type: 'External Transfer'
       });
+      setIsTransferReceiptOpen(true);
+      
       setIsExternalTransferDialogOpen(false);
       setShowTransferConfirmation(false);
       setConfirmationData(null);
@@ -847,10 +854,14 @@ export default function UserDashboard() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Wire Transfer Initiated",
-        description: data.message || "Your domestic wire transfer has been successfully initiated.",
+      // Show transfer receipt
+      setTransferReceiptData({
+        ...data,
+        transferType: 'Domestic Wire',
+        type: 'Domestic Wire Transfer'
       });
+      setIsTransferReceiptOpen(true);
+      
       // Reset form
       setDomesticWireForm({
         fromAccountId: '',
@@ -892,10 +903,14 @@ export default function UserDashboard() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "International Wire Transfer Initiated",
-        description: data.message || "Your international wire transfer has been successfully initiated.",
+      // Show transfer receipt
+      setTransferReceiptData({
+        ...data,
+        transferType: 'International Wire',
+        type: 'International Wire Transfer'
       });
+      setIsTransferReceiptOpen(true);
+      
       // Reset form
       setInternationalWireForm({
         fromAccountId: '',
@@ -4321,6 +4336,141 @@ export default function UserDashboard() {
               Done
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer Receipt Modal */}
+      <Dialog open={isTransferReceiptOpen} onOpenChange={setIsTransferReceiptOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center text-blue-600">
+              Transfer Receipt
+            </DialogTitle>
+          </DialogHeader>
+          
+          {transferReceiptData && (
+            <div className="space-y-6 py-4">
+              {/* Success Icon */}
+              <div className="flex justify-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-green-600" />
+                </div>
+              </div>
+
+              {/* Transfer Type */}
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-gray-800">{transferReceiptData.type}</h3>
+                <p className="text-gray-500 text-sm mt-1">Transaction Successful</p>
+              </div>
+
+              {/* Amount */}
+              <div className="bg-blue-50 rounded-lg p-6 text-center">
+                <p className="text-sm text-gray-600 mb-2">Transfer Amount</p>
+                <p className="text-4xl font-bold text-blue-600">
+                  ${parseFloat(transferReceiptData.transfer?.amount || transferReceiptData.amount || '0').toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              {/* Transfer Details */}
+              <div className="border rounded-lg p-6 space-y-4">
+                <h4 className="font-semibold text-gray-800 border-b pb-2">Transfer Details</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Reference Number</p>
+                    <p className="font-mono text-sm font-medium">{transferReceiptData.transfer?.referenceNumber || transferReceiptData.referenceNumber || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Date & Time</p>
+                    <p className="text-sm font-medium">{new Date().toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                      {transferReceiptData.transfer?.status || transferReceiptData.status || 'Completed'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Type</p>
+                    <p className="text-sm font-medium">{transferReceiptData.transferType}</p>
+                  </div>
+                </div>
+
+                {/* Recipient Details */}
+                {(transferReceiptData.transfer?.recipientName || transferReceiptData.recipientName || transferReceiptData.transfer?.beneficiaryName) && (
+                  <div className="pt-4 border-t">
+                    <p className="text-xs text-gray-500 mb-2">Recipient Information</p>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-sm font-medium">{transferReceiptData.transfer?.recipientName || transferReceiptData.recipientName || transferReceiptData.transfer?.beneficiaryName}</p>
+                      </div>
+                      {(transferReceiptData.transfer?.recipientBankName || transferReceiptData.recipientBankName) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Bank Name</p>
+                          <p className="text-sm">{transferReceiptData.transfer?.recipientBankName || transferReceiptData.recipientBankName}</p>
+                        </div>
+                      )}
+                      {(transferReceiptData.transfer?.recipientAccountNumber || transferReceiptData.recipientAccountNumber) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Account Number</p>
+                          <p className="text-sm font-mono">****{(transferReceiptData.transfer?.recipientAccountNumber || transferReceiptData.recipientAccountNumber).slice(-4)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fees if applicable */}
+                {(transferReceiptData.transfer?.senderFee || transferReceiptData.senderFee) && (
+                  <div className="pt-4 border-t">
+                    <p className="text-xs text-gray-500 mb-2">Fees</p>
+                    <div className="flex justify-between text-sm">
+                      <span>Transfer Fee</span>
+                      <span className="font-medium">${parseFloat(transferReceiptData.transfer?.senderFee || transferReceiptData.senderFee || '0').toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Note */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-xs text-gray-600 text-center">
+                  {transferReceiptData.message || 'Please save this receipt for your records. You can screenshot this page.'}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setIsTransferReceiptOpen(false);
+                    setTransferReceiptData(null);
+                  }}
+                  data-testid="button-close-receipt"
+                >
+                  Close
+                </Button>
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    toast({
+                      title: "Receipt Saved",
+                      description: "You can screenshot this receipt for your records.",
+                    });
+                  }}
+                  data-testid="button-save-receipt"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Screenshot This Receipt
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

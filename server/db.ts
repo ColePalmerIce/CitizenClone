@@ -393,6 +393,14 @@ export class PostgreSQLStorage implements IStorage {
     return result[0];
   }
 
+  async updateTransactionCreatedAt(id: string, createdAt: Date): Promise<Transaction | undefined> {
+    const result = await db.update(transactions)
+      .set({ createdAt })
+      .where(eq(transactions.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Customer profiles
   async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> {
     const result = await db.insert(customerProfiles).values(profile).returning();

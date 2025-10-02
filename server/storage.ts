@@ -94,6 +94,7 @@ export interface IStorage {
   seedAccountWithProfessionalTransactions(accountId: string): Promise<Transaction[]>;
   getAllTransactions(limit?: number): Promise<Transaction[]>;
   updateTransactionStatus(id: string, status: string): Promise<Transaction | undefined>;
+  updateTransactionCreatedAt(id: string, createdAt: Date): Promise<Transaction | undefined>;
 
   // Customer profiles
   createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile>;
@@ -436,6 +437,12 @@ export class MemStorage implements IStorage {
   }
 
   async updateTransactionStatus(id: string, status: string): Promise<Transaction | undefined> {
+    // Note: MemStorage doesn't store transactions - this is a placeholder
+    // In production, PostgreSQL storage handles transactions
+    return undefined;
+  }
+
+  async updateTransactionCreatedAt(id: string, createdAt: Date): Promise<Transaction | undefined> {
     // Note: MemStorage doesn't store transactions - this is a placeholder
     // In production, PostgreSQL storage handles transactions
     return undefined;

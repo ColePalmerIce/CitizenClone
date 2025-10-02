@@ -951,6 +951,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin update transaction date
+  app.patch("/api/admin/transactions/:transactionId/created-at", requireAdmin, async (req, res) => {
+    try {
+      const { transactionId } = req.params;
+      const { createdAt } = req.body;
+      
+      if (!createdAt) {
+        return res.status(400).json({ message: "Transaction date is required" });
+      }
+
+      // Validate that createdAt is a valid date
+      const parsedDate = new Date(createdAt);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+
+      const updatedTransaction = await storage.updateTransactionCreatedAt(transactionId, parsedDate);
+      if (!updatedTransaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+
+      res.json(updatedTransaction);
+    } catch (error) {
+      console.error('Failed to update transaction date:', error);
+      res.status(500).json({ message: "Failed to update transaction date" });
+    }
+  });
+
   // Admin customer fund management endpoints
   app.post("/api/admin/customer/add-funds", requireAdmin, async (req, res) => {
     try {
