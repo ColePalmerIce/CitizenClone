@@ -854,9 +854,10 @@ export default function UserDashboard() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Show transfer receipt
+      // Show transfer receipt - normalize wireTransfer to transfer for consistent modal display
       setTransferReceiptData({
         ...data,
+        transfer: data.wireTransfer, // Normalize to 'transfer' property
         transferType: 'Domestic Wire',
         type: 'Domestic Wire Transfer'
       });
@@ -903,9 +904,10 @@ export default function UserDashboard() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Show transfer receipt
+      // Show transfer receipt - normalize wireTransfer to transfer for consistent modal display
       setTransferReceiptData({
         ...data,
+        transfer: data.wireTransfer, // Normalize to 'transfer' property
         transferType: 'International Wire',
         type: 'International Wire Transfer'
       });
@@ -4400,23 +4402,25 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Recipient Details */}
-                {(transferReceiptData.transfer?.recipientName || transferReceiptData.recipientName || transferReceiptData.transfer?.beneficiaryName) && (
+                {(transferReceiptData.transfer?.recipientName || transferReceiptData.transfer?.beneficiaryName) && (
                   <div className="pt-4 border-t">
                     <p className="text-xs text-gray-500 mb-2">Recipient Information</p>
                     <div className="space-y-2">
                       <div>
-                        <p className="text-sm font-medium">{transferReceiptData.transfer?.recipientName || transferReceiptData.recipientName || transferReceiptData.transfer?.beneficiaryName}</p>
+                        <p className="text-sm font-medium">
+                          {transferReceiptData.transfer?.recipientName || transferReceiptData.transfer?.beneficiaryName}
+                        </p>
                       </div>
-                      {(transferReceiptData.transfer?.recipientBankName || transferReceiptData.recipientBankName) && (
+                      {(transferReceiptData.transfer?.recipientBankName || transferReceiptData.transfer?.beneficiaryBankName) && (
                         <div>
                           <p className="text-xs text-gray-500">Bank Name</p>
-                          <p className="text-sm">{transferReceiptData.transfer?.recipientBankName || transferReceiptData.recipientBankName}</p>
+                          <p className="text-sm">{transferReceiptData.transfer?.recipientBankName || transferReceiptData.transfer?.beneficiaryBankName}</p>
                         </div>
                       )}
-                      {(transferReceiptData.transfer?.recipientAccountNumber || transferReceiptData.recipientAccountNumber) && (
+                      {(transferReceiptData.transfer?.recipientAccount || transferReceiptData.transfer?.beneficiaryAccount || transferReceiptData.transfer?.recipientAccountNumber) && (
                         <div>
                           <p className="text-xs text-gray-500">Account Number</p>
-                          <p className="text-sm font-mono">****{(transferReceiptData.transfer?.recipientAccountNumber || transferReceiptData.recipientAccountNumber).slice(-4)}</p>
+                          <p className="text-sm font-mono">****{(transferReceiptData.transfer?.recipientAccount || transferReceiptData.transfer?.beneficiaryAccount || transferReceiptData.transfer?.recipientAccountNumber || '').slice(-4)}</p>
                         </div>
                       )}
                     </div>

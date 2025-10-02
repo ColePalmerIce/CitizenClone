@@ -443,9 +443,7 @@ export class MemStorage implements IStorage {
   }
 
   async updateTransactionCreatedAt(id: string, createdAt: Date): Promise<Transaction | undefined> {
-    // Note: MemStorage doesn't store transactions - this is a placeholder
-    // In production, PostgreSQL storage handles transactions
-    return undefined;
+    throw new Error("Not implemented in MemStorage");
   }
 
   // Pending external transfers (placeholder implementations)
