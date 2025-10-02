@@ -156,6 +156,17 @@ export default function UserDashboard() {
   const [isCardsDialogOpen, setIsCardsDialogOpen] = useState(false);
   const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
   const [showEmailDropdown, setShowEmailDropdown] = useState(false);
+  
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileEditData, setProfileEditData] = useState({
+    dateOfBirth: '',
+    phoneNumber: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: ''
+  });
   const [isSecurityDialogOpen, setIsSecurityDialogOpen] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isBranchLocatorOpen, setIsBranchLocatorOpen] = useState(false);
@@ -949,6 +960,28 @@ export default function UserDashboard() {
     },
   });
 
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('PATCH', '/api/user/profile', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      setIsEditingProfile(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+      });
+    },
+  });
+
   // Query for pending external transfers
   const { data: pendingExternalTransfers = [] } = useQuery<any[]>({
     queryKey: ['/api/user/pending-external-transfers'],
@@ -1094,40 +1127,175 @@ export default function UserDashboard() {
                     </div>
                     
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">Date of Birth</span>
-                        <span className="text-sm">
-                          {userProfile?.profile?.dateOfBirth 
-                            ? new Date(userProfile.profile.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                            : 'Not provided'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">Phone Number</span>
-                        <span className="text-sm">{userProfile?.profile?.phoneNumber || 'Not provided'}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">Address</span>
-                        <span className="text-sm">
-                          {userProfile?.profile?.address 
-                            ? `${userProfile.profile.address.street}, ${userProfile.profile.address.city}, ${userProfile.profile.address.state}` 
-                            : 'Not provided'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 border rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">Customer Since</span>
-                        <span className="text-sm">
-                          {userProfile?.user?.createdAt 
-                            ? new Date(userProfile.user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-                            : 'Not available'}
-                        </span>
-                      </div>
+                      {isEditingProfile ? (
+                        <>
+                          <div className="p-3 border rounded-lg">
+                            <label className="text-sm font-medium text-gray-600">Date of Birth</label>
+                            <input
+                              type="date"
+                              value={profileEditData.dateOfBirth}
+                              onChange={(e) => setProfileEditData({ ...profileEditData, dateOfBirth: e.target.value })}
+                              className="w-full mt-1 p-2 border rounded"
+                              data-testid="input-edit-dob"
+                            />
+                          </div>
+                          <div className="p-3 border rounded-lg">
+                            <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                            <input
+                              type="tel"
+                              value={profileEditData.phoneNumber}
+                              onChange={(e) => setProfileEditData({ ...profileEditData, phoneNumber: e.target.value })}
+                              placeholder="(555) 123-4567"
+                              className="w-full mt-1 p-2 border rounded"
+                              data-testid="input-edit-phone"
+                            />
+                          </div>
+                          <div className="p-3 border rounded-lg">
+                            <label className="text-sm font-medium text-gray-600">Street Address</label>
+                            <input
+                              type="text"
+                              value={profileEditData.street}
+                              onChange={(e) => setProfileEditData({ ...profileEditData, street: e.target.value })}
+                              placeholder="123 Main St"
+                              className="w-full mt-1 p-2 border rounded"
+                              data-testid="input-edit-street"
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-xs font-medium text-gray-600">City</label>
+                              <input
+                                type="text"
+                                value={profileEditData.city}
+                                onChange={(e) => setProfileEditData({ ...profileEditData, city: e.target.value })}
+                                placeholder="City"
+                                className="w-full mt-1 p-2 border rounded"
+                                data-testid="input-edit-city"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-gray-600">State</label>
+                              <input
+                                type="text"
+                                value={profileEditData.state}
+                                onChange={(e) => setProfileEditData({ ...profileEditData, state: e.target.value })}
+                                placeholder="CA"
+                                className="w-full mt-1 p-2 border rounded"
+                                data-testid="input-edit-state"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-gray-600">ZIP</label>
+                              <input
+                                type="text"
+                                value={profileEditData.zip}
+                                onChange={(e) => setProfileEditData({ ...profileEditData, zip: e.target.value })}
+                                placeholder="12345"
+                                className="w-full mt-1 p-2 border rounded"
+                                data-testid="input-edit-zip"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex justify-between items-center p-3 border rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">Date of Birth</span>
+                            <span className="text-sm">
+                              {userProfile?.profile?.dateOfBirth 
+                                ? new Date(userProfile.profile.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                : 'Not provided'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 border rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">Phone Number</span>
+                            <span className="text-sm">{userProfile?.profile?.phoneNumber || 'Not provided'}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 border rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">Address</span>
+                            <span className="text-sm">
+                              {userProfile?.profile?.address 
+                                ? `${userProfile.profile.address.street}, ${userProfile.profile.address.city}, ${userProfile.profile.address.state}` 
+                                : 'Not provided'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 border rounded-lg">
+                            <span className="text-sm font-medium text-gray-600">Customer Since</span>
+                            <span className="text-sm">
+                              {userProfile?.user?.createdAt 
+                                ? new Date(userProfile.user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                                : 'Not available'}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" className="w-full" data-testid="button-edit-profile">
-                      Edit Profile
-                    </Button>
+                    {isEditingProfile ? (
+                      <div className="flex gap-2 w-full">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1" 
+                          onClick={() => {
+                            setIsEditingProfile(false);
+                            setProfileEditData({
+                              dateOfBirth: '',
+                              phoneNumber: '',
+                              street: '',
+                              city: '',
+                              state: '',
+                              zip: ''
+                            });
+                          }}
+                          data-testid="button-cancel-profile-edit"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          className="flex-1 bg-blue-600 hover:bg-blue-700" 
+                          onClick={() => {
+                            updateProfileMutation.mutate({
+                              dateOfBirth: profileEditData.dateOfBirth || undefined,
+                              phoneNumber: profileEditData.phoneNumber || undefined,
+                              address: (profileEditData.street || profileEditData.city || profileEditData.state || profileEditData.zip) ? {
+                                street: profileEditData.street,
+                                city: profileEditData.city,
+                                state: profileEditData.state,
+                                zip: profileEditData.zip
+                              } : undefined
+                            });
+                          }}
+                          disabled={updateProfileMutation.isPending}
+                          data-testid="button-save-profile"
+                        >
+                          {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => {
+                          setIsEditingProfile(true);
+                          // Pre-fill with current data
+                          if (userProfile?.profile) {
+                            const profile = userProfile.profile;
+                            setProfileEditData({
+                              dateOfBirth: profile.dateOfBirth ? new Date(profile.dateOfBirth).toISOString().split('T')[0] : '',
+                              phoneNumber: profile.phoneNumber || '',
+                              street: profile.address?.street || '',
+                              city: profile.address?.city || '',
+                              state: profile.address?.state || '',
+                              zip: profile.address?.zip || ''
+                            });
+                          }
+                        }}
+                        data-testid="button-edit-profile"
+                      >
+                        Edit Profile
+                      </Button>
+                    )}
                   </DialogFooter>
                 </DialogContent>
               </Dialog>

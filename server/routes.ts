@@ -730,15 +730,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password with secure salt rounds
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      // Create user with validated data and optional custom creation date
+      // Create user with validated data
       const user = await storage.createUser({
         username,
         email, 
         password: hashedPassword,
         firstName,
-        lastName,
-        createdAt: accountCreationDate ? new Date(accountCreationDate) : undefined
+        lastName
       });
+      
+      // Update creation date if provided (after user is created)
+      if (accountCreationDate) {
+        await storage.updateUserCreatedAt(user.id, new Date(accountCreationDate));
+      }
 
       // Create comprehensive customer profile with encrypted sensitive data
       // Handle optional address and employment fields
@@ -1443,6 +1447,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Profile fetch error:', error);
       res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  // Update customer profile
+  app.patch("/api/user/profile", requireActiveCustomer, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const { dateOfBirth, phoneNumber, address } = req.body;
+
+      // Get existing profile
+      const profile = await storage.getCustomerProfileByUserId(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+
+      // Update profile with new data
+      const updatedProfile = await storage.updateCustomerProfileByUserId(userId, {
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : profile.dateOfBirth,
+        phoneNumber: phoneNumber || profile.phoneNumber,
+        address: address || profile.address
+      });
+
+      res.json({ 
+        success: true,
+        message: "Profile updated successfully",
+        profile: updatedProfile
+      });
+    } catch (error) {
+      console.error('Profile update error:', error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
