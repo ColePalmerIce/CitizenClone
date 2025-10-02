@@ -74,3 +74,12 @@ Preferred communication style: Simple, everyday language.
 - **Transaction Date Logic**: Modified getTransactionsForMonth() to use `new Date()` as base and subtract monthOffset months dynamically
 - **Balance Verification**: Added verification to ensure final transaction balance matches current account balance within 1 cent tolerance
 - **Clean Transaction History**: Seeding now deletes existing transactions first to prevent duplicates and ensure consistent data
+
+### October 2, 2025 - Phone Number Encryption Fix for Profile Display
+- **Phone Number Encryption**: Changed phone numbers from one-way hashing to reversible encryption (AES-256-CBC like SSN), allowing decryption for display purposes
+- **Encryption Functions**: Added `encryptPhoneNumber()` and `decryptPhoneNumber()` functions using same secure encryption as SSN with random IV per record
+- **Profile GET Endpoint**: Updated `/api/user/profile` to decrypt phone numbers before returning to frontend - users now see their actual phone number instead of encrypted gibberish
+- **Profile PATCH Endpoint**: Updated profile editing to format and encrypt phone numbers on save, maintaining security while enabling proper display
+- **Admin Customer Creation**: Changed from `hashSensitiveData()` to `encryptPhoneNumber()` when creating customers - all new customers get encrypted (not hashed) phone numbers
+- **Backward Compatibility**: Decryption function gracefully handles old hashed phone numbers by returning "Not available" if decryption fails
+- **User Experience**: Users can now view and edit their phone numbers correctly in the "My Profile" dialog, seeing formatted numbers like "(555) 123-4567" instead of encrypted strings
