@@ -2882,6 +2882,8 @@ function AccountApplicationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/account-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
       toast({
         title: "Application Approved",
         description: "Account application has been approved and user account created.",
@@ -2903,6 +2905,7 @@ function AccountApplicationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/account-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
       toast({
         title: "Application Rejected",
         description: "Account application has been rejected.",
@@ -2912,6 +2915,28 @@ function AccountApplicationsTab() {
       toast({
         title: "Rejection Failed",
         description: error.message || "Failed to reject application",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Delete application mutation
+  const deleteApplicationMutation = useMutation({
+    mutationFn: async (applicationId: string) => {
+      return await apiRequest('DELETE', `/api/admin/delete-account-application/${applicationId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/account-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
+      toast({
+        title: "Application Deleted",
+        description: "Account application has been permanently deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Deletion Failed",
+        description: error.message || "Failed to delete application",
         variant: "destructive",
       });
     }
@@ -3025,7 +3050,7 @@ function AccountApplicationsTab() {
                     <div className="flex flex-col space-y-2 lg:w-48">
                       <Button
                         onClick={() => approveApplicationMutation.mutate({ applicationId: application.id })}
-                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending}
+                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending || deleteApplicationMutation.isPending}
                         className="w-full bg-green-600 hover:bg-green-700"
                         data-testid={`button-approve-${application.id}`}
                       >
@@ -3034,11 +3059,25 @@ function AccountApplicationsTab() {
                       <Button
                         variant="destructive"
                         onClick={() => rejectApplicationMutation.mutate({ applicationId: application.id })}
-                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending}
+                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending || deleteApplicationMutation.isPending}
                         className="w-full"
                         data-testid={`button-reject-${application.id}`}
                       >
                         {rejectApplicationMutation.isPending ? 'Rejecting...' : 'Reject'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to permanently delete this application?')) {
+                            deleteApplicationMutation.mutate(application.id);
+                          }
+                        }}
+                        disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending || deleteApplicationMutation.isPending}
+                        className="w-full"
+                        data-testid={`button-delete-${application.id}`}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        {deleteApplicationMutation.isPending ? 'Deleting...' : 'Delete'}
                       </Button>
                     </div>
                   </div>
@@ -3072,13 +3111,28 @@ function AccountApplicationsTab() {
                     <p className="font-medium">{application.firstName} {application.lastName}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">{application.email}</p>
                   </div>
-                  <div className="text-right">
-                    <Badge variant={application.status === 'approved' ? 'default' : 'destructive'}>
-                      {application.status}
-                    </Badge>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {application.approvedAt ? new Date(application.approvedAt).toLocaleDateString() : ''}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <Badge variant={application.status === 'approved' ? 'default' : 'destructive'}>
+                        {application.status}
+                      </Badge>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {application.approvedAt ? new Date(application.approvedAt).toLocaleDateString() : ''}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to permanently delete this application?')) {
+                          deleteApplicationMutation.mutate(application.id);
+                        }
+                      }}
+                      disabled={deleteApplicationMutation.isPending}
+                      data-testid={`button-delete-processed-${application.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
                   </div>
                 </div>
               ))}
