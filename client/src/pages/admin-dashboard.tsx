@@ -2880,6 +2880,9 @@ function TransactionsTab({
 function AccountApplicationsTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [accountCreationDate, setAccountCreationDate] = useState("");
 
   // Account applications query
   const { data: applications, isLoading } = useQuery<any[]>({
@@ -2892,13 +2895,16 @@ function AccountApplicationsTab() {
 
   // Approve application mutation
   const approveApplicationMutation = useMutation({
-    mutationFn: async ({ applicationId, notes }: { applicationId: string; notes?: string }) => {
-      return await apiRequest('POST', `/api/admin/approve-account-application/${applicationId}`, { notes });
+    mutationFn: async ({ applicationId, notes, accountCreationDate }: { applicationId: string; notes?: string; accountCreationDate?: string }) => {
+      return await apiRequest('POST', `/api/admin/approve-account-application/${applicationId}`, { notes, accountCreationDate });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/account-applications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/customers'] });
+      setApproveDialogOpen(false);
+      setSelectedApplication(null);
+      setAccountCreationDate("");
       toast({
         title: "Application Approved",
         description: "Account application has been approved and user account created.",
@@ -3082,12 +3088,15 @@ function AccountApplicationsTab() {
 
                     <div className="flex flex-col space-y-2 lg:w-48">
                       <Button
-                        onClick={() => approveApplicationMutation.mutate({ applicationId: application.id })}
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setApproveDialogOpen(true);
+                        }}
                         disabled={approveApplicationMutation.isPending || rejectApplicationMutation.isPending || deleteApplicationMutation.isPending}
                         className="w-full bg-green-600 hover:bg-green-700"
                         data-testid={`button-approve-${application.id}`}
                       >
-                        {approveApplicationMutation.isPending ? 'Approving...' : 'Approve'}
+                        Approve
                       </Button>
                       <Button
                         variant="destructive"
@@ -3175,6 +3184,61 @@ function AccountApplicationsTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Approve Application Dialog */}
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Application</DialogTitle>
+            <DialogDescription>
+              Approve {selectedApplication?.firstName} {selectedApplication?.lastName}'s account application
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="accountCreationDate">Account Creation Date (Optional)</Label>
+              <Input
+                id="accountCreationDate"
+                type="datetime-local"
+                value={accountCreationDate}
+                onChange={(e) => setAccountCreationDate(e.target.value)}
+                placeholder="Leave empty for current date"
+                data-testid="input-account-creation-date"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Set a custom "Member Since" date. Leave empty to use current date.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setApproveDialogOpen(false);
+                setSelectedApplication(null);
+                setAccountCreationDate("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedApplication) {
+                  approveApplicationMutation.mutate({
+                    applicationId: selectedApplication.id,
+                    accountCreationDate: accountCreationDate || undefined
+                  });
+                }
+              }}
+              disabled={approveApplicationMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="button-confirm-approve"
+            >
+              {approveApplicationMutation.isPending ? 'Approving...' : 'Approve Application'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

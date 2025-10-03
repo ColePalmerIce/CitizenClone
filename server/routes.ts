@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { applicationId } = req.params;
       const adminId = req.session.adminId;
-      const { notes } = req.body;
+      const { notes, accountCreationDate } = req.body;
       
       // Get the application
       const application = await storage.getAccountApplication(applicationId);
@@ -362,13 +362,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: application.lastName
       });
 
-      // Create bank account with the generated details
+      // Update creation date if provided (backdate support)
+      let accountTimestamp = user.createdAt;
+      if (accountCreationDate) {
+        const backdatedDate = new Date(accountCreationDate);
+        await storage.updateUserCreatedAt(user.id, backdatedDate);
+        accountTimestamp = backdatedDate;
+      }
+
+      // Create customer profile with all personal information from application
+      if (application.ssn || application.dateOfBirth || application.phoneNumber) {
+        // Handle SSN: decrypt (already encrypted in application), format, re-encrypt
+        let finalEncryptedSSN: string | undefined = undefined;
+        if (application.ssn) {
+          try {
+            const decryptedSSN = decryptSSN(application.ssn); // Decrypt from application
+            const formattedSSN = formatSSN(decryptedSSN); // Format to XXX-XX-XXXX
+            finalEncryptedSSN = encryptSSN(formattedSSN); // Re-encrypt for profile
+          } catch (error) {
+            console.error('Error processing SSN:', error);
+          }
+        }
+        
+        // Handle phone: format and encrypt (stored as plain text in application)
+        let finalEncryptedPhone: string | undefined = undefined;
+        if (application.phoneNumber) {
+          try {
+            const formattedPhone = formatPhoneNumber(application.phoneNumber);
+            finalEncryptedPhone = encryptPhoneNumber(formattedPhone);
+          } catch (error) {
+            console.error('Error processing phone number:', error);
+          }
+        }
+
+        await storage.createCustomerProfile({
+          userId: user.id,
+          ssn: finalEncryptedSSN,
+          dateOfBirth: application.dateOfBirth ? new Date(application.dateOfBirth) : undefined,
+          phoneNumber: finalEncryptedPhone,
+          address: (application.street && application.city && application.state && application.zipCode) ? {
+            street: application.street,
+            city: application.city,
+            state: application.state,
+            zip: application.zipCode
+          } : undefined,
+          employmentInfo: (application.employer && application.jobTitle && application.employmentType) ? {
+            employer: application.employer,
+            jobTitle: application.jobTitle,
+            annualIncome: application.annualIncome ? parseInt(application.annualIncome) : 0,
+            employmentType: application.employmentType
+          } : undefined,
+          kycStatus: "approved"
+        });
+      }
+
+      // Create bank account with the generated details (use backdated timestamp if provided)
       const bankAccount = await storage.createBankAccount({
         userId: user.id,
         accountNumber,
         routingNumber,
         accountType: application.accountType,
-        balance: application.initialDeposit?.toString() || '0.00'
+        balance: application.initialDeposit?.toString() || '0.00',
+        openDate: accountTimestamp,
+        createdAt: accountTimestamp
       });
 
       // Update application status with generated account details
